@@ -1,0 +1,14 @@
+{
+  "SITE_FAVICON_PATH": "/static/images/favicon.ico",
+  "POST_IMAGE_MAX_EDGE": 1200,
+  "POST_IMAGE_OUTPUT_WIDTH": 1200,
+  "POST_IMAGE_OUTPUT_HEIGHT": 630,
+  "POST_IMAGE_CROP_OG": true,
+  "SITE_DISPLAY_NAME": "Trucker Club",
+  "SITE_TAGLINE": "Simplicity is the ultimate sophistication! - Leonardo da Vinci",
+  "OG_CARD_IMAGE_PATH": "/static/images/site_uploads/816a401ba88d445498b8b3919f93d8dd.png",
+  "FLAT_POST_URLS": false,
+  "ACTIVE_THEME": "default",
+  "NAV_FIXED_POST_SLUG": "despre-mine",
+  "SITE_BRAND_IMAGE_PATH": "/static/images/site_uploads/37c345d9b4df41eeb9d9ae5fc04bcb59.ico"
+}

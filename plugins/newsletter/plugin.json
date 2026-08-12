@@ -1,0 +1,72 @@
+{
+  "name": "Newsletter",
+  "description": "Formular public /newsletter; abonați în fișier local; eveniment pentru notificări.",
+  "version": "1.0.0",
+  "author": "Camionagiul",
+  "permissions": ["template_hooks", "events", "file_write"],
+  "settings": {
+    "from_email": {
+      "type": "email",
+      "label": "E-mail expeditor",
+      "description": "Adresa de e-mail folosită pentru trimiterea notificărilor de abonare",
+      "default": "",
+      "required": false
+    },
+    "notify_email": {
+      "type": "email", 
+      "label": "E-mail notificări",
+      "description": "Adresa unde se trimit notificări despre abonări noi",
+      "default": "",
+      "required": false
+    },
+    "smtp_host": {
+      "type": "text",
+      "label": "Server SMTP",
+      "description": "Hostul serverului SMTP pentru trimitere e-mailuri",
+      "default": "",
+      "required": false
+    },
+    "smtp_port": {
+      "type": "number",
+      "label": "Port SMTP",
+      "description": "Portul serverului SMTP",
+      "default": "587",
+      "required": false
+    },
+    "smtp_user": {
+      "type": "text",
+      "label": "Utilizator SMTP",
+      "description": "Numele de utilizator pentru autentificare SMTP",
+      "default": "",
+      "required": false
+    },
+    "smtp_password": {
+      "type": "password",
+      "label": "Parolă SMTP",
+      "description": "Parola pentru autentificare SMTP",
+      "default": "",
+      "required": false
+    },
+    "smtp_use_tls": {
+      "type": "checkbox",
+      "label": "STARTTLS (port 587)",
+      "description": "Aproape obligatoriu pe portul 587: upgrade TLS înainte de autentificare; fără asta apare „AUTH not supported”.",
+      "default": true,
+      "required": false
+    },
+    "smtp_allow_self_signed": {
+      "type": "checkbox",
+      "label": "Certificat SMTP self-signed",
+      "description": "Bifează dacă mailserverul are certificat privat / LAN (ex. hosting_mailserver). TLS rămâne activ, dar nu mai verificăm CA-ul. Alternativ: NEWSLETTER_SMTP_TLS_VERIFY=false în .env pe container.",
+      "default": false,
+      "required": false
+    },
+    "email_subscribers_on_publish": {
+      "type": "checkbox",
+      "label": "Notifică abonații la articol nou",
+      "description": "La publicare (postare nouă ne-ciornă sau trecere din ciornă în publicat), trimite un e-mail tuturor adreselor din lista de abonați.",
+      "default": true,
+      "required": false
+    }
+  }
+}

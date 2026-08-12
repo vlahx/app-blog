@@ -1,0 +1,22 @@
+{# Default theme: blog hero #}
+<section class="hero-section text-center mb-5">
+  <div class="container">
+    <h1 class="display-4 fw-bold mb-3 d-flex align-items-center justify-content-center gap-2 flex-wrap">
+      {% if site_nav_icon_abs %}
+      <img src="{{ site_nav_icon_abs|e }}" width="56" height="56" alt="" class="rounded-2 flex-shrink-0" style="object-fit:contain" decoding="async" />
+      {% else %}
+      <span class="flex-shrink-0" aria-hidden="true">🚛</span>
+      {% endif %}
+      <span>{{ site_display_name() }}</span>
+    </h1>
+    <p class="lead mb-4">{{ site_tagline() }}</p>
+    <div class="d-flex justify-content-center gap-2 flex-wrap">
+      <span class="badge rounded-pill bg-body-tertiary text-body px-3 py-2">✈️ {{ t_safe(translations, 'home.badges.python') }}</span>
+      <span class="badge rounded-pill bg-body-tertiary text-body px-3 py-2">🛣️ {{ t_safe(translations, 'home.badges.highways') }}</span>
+      <span class="badge rounded-pill bg-body-tertiary text-body px-3 py-2">🌍 {{ t_safe(translations, 'home.badges.europe') }}</span>
+      <span class="badge rounded-pill bg-body-tertiary text-body px-3 py-2">🚛 {{ t_safe(translations, 'home.badges.technical') }}</span>
+      <span class="badge rounded-pill bg-body-tertiary text-body px-3 py-2">👍 {{ t_safe(translations, 'home.badges.programming') }}</span>
+    </div>
+  </div>
+</section>
+

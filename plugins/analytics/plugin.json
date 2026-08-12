@@ -1,0 +1,7 @@
+{
+  "id": "analytics",
+  "name": "Analytics",
+  "version": "1.0.0",
+  "description": "Contorizează vizualizările și timpul petrecut pe articole; afișează badge-uri în header articol și panou în Admin.",
+  "author": "Antigravity"
+}

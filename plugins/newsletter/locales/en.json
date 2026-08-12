@@ -1,0 +1,9 @@
+{
+  "subscribe_title": "📧 Newsletter Subscription",
+  "subscribe_desc": "Subscribe to receive the latest articles directly in your inbox.",
+  "email_placeholder": "Enter your email address...",
+  "subscribe_btn": "Subscribe",
+  "success_msg": "Thank you for subscribing! Please check your spam folder for future emails.",
+  "already_msg": "This email address is already subscribed to the newsletter.",
+  "error_invalid": "Invalid email address."
+}

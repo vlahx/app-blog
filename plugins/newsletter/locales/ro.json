@@ -1,0 +1,9 @@
+{
+  "subscribe_title": "📧 Abonare Newsletter",
+  "subscribe_desc": "Abonează-te pentru a primi ultimele articole direct pe e-mail.",
+  "email_placeholder": "Introdu adresa ta de e-mail...",
+  "subscribe_btn": "Abonează-te",
+  "success_msg": "Mulțumim pentru abonare! Te rugăm să verifici și folderul Spam pentru e-mailurile viitoare.",
+  "already_msg": "Această adresă de e-mail este deja abonată la newsletter.",
+  "error_invalid": "Adresă de e-mail invalidă."
+}

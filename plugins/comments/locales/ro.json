@@ -1,0 +1,23 @@
+{
+  "title": "💬 Comentarii",
+  "no_comments": "Fii primul care lasă un comentariu la acest articol!",
+  "placeholder": "Scrie un comentariu respectuos...",
+  "submit_btn": "🚀 Publică Comentariul",
+  "login_prompt_title": "💬 Alătură-te conversației",
+  "login_prompt_desc": "Autentifică-te rapid cu contul tău de Telegram pentru a lăsa un comentariu.",
+  "comment_as": "Comentezi ca",
+  "logout": "Deconectare",
+  "delete_btn": "🗑️ Șterge",
+  "delete_confirm": "Ești sigur că vrei să ștergi acest comentariu?",
+  "sending": "Se trimite...",
+  "success_msg": "Comentariul tău a fost adăugat cu succes!",
+  "pending_msg": "Comentariul a fost trimis spre moderare.",
+  "error_empty": "Comentariul nu poate fi gol.",
+  "error_too_long": "Comentariul este prea lung (max 2000 caractere).",
+  "error_auth_required": "Trebuie să fii autentificat cu Telegram pentru a lăsa un comentariu.",
+  "error_pending_user": "Contul tău este în așteptare și nu poți posta încă.",
+  "error_cannot_delete": "Nu poți șterge acest comentariu.",
+  "reply_btn": "💬 Răspunde",
+  "cancel_reply": "Anulează",
+  "replying_to": "Răspunzi lui"
+}

@@ -1,0 +1,43 @@
+{# Minimal theme: navbar (simpler, no color scheme toggle) #}
+{%- set _path = request.url.path.rstrip('/') -%}
+<header class="navbar navbar-expand-lg border-bottom sticky-top" style="background: transparent;">
+  <div class="container-fluid px-4 py-3">
+    <a class="navbar-brand fw-semibold d-flex align-items-center" href="/">
+      {% if site_nav_icon_abs %}
+      <img class="me-2 rounded-1 flex-shrink-0" src="{{ site_nav_icon_abs|e }}" width="28" height="28" alt="" style="object-fit:contain" decoding="async" />
+      {% endif %}
+      <span class="text-body">{{ site_display_name() }}</span>
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-lg-auto mb-2 mb-lg-0 align-items-lg-center flex-wrap column-gap-1 row-gap-2 mt-3 mt-lg-0">
+        {% if nav_fixed_post_link %}
+        {%- set _fix = nav_fixed_post_link.href.rstrip('/') -%}
+        <li class="nav-item">
+          <a class="nav-link py-2 rounded px-2{% if _path == _fix %} active fw-semibold{% endif %}" href="{{ nav_fixed_post_link.href|e }}">{{ nav_fixed_post_link.label|e }}</a>
+        </li>
+        {% endif %}
+        <li class="nav-item d-flex flex-wrap align-items-center gap-2 ms-lg-2">
+          {% set _locale_options = get_available_locales() %}
+          {% if _locale_options|length > 1 %}
+          <select class="form-select form-select-sm w-auto" aria-label="Language" onchange="window.location = this.value">
+            {% for loc in _locale_options %}
+            {% set _category = request.query_params.get('category') or '' %}
+            {% set _lang_href = request.url.path ~ '?lang=' ~ loc.code %}
+            {% if _category %}
+            {% set _lang_href = _lang_href ~ '&category=' ~ _category|urlencode %}
+            {% endif %}
+            <option value="{{ _lang_href }}" {% if locale == loc.code %}selected{% endif %}>{{ loc.code|upper }}</option>
+            {% endfor %}
+          </select>
+          {% endif %}
+          <a class="btn btn-sm btn-outline-primary" href="/admin">{{ t_safe(translations, 'ui.admin') }}</a>
+        </li>
+        {% block navbar_extra %}{% endblock %}
+      </ul>
+    </div>
+  </div>
+</header>
+

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="py-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="h3 mb-1">Setări site</h1>
+      <p class="text-secondary mb-0">
+        Ajustezi <strong>numele și identitatea vizuală</strong> fără să schimbi codul — util când rulezi același container pentru alt blog.
+        Setările text + imagini se salvează în <code class="small">db/site_settings.json</code>.
+      </p>
+      <p class="text-secondary small mb-0">
+        <strong>URL public</strong> (pentru OG, TinyMCE, link-uri canonice) vine doar din <code>.env</code>
+        <code class="small">PUBLIC_SITE_URL</code>{% if env_public_url %}: <span class="text-body">{{ env_public_url }}</span>{% else %}: <em class="text-warning">nelsetat — se folosește hostul din request</em>{% endif %}.
+        Caddy decide domeniul; aici nu îl mai duplicăm.
+      </p>
+      <p class="text-secondary small mb-0">Token Telegram și <code>SESSION_SECRET</code> rămân în <code>.env</code>.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-secondary" href="/admin">Înapoi</a>
+    </div>
+  </div>
+
+  <form method="post" action="/admin/settings/save" class="mb-4">
+    <div class="row g-4 align-items-start">
+      <div class="col-12 col-lg-6">
+        <div class="card card-modern h-100">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Nume și descriere</h2>
+            <div class="mb-3">
+              <label class="form-label">Nume site (ro)</label>
+              <input class="form-control" type="text" name="site_display_name_ro" value="{{ settings_site_name_ro }}" placeholder="Ex: Camionagiul.club" autocomplete="off" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Nume site (en)</label>
+              <input class="form-control" type="text" name="site_display_name_en" value="{{ settings_site_name_en }}" placeholder="Ex: Camionagiul.club" autocomplete="off" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Nume site fallback (general)</label>
+              <input class="form-control" type="text" name="site_display_name" value="{{ settings_site_name }}" placeholder="Ex: Camionagiul.club" autocomplete="off" />
+              <div class="form-text">Folosit când nu există valoare pentru limba curentă.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Tagline (ro)</label>
+              <textarea class="form-control" name="site_tagline_ro" rows="2" placeholder="Scurtă descriere a site-ului">{{ settings_site_tagline_ro }}</textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Tagline (en)</label>
+              <textarea class="form-control" name="site_tagline_en" rows="2" placeholder="Short site description">{{ settings_site_tagline_en }}</textarea>
+            </div>
+            <div class="mb-0">
+              <label class="form-label">Tagline fallback (general)</label>
+              <textarea class="form-control" name="site_tagline" rows="2" placeholder="Scurtă descriere a site-ului">{{ settings_site_tagline }}</textarea>
+              <div class="form-text">Folosit când nu există valoare pentru limba curentă.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <div class="vstack gap-4">
+          <div class="card card-modern">
+            <div class="card-body">
+              <h2 class="h5 mb-3">URL-uri articole</h2>
+              <div class="mb-0">
+                <label class="form-label">Cale publică articole</label>
+                <select class="form-select" name="flat_post_urls">
+                  <option value="0" {% if not flat_post_urls %}selected{% endif %}>Clasic: <code>/blog/slug</code></option>
+                  <option value="1" {% if flat_post_urls %}selected{% endif %}>Scurt: <code>/slug</code> (fără prefix <code>/blog/</code>)</option>
+                </select>
+                <div class="form-text">În modul scurt, vechile linkuri <code>/blog/slug</code> redirecționează 301 către <code>/slug</code>. Linkul din meniu (articole fixe) se actualizează automat. Slugurile rezervate (ex. <code>admin</code>, <code>api</code>) nu pot fi articole la rădăcină.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-modern">
+            <div class="card-body">
+              <h2 class="h5 mb-3">Temă</h2>
+              <div class="mb-0">
+                <label class="form-label">Tema activă</label>
+                <select class="form-select" name="active_theme">
+                  {% for t in installed_themes %}
+                  <option value="{{ t.slug|e }}" {% if t.slug == active_theme_slug %}selected{% endif %}>
+                    {{ t.name }} — {{ t.author }}
+                  </option>
+                  {% endfor %}
+                </select>
+                <div class="form-text">Temele sunt încărcate din <code>/themes/&lt;nume&gt;/templates</code>. <code>default</code> folosește tema de bază (fallback).</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card card-modern">
+          <div class="card-body">
+            <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-start align-items-md-center">
+              <div>
+                <h2 class="h5 mb-1">Procesare imagini în articole</h2>
+                <p class="text-secondary small mb-0">Afectează imaginile încărcate în editor (dimensiuni/crop pentru OG).</p>
+              </div>
+            </div>
+            <hr class="my-3" />
+            <div class="row g-3">
+              <div class="col-12 col-md-4">
+                <label class="form-label">Mod procesare</label>
+                <select class="form-select" name="post_image_crop_og">
+                  <option value="0" {% if not post_image_crop_og %}selected{% endif %}>Thumbnail (păstrează raportul)</option>
+                  <option value="1" {% if post_image_crop_og %}selected{% endif %}>Crop centrat (raport OG)</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">Max edge (px)</label>
+                <input class="form-control" type="number" name="post_image_max_edge" min="1" value="{{ post_image_max_edge }}" />
+              </div>
+              <div class="col-12 col-md-2">
+                <label class="form-label">Lățime crop</label>
+                <input class="form-control" type="number" name="post_image_output_width" min="1" value="{{ post_image_output_width }}" />
+              </div>
+              <div class="col-12 col-md-2">
+                <label class="form-label">Înălțime crop</label>
+                <input class="form-control" type="number" name="post_image_output_height" min="1" value="{{ post_image_output_height }}" />
+              </div>
+            </div>
+            <div class="d-flex justify-content-end mt-4">
+              <button class="btn btn-primary" type="submit">Salvează setările</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <div class="card card-modern">
+    <div class="card-body">
+      <h2 class="h5 mb-3">Imagini — preview și upload</h2>
+      <p class="small text-secondary mb-4">Fișierele încărcate merg în <code>/static/images/site_uploads/</code> și actualizează automat calea în setări.</p>
+
+      {% macro image_block(label, key, path, empty_hint=None) %}
+      <div class="border rounded p-3 h-100">
+        <h3 class="h6 mb-3">{{ label }}</h3>
+        <div class="row g-3 align-items-center">
+          <div class="col-auto">
+            <div class="bg-light rounded d-flex align-items-center justify-content-center border" style="width: 88px; height: 88px; overflow: hidden;">
+              {% if path %}
+              <img src="{{ path }}" alt="" class="img-fluid" style="max-width: 88px; max-height: 88px; object-fit: contain;" loading="lazy" />
+              {% else %}
+              <span class="small text-secondary text-center px-1">{{ empty_hint or '—' }}</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col">
+            <p class="small text-break text-secondary mb-2">{% if path %}<code>{{ path }}</code>{% else %}<span class="text-muted">{{ empty_hint or 'Nicio cale în setări — vezi .env sau default.' }}</span>{% endif %}</p>
+            <form method="post" action="/admin/settings/upload-image" enctype="multipart/form-data" class="d-flex flex-wrap gap-2 align-items-center">
+              <input type="hidden" name="setting_key" value="{{ key }}" />
+              <input class="form-control form-control-sm" type="file" name="file" accept="image/*,.ico" style="max-width: 220px;" required />
+              <button class="btn btn-sm btn-primary" type="submit">Încarcă</button>
+            </form>
+            <form method="post" action="/admin/settings/clear-image" class="mt-2">
+              <input type="hidden" name="setting_key" value="{{ key }}" />
+              <button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Ștergi imaginea din setări? Fișierul din site_uploads este șters de pe disc; calea revine la .env sau default.');">Șterge din setări</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endmacro %}
+
+      <div class="row g-4">
+        <div class="col-12 col-lg-6">
+          {{ image_block("Favicon", "SITE_FAVICON_PATH", site_favicon_path) }}
+        </div>
+        <div class="col-12 col-lg-6">
+          {{ image_block("Imagine brand", "SITE_BRAND_IMAGE_PATH", site_brand_image_path) }}
+        </div>
+        <div class="col-12 col-lg-6">
+          {{ image_block("Icon navbar și hero", "SITE_NAV_ICON_PATH", site_nav_icon_path, "SVG implicit (camion)") }}
+        </div>
+        <div class="col-12 col-lg-6">
+          {{ image_block("Card Open Graph", "OG_CARD_IMAGE_PATH", og_card_image_path) }}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

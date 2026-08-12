@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5 text-center" style="max-width: 600px;">
+  <div class="card shadow border-0 p-4 p-md-5 rounded-4">
+    <div class="mb-4">
+      <div class="bg-warning bg-opacity-25 text-warning d-inline-flex p-3 rounded-circle mb-3">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+        </svg>
+      </div>
+      <h2 class="fw-bold">Contul tău este în așteptare</h2>
+      <p class="text-secondary lead mt-2">
+        Te-ai conectat cu succes prin Telegram! Un administrator trebuie să-ți aprobe contul și să-ți atribuie un rol (Autor, Editor sau Admin) înainte de a putea accesa panoul de control.
+      </p>
+    </div>
+    <div class="d-flex justify-content-center gap-3">
+      <a href="/" class="btn btn-outline-secondary px-4">Prima Pagină</a>
+      <a href="/admin/logout" class="btn btn-danger px-4">Deconectare</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

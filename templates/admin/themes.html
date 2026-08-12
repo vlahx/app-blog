@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="py-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="h3 mb-1">Teme</h1>
+      <p class="text-secondary mb-0">Încarci o temă ca arhivă <code>.zip</code> (templates + CSS).</p>
+      <p class="text-secondary small mb-0">Temele se instalează în <code>/themes/&lt;slug&gt;/</code> și <code>/static/themes/&lt;slug&gt;/</code>.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-secondary" href="/admin">Înapoi</a>
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+
+  {% if message %}
+  <div class="alert alert-success">{{ message }}</div>
+  {% endif %}
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h2 class="h5 mb-3">Upload temă</h2>
+      <form method="post" action="/admin/themes/upload" enctype="multipart/form-data" class="d-flex flex-column gap-3">
+        <div class="alert alert-info mb-0">
+          Format recomandat: zip-ul conține <code>themes/&lt;slug&gt;/</code> cu <code>theme.json</code> și/sau <code>templates/</code>,
+          plus (opțional) <code>static/themes/&lt;slug&gt;/theme.css</code>.
+          <div class="small mt-2">
+            Alternativ, acceptăm și un singur folder la rădăcină: <code>&lt;slug&gt;/</code> cu <code>theme.json</code>, <code>templates/</code> și (opțional) <code>theme.css</code>.
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Arhivă .zip</label>
+          <input class="form-control" type="file" name="file" accept=".zip,application/zip" required />
+          <div class="form-text">
+            Acceptăm: <code>themes/&lt;slug&gt;/theme.json</code> și/sau <code>themes/&lt;slug&gt;/templates/</code>. Opțional: <code>static/themes/&lt;slug&gt;/theme.css</code>.
+          </div>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="1" id="overwrite" name="overwrite">
+          <label class="form-check-label" for="overwrite">Suprascrie dacă există deja tema</label>
+        </div>
+        <div>
+          <button class="btn btn-primary" type="submit">Instalează</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="h5 mb-3">Teme instalate</h2>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Slug</th>
+              <th>Nume</th>
+              <th>Autor</th>
+              <th>Activă</th>
+              <th class="text-end">Acțiuni</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in installed_themes %}
+            <tr>
+              <td><code>{{ t.slug }}</code></td>
+              <td>{{ t.name }}</td>
+              <td>{{ t.author }}</td>
+              <td>
+                {% if t.slug == active_theme_slug %}
+                  <span class="badge bg-success">Da</span>
+                {% else %}
+                  <span class="badge bg-secondary">Nu</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                {% if t.slug != "default" %}
+                <form method="post" action="/admin/themes/delete" class="d-inline">
+                  <input type="hidden" name="slug" value="{{ t.slug|e }}" />
+                  <button class="btn btn-sm btn-outline-danger"
+                          type="submit"
+                          onclick="return confirm('Ștergi tema {{ t.slug }}? Se vor șterge și fișierele din /themes și /static/themes.');">
+                    Șterge
+                  </button>
+                </form>
+                {% else %}
+                  <span class="text-secondary small">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="text-secondary small mt-3 mb-0">Schimbarea temei se face din <a href="/admin/settings">Setări</a>.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+

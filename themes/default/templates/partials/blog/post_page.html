@@ -1,0 +1,102 @@
+{# Default theme: post page body. Expects `post`, `share_url`. #}
+<div class="container-fluid px-4 py-5">
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="/" class="text-decoration-none">
+          <svg class="me-1" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+          </svg>
+          {{ t_safe(translations, 'home.breadcrumb.home') }}
+        </a>
+      </li>
+      <li class="breadcrumb-item active" aria-current="page">{{ post.title }}</li>
+    </ol>
+  </nav>
+
+  <div class="row mb-5">
+    <div class="col-12">
+      <div class="text-center mb-4">
+        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+          {% if post.published_at %}
+            <span class="badge bg-primary">
+              <svg class="me-1" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/>
+              </svg>
+              {{ post.published_at_utc.strftime("%d %B %Y, %H:%M") }}
+            </span>
+          {% endif %}
+          {% if post.author_name %}
+            <a href="/?author={{ (post.author_username or post.author_name)|urlencode }}" class="badge bg-secondary text-decoration-none d-inline-flex align-items-center gap-1 px-2 py-1" title="Toate articolele scrise de {{ post.author_name }}">
+              {% if post.author_avatar %}
+                <img src="{{ post.author_avatar }}" width="14" height="14" class="rounded-circle me-1" alt="" style="object-fit:cover;">
+              {% else %}
+                <span class="me-1">✍️</span>
+              {% endif %}
+              <span>{{ post.author_name }}</span>
+            </a>
+          {% endif %}
+          {% if post.category %}
+            <a href="/?category={{ post.category|urlencode }}" class="badge bg-success text-decoration-none px-2 py-1">{{ post.category }}</a>
+          {% endif %}
+          {% if post.draft %}
+            <span class="badge bg-warning text-dark">Draft</span>
+          {% endif %}
+          {% if post_header_meta_html %}
+            {{ post_header_meta_html | safe }}
+          {% endif %}
+        </div>
+        <h1 class="display-5 fw-bold text-primary mb-4">{{ post.title }}</h1>
+        {% if post.excerpt %}
+          <p class="lead text-secondary mb-4" style="max-width: 700px; margin: 0 auto;">{{ post.excerpt }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if post.hero_image_url %}
+  <div class="row justify-content-center mb-5">
+    <div class="col-lg-8 col-xl-7">
+      <figure class="post-hero shadow-sm">
+        <img src="{{ post.hero_image_url }}" alt="{{ post.title }}" loading="lazy" decoding="async" />
+      </figure>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row justify-content-center mb-5">
+    <div class="col-lg-8 col-xl-7">
+      <div class="card bg-body-tertiary border-0 shadow-sm">
+        <div class="card-body p-4 p-md-5 post-body content">
+          {{ post.content_html | safe }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if post_article_footer_html %}
+  <div class="row justify-content-center mb-5">
+    <div class="col-lg-8 col-xl-7">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+          {{ post_article_footer_html | safe }}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+      <div class="d-flex justify-content-start">
+        <a href="/" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+          </svg>
+          <span>{{ t_safe(translations, 'home.postPage.backToBlog') or 'Înapoi la Jurnal' }}</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+

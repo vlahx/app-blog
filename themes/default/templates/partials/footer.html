@@ -1,0 +1,113 @@
+{# Default theme: modern 4-column responsive footer with Newsletter in Col 1 #}
+<footer class="footer mt-auto bg-body-tertiary border-top py-5">
+  <div class="container px-4">
+    <div class="row g-4 mb-4">
+      <!-- Col 1: Brand, Tagline & Newsletter Form -->
+      <div class="col-12 col-md-6 col-lg-3" id="footer-newsletter-widget">
+        <div class="d-flex align-items-center mb-2">
+          {% if site_nav_icon_abs %}
+          <img class="me-2 rounded-1 flex-shrink-0" src="{{ site_nav_icon_abs|e }}" width="28" height="28" alt="" style="object-fit:contain" loading="lazy" decoding="async" />
+          {% else %}
+          <svg class="me-2 text-primary flex-shrink-0" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/>
+          </svg>
+          {% endif %}
+          <h5 class="fw-bold mb-0 text-body">{{ site_display_name() }}</h5>
+        </div>
+        <p class="text-secondary small mb-3">{{ site_tagline() }}</p>
+
+        <h6 class="fw-bold mb-2 text-body" style="font-size: 0.9rem;">📧 {{ t_safe(translations, 'newsletter.title') or 'Abonare Newsletter' }}</h6>
+        <form id="footer-newsletter-form" onsubmit="submitFooterNewsletter(event)">
+          <div class="input-group input-group-sm mb-2">
+            <input type="email" id="footer-newsletter-email" class="form-control" placeholder="adresa@email.com" required />
+            <button type="submit" id="footer-newsletter-btn" class="btn btn-primary fw-semibold px-3">OK</button>
+          </div>
+          <div id="footer-newsletter-status" class="small" style="font-size: 0.8rem;"></div>
+        </form>
+      </div>
+
+      <!-- Col 2: Navigare Rapidă -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <h6 class="fw-bold mb-3 text-body">{{ t_safe(translations, 'footer.quickNav') or 'Navigare Rapidă' }}</h6>
+        <ul class="list-unstyled mb-0 small">
+          <li class="mb-2">
+            <a href="/" class="text-secondary text-decoration-none hover-primary">{{ t_safe(translations, 'footer.home') or '🏠 Acasă' }}</a>
+          </li>
+          <li class="mb-2">
+            <a href="/#categories" class="text-secondary text-decoration-none hover-primary">{{ t_safe(translations, 'footer.categories') or '📁 Categorii' }}</a>
+          </li>
+          <li class="mb-2">
+            <a href="#footer-newsletter-widget" class="text-secondary text-decoration-none hover-primary">{{ t_safe(translations, 'footer.newsletter') or '📧 Newsletter' }}</a>
+          </li>
+          <li>
+            <a href="/admin" class="text-secondary text-decoration-none hover-primary">{{ t_safe(translations, 'footer.admin') or '⚡ Panou Admin' }}</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Col 3: Info & Temă -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <h6 class="fw-bold mb-3 text-body">{{ t_safe(translations, 'footer.aboutBlog') or 'Despre Blog' }}</h6>
+        {% set _t = active_theme_info() %}
+        <p class="text-secondary small mb-2">
+          {{ t_safe(translations, 'footer.theme') or 'Temă' }}: <strong>{{ _t.name|e }}</strong> (v{{ _t.version|default("1.0") }})
+        </p>
+        <p class="text-secondary small mb-0">
+          Versiune aplicație: <strong>2.0 Core</strong>
+        </p>
+      </div>
+
+      <!-- Col 4: Comunitate & Jurnal -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <h6 class="fw-bold mb-3 text-body">{{ t_safe(translations, 'footer.communityTitle') or 'Comunitate' }}</h6>
+        <p class="text-secondary small mb-0">
+          🚛 <strong>{{ site_display_name() }}</strong> — {{ t_safe(translations, 'footer.communityText') or 'Jurnal de drum, articole tehnice și povești din comunitatea de șoferi și pasionați.' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Bottom Copyright Divider -->
+    <div class="border-top pt-4 text-center">
+      <p class="text-secondary small mb-0">
+        © {{ now().strftime("%Y") }} <strong>{{ site_display_name() }}</strong>. {{ t_safe(translations, 'footer.rights') or 'Toate drepturile rezervate.' }}
+      </p>
+    </div>
+  </div>
+</footer>
+
+<script>
+async function submitFooterNewsletter(e) {
+    e.preventDefault();
+    const emailInput = document.getElementById('footer-newsletter-email');
+    const btn = document.getElementById('footer-newsletter-btn');
+    const status = document.getElementById('footer-newsletter-status');
+
+    const email = (emailInput.value || '').trim();
+    if (!email) return;
+
+    btn.disabled = true;
+    status.innerHTML = '<span class="text-muted"><span class="spinner-border spinner-border-sm me-1"></span> Trimitem...</span>';
+
+    const formData = new FormData();
+    formData.append('email', email);
+
+    try {
+        const res = await fetch('/newsletter/subscribe', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await res.json();
+        if (data.ok) {
+            emailInput.value = '';
+            status.innerHTML = '<span class="text-success fw-semibold">✅ ' + (data.msg || 'Abonat cu succes!') + '</span>';
+        } else {
+            status.innerHTML = '<span class="text-danger fw-semibold">❌ ' + (data.err || 'Eroare la abonare') + '</span>';
+            btn.disabled = false;
+        }
+    } catch(err) {
+        status.innerHTML = '<span class="text-danger fw-semibold">❌ Eroare de rețea.</span>';
+        btn.disabled = false;
+    }
+}
+</script>

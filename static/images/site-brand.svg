@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Camionagiul">
+  <rect width="512" height="512" rx="96" fill="#7c5cff"/>
+  <path fill="#ffffff" d="M128 352h256v64H128zm32-192h64v96h-64zm192 0h64v96h-64zm-96-32c-53 0-96 43-96 96v64h256v-64c0-53-43-96-96-96h-64z"/>
+</svg>

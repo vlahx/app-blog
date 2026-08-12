@@ -1,0 +1,124 @@
+from __future__ import annotations
+
+from collections.abc import Generator
+from pathlib import Path
+
+from sqlalchemy import create_engine, event, text
+from sqlalchemy.orm import Session, sessionmaker
+
+from app.models.db_models import Base
+from app.core.posts_fs import list_posts as list_posts_fs
+from app.models.db_models import User, Post
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DB_DIR = PROJECT_ROOT / "db"
+DB_DIR.mkdir(parents=True, exist_ok=True)
+DB_PATH = DB_DIR / "app.db"
+
+
+engine = create_engine(
+    f"sqlite:///{DB_PATH}",
+    connect_args={"check_same_thread": False},
+    future=True,
+)
+
+
+@event.listens_for(engine, "connect")
+def _sqlite_pragma(dbapi_conn, _connection_record) -> None:
+    cur = dbapi_conn.cursor()
+    cur.execute("PRAGMA foreign_keys=ON")
+    cur.close()
+
+
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, class_=Session, future=True)
+
+
+def init_db() -> None:
+    Base.metadata.create_all(bind=engine)
+
+    with SessionLocal() as db:
+        # Ensure old databases gain the new category column.
+        result = db.execute(text("PRAGMA table_info(posts)"))
+        columns = [row[1] for row in result.fetchall()]
+        if "category" not in columns:
+            try:
+                db.execute(text("ALTER TABLE posts ADD COLUMN category VARCHAR(80)"))
+                db.commit()
+            except Exception:
+                db.rollback()
+        if "hero_image_url" not in columns:
+            try:
+                db.execute(text("ALTER TABLE posts ADD COLUMN hero_image_url VARCHAR(255)"))
+                db.commit()
+            except Exception:
+                db.rollback()
+
+    with SessionLocal() as db:
+        if db.execute(
+            text(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='categories' LIMIT 1"
+            )
+        ).scalar():
+            cols = [
+                row[1]
+                for row in db.execute(text("PRAGMA table_info(categories)")).fetchall()
+            ]
+            if "parent_id" not in cols:
+                try:
+                    db.execute(text("ALTER TABLE categories ADD COLUMN parent_id INTEGER"))
+                    db.commit()
+                except Exception:
+                    db.rollback()
+
+    # One-time seed from old JSON posts if the DB is empty.
+    with SessionLocal() as db:
+        posts_count = db.query(Post).count()
+        if posts_count > 0:
+            return
+
+        try:
+            fs_posts = list_posts_fs(include_drafts=True, base_dir=PROJECT_ROOT / "content/posts")
+        except Exception:
+            fs_posts = []
+
+        if not fs_posts:
+            return
+
+        # Create a placeholder author so foreign key is satisfied.
+        placeholder = db.query(User).filter(User.provider == "seed", User.oauth_id == "0").first()
+        if placeholder is None:
+            from datetime import datetime, timezone
+
+            now = datetime.now(timezone.utc)
+            placeholder = User(provider="seed", oauth_id="0", created_at=now)
+            db.add(placeholder)
+            db.commit()
+            db.refresh(placeholder)
+
+        for p in fs_posts:
+            db_post = Post(
+                slug=p.slug,
+                author_id=placeholder.id,
+                title=p.title,
+                excerpt=p.excerpt,
+                content_html=p.content_html,
+                image_url=None,
+                images_url_json=None,
+                draft=bool(p.draft),
+                published_at=p.published_at,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            )
+            db.add(db_post)
+
+        db.commit()
+
+
+def get_db() -> Generator[Session, None, None]:
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+

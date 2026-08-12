@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="container py-5 text-center">
+  <div class="mx-auto" style="max-width: 640px;">
+    <div class="display-5 fw-semibold mb-3">404</div>
+    <p class="text-secondary mb-3">{{ t_safe(translations, 'blog.notFound.message') }} <code>{{ slug }}</code></p>
+    <a class="btn btn-primary" href="/">{{ t_safe(translations, 'blog.notFound.backToBlog') }}</a>
+  </div>
+</section>
+{% endblock %}
+

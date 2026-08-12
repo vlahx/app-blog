@@ -1,0 +1,25 @@
+services:
+  blog:
+    build: .
+    image: fastapi-blog:3.11-bookworm
+    container_name: app.blog
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_PORT: "8000"
+    volumes:
+      - ./app:/app/app
+      - ./templates:/app/templates
+      - ./db:/app/db
+      - ./static:/app/static
+      - ./themes:/app/themes
+      - ./plugins:/app/plugins
+      - ./main.py:/app/main.py
+    networks:       
+      s366:
+        ipv4_address: 172.27.0.16
+
+networks:
+  s366:
+    external: true

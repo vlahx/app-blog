@@ -1,0 +1,6 @@
+{
+  "id": "robots",
+  "name": "robots.txt",
+  "description": "Servește /robots.txt din fișierul din rădăcina proiectului sau fallback minimal.",
+  "version": "1.0.0"
+}

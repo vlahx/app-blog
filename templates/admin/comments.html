@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1">💬 Moderare Comentarii</h1>
+      <p class="text-secondary mb-0">Gestionează comentariile publicate de cititori pe articole.</p>
+    </div>
+    <a href="/admin" class="btn btn-outline-secondary">← Înapoi în Admin</a>
+  </div>
+
+  {% if request.query_params.get("msg") %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      {{ request.query_params.get("msg") }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endif %}
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-body-tertiary d-flex justify-content-between align-items-center py-3">
+      <span class="fw-bold">Listează după status</span>
+      <div class="btn-group btn-group-sm">
+        <a href="/admin/comments" class="btn btn-outline-primary {% if selected_status == 'all' %}active{% endif %}">Toate</a>
+        <a href="/admin/comments?status=approved" class="btn btn-outline-success {% if selected_status == 'approved' %}active{% endif %}">Aprobate</a>
+        <a href="/admin/comments?status=pending" class="btn btn-outline-warning {% if selected_status == 'pending' %}active{% endif %}">În Așteptare</a>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Autor</th>
+            <th>Articol / Slug</th>
+            <th>Comentariu</th>
+            <th class="text-center">Status</th>
+            <th class="text-end">Acțiuni & Dată</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in comments %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                {% if c.user_avatar %}
+                  <img src="{{ c.user_avatar }}" alt="{{ c.user_name }}" class="rounded-circle" width="32" height="32">
+                {% else %}
+                  <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width:32px;height:32px;">
+                    {{ (c.user_name or 'U')[0]|upper }}
+                  </div>
+                {% endif %}
+                <div>
+                  <div class="fw-bold small">{{ c.user_name }}</div>
+                  <div class="text-secondary small">User ID: {{ c.user_id }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <a href="/blog/{{ c.post_slug }}" target="_blank" class="badge bg-light text-dark border text-decoration-none">
+                /{{ c.post_slug }} 🔗
+              </a>
+              {% if c.parent_id %}
+                <span class="badge bg-secondary d-block mt-1">↳ Răspuns la #{{ c.parent_id }}</span>
+              {% endif %}
+            </td>
+            <td style="max-width: 350px;">
+              <div class="text-body text-break">{{ c.content }}</div>
+            </td>
+            <td class="text-center">
+              {% if c.status == 'approved' %}
+                <span class="badge bg-success">Aprobat</span>
+              {% elif c.status == 'pending' %}
+                <span class="badge bg-warning text-dark">În Așteptare</span>
+              {% else %}
+                <span class="badge bg-danger">Inactiv</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <div class="d-flex align-items-center justify-content-end gap-2">
+                <span class="text-secondary small me-2">{{ c.created_at }}</span>
+                {% if c.status == 'pending' %}
+                <form action="/admin/comments/status" method="post" class="d-inline">
+                  <input type="hidden" name="comment_id" value="{{ c.id }}" />
+                  <input type="hidden" name="new_status" value="approved" />
+                  <button type="submit" class="btn btn-sm btn-success py-0 px-2" title="Aprobă comentariul">✓ Aprobă</button>
+                </form>
+                {% endif %}
+                <form action="/admin/comments/delete" method="post" class="d-inline" onsubmit="return confirm('Ștergi acest comentariu?')">
+                  <input type="hidden" name="comment_id" value="{{ c.id }}" />
+                  <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="Șterge comentariu">🗑️ Șterge</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" class="text-center text-muted py-4">Nu există comentarii de afișat.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

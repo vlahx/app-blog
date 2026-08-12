@@ -1,0 +1,30 @@
+# Robots.txt — Camionagiul Club
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /shop/checkout
+Disallow: /shop/download/
+
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /shop/checkout
+Disallow: /shop/download/
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Facebot
+Allow: /
+
+Sitemap: https://camionagiul.club/sitemap.xml

@@ -1,0 +1,23 @@
+{
+  "name": "Comentarii Articole",
+  "description": "Sistem de comentarii la articole pentru cititori autentificați cu Telegram.",
+  "version": "1.0.0",
+  "author": "Camionagiul",
+  "permissions": ["template_hooks", "database"],
+  "settings": {
+    "auto_approve": {
+      "type": "checkbox",
+      "label": "Aprobare automată comentarii",
+      "description": "Dacă e bifat, comentariile apar direct pe site fără a necesita moderare prealabilă în Admin.",
+      "default": true,
+      "required": false
+    },
+    "allow_author_delete": {
+      "type": "checkbox",
+      "label": "Permite autorului ștergerea propriilor comentarii",
+      "description": "Permite utilizatorilor logați să își șteargă propriile comentarii de pe articole.",
+      "default": true,
+      "required": false
+    }
+  }
+}
