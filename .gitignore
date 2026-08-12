@@ -4,3 +4,17 @@ __pycache__/
 *.pyc
 .DS_Store
 *.swp
+
+# Baza de date (se creează automat la inițializare)
+db/
+*.db
+*.sqlite
+*.sqlite3
+
+# Zona de plugin-uri (gestionate separat)
+plugins/*
+!plugins/.gitkeep
+
+# Upload-uri media și fișiere dinamic încărcate
+static/uploads/*
+!static/uploads/.gitkeep

@@ -1,6 +1,0 @@
-{
-  "id": "sitemap",
-  "name": "Sitemap XML",
-  "description": "Generează /sitemap.xml cu pagina principală și articolele publicate (URL-uri canonice).",
-  "version": "1.0.0"
-}
