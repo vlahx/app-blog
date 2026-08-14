@@ -12,6 +12,7 @@ APP_DIR = PROJECT_ROOT / "app"
 LOCALES_DIR = APP_DIR / "locales"
 
 DEFAULT_LOCALE = "en"
+SUPPORTED_LOCALES = {"en", "ro"}
 
 _IN_MEMORY_TRANSLATIONS: dict[str, dict[str, Any]] = {}
 _IN_MEMORY_LOCALES_META: dict[str, dict[str, Any]] = {}

@@ -23,13 +23,13 @@ from app.core.i18n import (
     DEFAULT_LOCALE,
     SUPPORTED_LOCALES,
     build_context,
+    get_available_locales,
     get_translation,
     get_translations,
     resolve_locale,
     set_locale_cookie,
 )
 from app.core.themes import active_theme_info
-from app.core.translation_db import get_available_locales
 from app.core.plugin_manager import is_plugin_enabled
 from app.utils.open_graph import public_site_origin
 

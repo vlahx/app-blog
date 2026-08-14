@@ -66,15 +66,9 @@ from app.core.process_restart import sigterm_self_after_delay
 from app.core.site_uploads import unlink_site_upload_file
 from app.core.templates import render_template
 from app.core.themes import list_installed_themes, set_active_theme
-from app.core.translation_db import (
+from app.core.i18n import (
     DEFAULT_LOCALE,
-    delete_translation_entry,
-    ensure_default_locale,
     get_available_locales,
-    list_translation_catalog,
-    seed_locale_from_default,
-    set_translation_entry,
-    set_translation_values,
 )
 from app.utils.auth import login_required, role_required
 from app.utils.db import get_db
