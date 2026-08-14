@@ -10,11 +10,44 @@ logger = logging.getLogger(__name__)
 
 _post_article_footer: list[tuple[int, Callable[[Any, Request], str]]] = []
 _post_header_meta: list[tuple[int, Callable[[Any, Request], str]]] = []
+_admin_nav: list[tuple[int, Callable[[Request], str]]] = []
+_admin_top_bar: list[tuple[int, Callable[[Request], str]]] = []
+
+_footer_col1: list[tuple[int, Callable[[Request], str]]] = []
+_footer_col2: list[tuple[int, Callable[[Request], str]]] = []
+_footer_col3: list[tuple[int, Callable[[Request], str]]] = []
+_footer_col4: list[tuple[int, Callable[[Request], str]]] = []
+_footer_bottom: list[tuple[int, Callable[[Request], str]]] = []
+_navbar_link: list[tuple[int, Callable[[Request], str]]] = []
 
 
 def clear_post_article_footers() -> None:
     _post_article_footer.clear()
     _post_header_meta.clear()
+    _admin_nav.clear()
+    _admin_top_bar.clear()
+    _footer_col1.clear()
+    _footer_col2.clear()
+    _footer_col3.clear()
+    _footer_col4.clear()
+    _footer_bottom.clear()
+    _navbar_link.clear()
+
+
+def register_navbar_link(renderer: Callable[[Request], str], *, order: int = 100) -> None:
+    _navbar_link.append((order, renderer))
+    _navbar_link.sort(key=lambda t: t[0])
+
+
+def render_navbar_links(request: Request) -> str:
+    parts = []
+    for _, fn in _navbar_link:
+        try:
+            c = (fn(request) or "").strip()
+            if c: parts.append(c)
+        except Exception:
+            logger.exception("navbar_link renderer failed")
+    return "\n".join(parts)
 
 
 def register_post_article_footer(
@@ -57,3 +90,117 @@ def render_post_header_metas(post: Any, request: Request) -> str:
         except Exception:
             logger.exception("post_header_meta renderer failed")
     return " ".join(parts)
+
+
+def register_admin_nav(
+    renderer: Callable[[Request], str],
+    *,
+    order: int = 100,
+) -> None:
+    _admin_nav.append((order, renderer))
+    _admin_nav.sort(key=lambda t: t[0])
+
+
+def render_admin_navs(request: Request) -> str:
+    parts: list[str] = []
+    for _, fn in _admin_nav:
+        try:
+            chunk = (fn(request) or "").strip()
+            if chunk:
+                parts.append(chunk)
+        except Exception:
+            logger.exception("admin_nav renderer failed")
+    return "\n".join(parts)
+
+
+def register_admin_top_bar(
+    renderer: Callable[[Request], str],
+    *,
+    order: int = 100,
+) -> None:
+    _admin_top_bar.append((order, renderer))
+    _admin_top_bar.sort(key=lambda t: t[0])
+
+
+def render_admin_top_bars(request: Request) -> str:
+    parts: list[str] = []
+    for _, fn in _admin_top_bar:
+        try:
+            chunk = (fn(request) or "").strip()
+            if chunk:
+                parts.append(chunk)
+        except Exception:
+            logger.exception("admin_top_bar renderer failed")
+    return "\n".join(parts)
+
+
+# Footer Column Hooks
+def register_footer_col1(renderer: Callable[[Request], str], *, order: int = 100) -> None:
+    _footer_col1.append((order, renderer))
+    _footer_col1.sort(key=lambda t: t[0])
+
+def render_footer_col1(request: Request) -> str:
+    parts = []
+    for _, fn in _footer_col1:
+        try:
+            c = (fn(request) or "").strip()
+            if c: parts.append(c)
+        except Exception:
+            logger.exception("footer_col1 renderer failed")
+    return "\n".join(parts)
+
+def register_footer_col2(renderer: Callable[[Request], str], *, order: int = 100) -> None:
+    _footer_col2.append((order, renderer))
+    _footer_col2.sort(key=lambda t: t[0])
+
+def render_footer_col2(request: Request) -> str:
+    parts = []
+    for _, fn in _footer_col2:
+        try:
+            c = (fn(request) or "").strip()
+            if c: parts.append(c)
+        except Exception:
+            logger.exception("footer_col2 renderer failed")
+    return "\n".join(parts)
+
+def register_footer_col3(renderer: Callable[[Request], str], *, order: int = 100) -> None:
+    _footer_col3.append((order, renderer))
+    _footer_col3.sort(key=lambda t: t[0])
+
+def render_footer_col3(request: Request) -> str:
+    parts = []
+    for _, fn in _footer_col3:
+        try:
+            c = (fn(request) or "").strip()
+            if c: parts.append(c)
+        except Exception:
+            logger.exception("footer_col3 renderer failed")
+    return "\n".join(parts)
+
+def register_footer_col4(renderer: Callable[[Request], str], *, order: int = 100) -> None:
+    _footer_col4.append((order, renderer))
+    _footer_col4.sort(key=lambda t: t[0])
+
+def render_footer_col4(request: Request) -> str:
+    parts = []
+    for _, fn in _footer_col4:
+        try:
+            c = (fn(request) or "").strip()
+            if c: parts.append(c)
+        except Exception:
+            logger.exception("footer_col4 renderer failed")
+    return "\n".join(parts)
+
+def register_footer_bottom(renderer: Callable[[Request], str], *, order: int = 100) -> None:
+    _footer_bottom.append((order, renderer))
+    _footer_bottom.sort(key=lambda t: t[0])
+
+def render_footer_bottom(request: Request) -> str:
+    parts = []
+    for _, fn in _footer_bottom:
+        try:
+            c = (fn(request) or "").strip()
+            if c: parts.append(c)
+        except Exception:
+            logger.exception("footer_bottom renderer failed")
+    return "\n".join(parts)

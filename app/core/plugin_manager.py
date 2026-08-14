@@ -8,13 +8,13 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI
 
-from app.core.config import PROJECT_ROOT
+from app.core.config import APP_DIR, PROJECT_ROOT
 from app.models.db_models import Plugin, PluginSetting
 from app.utils.db import SessionLocal
 
 logger = logging.getLogger(__name__)
 
-PLUGINS_DIR = PROJECT_ROOT / "plugins"
+PLUGINS_DIR = APP_DIR / "plugins"
 
 
 class PluginMetadata:
@@ -194,7 +194,7 @@ def load_plugins_with_metadata(app: FastAPI) -> None:
         return
     
     for plugin_dir in sorted(PLUGINS_DIR.iterdir()):
-        if not plugin_dir.is_dir() or plugin_dir.name.startswith(("_", ".")):
+        if not plugin_dir.is_dir() or plugin_dir.name.startswith(("_", ".")) or "to_del" in plugin_dir.name or "bak" in plugin_dir.name:
             continue
         
         plugin_file = plugin_dir / "plugin.py"

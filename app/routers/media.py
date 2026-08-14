@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.config import PROJECT_ROOT
+from app.core.config import APP_DIR, PROJECT_ROOT
 from app.models.db_models import MediaFile, User
 from app.utils.auth import get_current_user_from_request, login_required, user_has_role
 from app.utils.db import get_db
@@ -166,7 +166,7 @@ async def api_upload_media(
     if cat_clean not in ("blog", "shop", "general"):
         cat_clean = "general"
 
-    user_media_dir = PROJECT_ROOT / "static" / "uploads" / "users" / str(user.id) / cat_clean
+    user_media_dir = APP_DIR / "static" / "uploads" / "users" / str(user.id) / cat_clean
     user_media_dir.mkdir(parents=True, exist_ok=True)
 
     saved_records = []
@@ -184,7 +184,10 @@ async def api_upload_media(
         with dest_file.open("wb") as buffer:
             shutil.copyfileobj(uf.file, buffer)
 
-        process_and_optimize_image(dest_file)
+        if cat_clean in ("blog", "shop"):
+            crop_and_resize_image(dest_file, target_w=1200, target_h=630)
+        else:
+            process_and_optimize_image(dest_file)
 
         file_size = dest_file.stat().st_size
         rel_url = f"/static/uploads/users/{user.id}/{cat_clean}/{safe_filename}"
@@ -242,7 +245,7 @@ async def api_delete_media(
 
     if media.file_url and media.file_url.startswith("/static/"):
         rel_p = media.file_url.lstrip("/")
-        phys = PROJECT_ROOT / rel_p
+        phys = APP_DIR / rel_p
         if phys.is_file():
             try:
                 phys.unlink()
@@ -285,7 +288,7 @@ async def api_crop_media(
         target_h = max(100, min(3840, height))
 
     rel_p = media.file_url.lstrip("/")
-    phys = PROJECT_ROOT / rel_p
+    phys = APP_DIR / rel_p
     if not phys.is_file():
         return JSONResponse({"error": "Physical file missing"}, status_code=404)
 

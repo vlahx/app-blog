@@ -1,5 +1,6 @@
 .venv/
 venv/
+*_to_del
 __pycache__/
 *.pyc
 .DS_Store
@@ -11,20 +12,35 @@ db/
 *.sqlite
 *.sqlite3
 
-# Documentație internă de dezvoltare
-docs/
+# Documentație de dezvoltare
+!docs
+!docs/**
 
-# Teme (păstrăm doar tema minimal în Git)
-themes/*
-!themes/minimal
-!themes/minimal/**
+# Teme (doar tema minimal este integrată în Core)
+app/themes/*
+!app/themes/minimal
+!app/themes/minimal/**
 
-# Zona de plugin-uri (gestionate separat)
-plugins/*
-!plugins/.gitkeep
+app/static/themes/*
+!app/static/themes/minimal
+!app/static/themes/minimal/**
+
+# Plugin-uri (aplicația este cheală în Git; plugin-urile sunt păstrate ca arhive în /zips)
+app/plugins/*
+!app/plugins/.gitkeep
+
+# Arhive ZIP cu plugin-uri și teme gata de instalare
+!zips
+!zips/**
 
 # Fără nicio poză sau fișier media (static/images și static/uploads)
-static/images/*
-!static/images/.gitkeep
-static/uploads/*
-!static/uploads/.gitkeep
+app/static/images/*
+!app/static/images/.gitkeep
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+
+# Temporary backup folders
+*_old*/
+*_bak*/
+*_root_old/
+db_old_root/

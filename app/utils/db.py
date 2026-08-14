@@ -28,6 +28,8 @@ engine = create_engine(
 def _sqlite_pragma(dbapi_conn, _connection_record) -> None:
     cur = dbapi_conn.cursor()
     cur.execute("PRAGMA foreign_keys=ON")
+    cur.execute("PRAGMA journal_mode=WAL")
+    cur.execute("PRAGMA synchronous=NORMAL")
     cur.close()
 
 

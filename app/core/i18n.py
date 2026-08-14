@@ -16,13 +16,13 @@ from app.core.translation_db import (
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+APP_DIR = PROJECT_ROOT / "app"
 TRANSLATIONS_DIR = PROJECT_ROOT / "translations"
 SUPPORTED_LOCALES = {"en", "ro"}
 DEFAULT_FALLBACK_LOCALE = DEFAULT_LOCALE
 
 
 def get_supported_locales() -> set[str]:
-    ensure_default_locale()
     locales = get_available_locales()
     if locales:
         return {row["code"] for row in locales}
@@ -30,19 +30,8 @@ def get_supported_locales() -> set[str]:
 
 
 def _load_locale_data(locale: str) -> dict[str, Any]:
-    ensure_default_locale()
     normalized = (locale or DEFAULT_LOCALE).strip().lower()
-    if normalized in get_supported_locales():
-        return get_translations_from_db(normalized)
-    if normalized != DEFAULT_LOCALE:
-        return get_translations_from_db(DEFAULT_LOCALE)
-    path = TRANSLATIONS_DIR / f"{normalized}.json"
-    if not path.exists():
-        path = TRANSLATIONS_DIR / f"{DEFAULT_LOCALE}.json"
-    if path.exists():
-        with path.open("r", encoding="utf-8") as handle:
-            return json.load(handle)
-    return {}
+    return get_translations_from_db(normalized)
 
 
 def resolve_locale(request: Request | None = None, fallback: str = DEFAULT_LOCALE) -> str:
@@ -128,8 +117,44 @@ def get_translation(locale: str, key: str) -> str:
     if isinstance(value, str) and value:
         return value
     return key
+_COMPOSED_TRANSLATIONS_CACHE: dict[str, dict[str, Any]] = {}
+
+
+def clear_i18n_cache() -> None:
+    global _COMPOSED_TRANSLATIONS_CACHE
+    _COMPOSED_TRANSLATIONS_CACHE.clear()
+
+
 def get_translations(locale: str) -> dict[str, Any]:
-    return _load_locale_data(locale if locale in get_supported_locales() else DEFAULT_LOCALE)
+    global _COMPOSED_TRANSLATIONS_CACHE
+    normalized = (locale or DEFAULT_LOCALE).strip().lower()
+    if normalized not in get_supported_locales():
+        normalized = DEFAULT_LOCALE
+
+    if normalized in _COMPOSED_TRANSLATIONS_CACHE:
+        return _COMPOSED_TRANSLATIONS_CACHE[normalized]
+
+    data = _load_locale_data(normalized)
+    if normalized == DEFAULT_LOCALE:
+        _COMPOSED_TRANSLATIONS_CACHE[normalized] = data
+        return data
+
+    fallback = _load_locale_data(DEFAULT_LOCALE)
+
+    def _merge(a: Any, b: Any) -> Any:
+        if isinstance(a, dict) and isinstance(b, dict):
+            merged = dict(b)
+            for key, value in a.items():
+                if key not in merged:
+                    merged[key] = value
+                else:
+                    merged[key] = _merge(value, merged[key])
+            return merged
+        return a if a is not None else b
+
+    res = _merge(data, fallback)
+    _COMPOSED_TRANSLATIONS_CACHE[normalized] = res
+    return res
 
 
 def get_translation_value(locale: str, key: str) -> str:
@@ -165,7 +190,7 @@ def get_plugin_translation(plugin_id: str, locale: str, key: str, default_val: s
         if db_fb:
             return db_fb
 
-    p_dir = PROJECT_ROOT / "plugins" / plugin_id / "locales"
+    p_dir = APP_DIR / "plugins" / plugin_id / "locales"
 
     target_file = p_dir / f"{norm_locale}.json"
     if target_file.is_file():

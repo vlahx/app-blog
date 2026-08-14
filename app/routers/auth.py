@@ -13,6 +13,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core import events
 from app.core.config import TELEGRAM_AUTH_URL, get_telegram_bot_username
 from app.core.templates import render_template
 from app.models.db_models import User
@@ -41,6 +42,40 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
                 "google_client_id": google_client_id,
             },
         )
+
+    @router.get("/dev/login")
+    async def dev_login(
+        request: Request,
+        user_id: int = 1,
+        role: str = "admin",
+        db: Session = Depends(get_db),
+    ):
+        """Quick developer session login & elevation route for local testing."""
+        stmt = select(User).where(User.id == user_id)
+        user = db.execute(stmt).scalar_one_or_none()
+        now = datetime.now(timezone.utc)
+
+        if user is None:
+            user = User(
+                provider="dev",
+                oauth_id=f"dev_{user_id}",
+                username="Developer Admin",
+                first_name="Dev",
+                last_name="Admin",
+                email="dev@camionagiul.club",
+                role=role,
+                created_at=now,
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        else:
+            if role:
+                user.role = role
+                db.commit()
+
+        request.session["user_id"] = str(user.id)
+        return RedirectResponse(url="/profile", status_code=303)
 
     @router.get("/admin/pending", response_class=HTMLResponse)
     def pending_page(request: Request):
@@ -92,6 +127,16 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
                 created_at=now,
             )
             db.add(existing)
+            db.commit()
+            db.refresh(existing)
+            events.publish(
+                "user.registered",
+                provider=provider,
+                username=existing.username,
+                first_name=existing.first_name,
+                last_name=existing.last_name,
+                email=existing.email,
+            )
         else:
             existing.username = params.get("username") or existing.username
             existing.first_name = params.get("first_name") or existing.first_name
@@ -211,6 +256,15 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
                     created_at=now,
                 )
                 db.add(existing)
+                db.commit()
+                db.refresh(existing)
+                events.publish(
+                    "user.registered",
+                    provider=provider,
+                    first_name=existing.first_name,
+                    last_name=existing.last_name,
+                    email=existing.email,
+                )
             else:
                 existing.email = email or existing.email
                 existing.first_name = given_name or existing.first_name
@@ -243,7 +297,7 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
         # Retrieve user's orders from minishop if minishop plugin exists
         orders = []
         try:
-            from plugins.minishop.db import list_user_orders
+            from app.plugins.minishop.db import list_user_orders
             orders = list_user_orders(user_id=user.id, email=user.email)
         except Exception:
             pass
@@ -316,7 +370,6 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
         request.session.clear()
         return RedirectResponse(url="/", status_code=303)
 
-    
     @router.post("/profile/request-role")
     async def user_request_role(
         request: Request,

@@ -1,18 +1,13 @@
 from __future__ import annotations
 
 import os
-
 import uvicorn
-
-# Folosim ``app`` din ``main`` — acolo se face deja ``create_app()`` la import.
-# Un al doilea ``create_app()`` aici dubla ``load_plugins`` și handler-ele globale (ex. share).
-from main import app
 
 _DEFAULT_PORT = 8000
 
 
 def main() -> None:
-    """Pornește uvicorn pe TCP (APP_PORT, implicit 8000)."""
+    """Pornește uvicorn cu hot-reload pe TCP (APP_PORT, implicit 8000)."""
     raw = os.environ.get("APP_PORT", "").strip()
     if raw:
         try:
@@ -24,7 +19,15 @@ def main() -> None:
     else:
         port = _DEFAULT_PORT
 
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # Activate hot-reload so modifications to python files & templates reload automatically without docker restart
+    reload_env = os.environ.get("APP_RELOAD", "true").strip().lower()
+    is_reload = reload_env in ("true", "1", "yes")
+
+    if is_reload:
+        uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True, reload_dirs=["app"])
+    else:
+        from main import app
+        uvicorn.run(app, host="0.0.0.0", port=port)
 
 
 if __name__ == "__main__":

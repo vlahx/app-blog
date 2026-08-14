@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from app.models.db_models import AppSetting
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+APP_DIR = PROJECT_ROOT / "app"
 load_dotenv(PROJECT_ROOT / ".env", override=False)
 
 
@@ -43,7 +44,7 @@ SITE_DISPLAY_NAME = (
 )
 SITE_TAGLINE = (
     os.environ.get("SITE_TAGLINE", "").strip()
-    or "Jurnal de drum, articole și povești de pe șosea."
+    or "Road journal, technical articles, and stories from the road."
 )
 
 # Favicon (`<link rel="icon">`). Cale relativă, începe cu `/`.
@@ -236,12 +237,63 @@ def get_site_nav_icon_path() -> str:
     return ""
 
 
+def _runtime_static_nav_items(d: dict) -> list[dict[str, str]]:
+    raw_links = d.get("STATIC_NAV_LINKS")
+    items: list[dict[str, str]] = []
+    if isinstance(raw_links, str):
+        try:
+            raw_links = __import__("json").loads(raw_links)
+        except Exception:
+            raw_links = []
+    if isinstance(raw_links, list):
+        for item in raw_links:
+            if not isinstance(item, dict):
+                continue
+            slug = str(item.get("slug") or item.get("value") or "").strip()
+            if not slug:
+                continue
+            label = str(item.get("label") or item.get("fixed_label") or item.get("title") or slug).strip()
+            items.append({"slug": slug, "label": label, "fixed_label": label})
+    return items
+
+
+def _get_static_nav_items_raw() -> list[dict[str, str]]:
+    d = _runtime()
+    items = _runtime_static_nav_items(d)
+    if items:
+        return items
+
+    raw_single = d.get("NAV_FIXED_POST_SLUG")
+    if isinstance(raw_single, str) and raw_single.strip():
+        slug = raw_single.strip()
+        label = str(d.get("NAV_FIXED_POST_LABEL") or slug).strip()
+        return [{"slug": slug, "label": label, "fixed_label": label}]
+
+    if not d:
+        return []
+
+    legacy = d.get("STATIC_NAV_LINKS")
+    if isinstance(legacy, list):
+        # keep compatibility with old runtime values that may be stored as JSON-encoded values
+        return _runtime_static_nav_items(d)
+    return []
+
+
 def get_nav_fixed_post_slug_setting() -> str:
     d = _runtime()
     raw = d.get("NAV_FIXED_POST_SLUG")
     if isinstance(raw, str) and raw.strip():
         return raw.strip()
-    return NAV_FIXED_POST_SLUG
+
+    for item in _runtime_static_nav_items(d):
+        slug = str(item.get("slug") or "").strip()
+        if slug:
+            return slug
+
+    raw_env = NAV_FIXED_POST_SLUG
+    if isinstance(raw_env, str) and raw_env.strip():
+        return raw_env.strip()
+    return ""
 
 
 def get_nav_fixed_post_label_setting() -> str:
@@ -249,7 +301,75 @@ def get_nav_fixed_post_label_setting() -> str:
     raw = d.get("NAV_FIXED_POST_LABEL")
     if isinstance(raw, str) and raw.strip():
         return raw.strip()
-    return NAV_FIXED_POST_LABEL
+
+    for item in _runtime_static_nav_items(d):
+        label = item.get("label") or item.get("fixed_label") or ""
+        if label:
+            return label
+
+    raw_env = NAV_FIXED_POST_LABEL
+    if isinstance(raw_env, str) and raw_env.strip():
+        return raw_env.strip()
+    return ""
+
+
+_NAV_FIXED_POST_LINKS_CACHE: dict[str, list[dict[str, str]]] = {}
+
+
+def invalidate_nav_fixed_post_links_cache() -> None:
+    global _NAV_FIXED_POST_LINKS_CACHE
+    _NAV_FIXED_POST_LINKS_CACHE.clear()
+
+
+def get_nav_fixed_post_links(locale: str | None = None) -> list[dict[str, str]]:
+    global _NAV_FIXED_POST_LINKS_CACHE
+    cache_key = (locale or "default").strip().lower()
+    if cache_key in _NAV_FIXED_POST_LINKS_CACHE:
+        return _NAV_FIXED_POST_LINKS_CACHE[cache_key]
+
+    items: list[dict[str, str]] = []
+    from sqlalchemy import select
+
+    from app.models.db_models import Post as PostModel
+    from app.models.db_models import PostTranslation as PostTranslationModel
+    from app.utils.db import SessionLocal
+
+    try:
+        with SessionLocal() as db:
+            rows = db.execute(select(PostModel)).scalars().all()
+            post_lookup = {row.slug: row for row in rows if getattr(row, "slug", None)}
+            translated_titles = {}
+            if locale:
+                translated_rows = db.execute(
+                    select(PostTranslationModel).where(PostTranslationModel.locale_code == locale)
+                ).scalars().all()
+                for tr in translated_rows:
+                    translated_titles.setdefault(tr.post_id, tr.title.strip())
+
+            for item in _get_static_nav_items_raw():
+                slug = str(item.get("slug") or "").strip()
+                if not slug:
+                    continue
+                fallback = str(item.get("label") or item.get("fixed_label") or slug).strip()
+                row = post_lookup.get(slug)
+                label = fallback
+                if row:
+                    label = row.title.strip() or fallback
+                    if locale:
+                        title = translated_titles.get(row.id)
+                        if title and title.strip():
+                            label = title.strip()
+                items.append({
+                    "slug": slug,
+                    "label": label,
+                    "fixed_label": label,
+                    "href": f"/{slug.strip('/')}" if slug else "/",
+                })
+    except Exception:
+        pass
+
+    _NAV_FIXED_POST_LINKS_CACHE[cache_key] = items
+    return items
 
 
 def get_flat_post_urls() -> bool:
@@ -285,7 +405,7 @@ def get_active_theme() -> str:
     if any(ch not in ok for ch in v):
         return "default"
     if v != "default":
-        theme_templates = PROJECT_ROOT / "themes" / v / "templates"
+        theme_templates = APP_DIR / "themes" / v / "templates"
         if not theme_templates.is_dir():
             return "default"
     return v
@@ -295,8 +415,7 @@ def is_static_page_slug(slug: str) -> bool:
     if not slug:
         return False
     s = slug.strip().lower()
-    nav_slug = (get_nav_fixed_post_slug_setting() or "").strip().lower()
-    return bool(nav_slug and nav_slug == s)
+    return any(str(item.get("slug") or "").strip().lower() == s for item in _get_static_nav_items_raw())
 
 
 def post_public_path(slug: str) -> str:
@@ -308,25 +427,28 @@ def post_public_path(slug: str) -> str:
     return f"/blog/{s}"
 
 
-def get_nav_fixed_post_link() -> dict[str, str] | None:
-    """
-    Dacă e setat un slug valid pentru un articol publicat (nu draft), returnează href + label pentru navbar.
-    """
-    slug = get_nav_fixed_post_slug_setting()
-    if not slug:
+def get_nav_fixed_post_link(locale: str | None = None) -> dict[str, str] | None:
+    """Returnează primul link static valid pentru navbar."""
+    links = get_nav_fixed_post_links(locale=locale)
+    if not links:
         return None
+    slug = links[0]["slug"]
     from sqlalchemy import select
 
     from app.models.db_models import Post as PostModel
     from app.utils.db import SessionLocal
 
-    label_override = get_nav_fixed_post_label_setting()
     with SessionLocal() as db:
         row = db.execute(select(PostModel).where(PostModel.slug == slug)).scalars().first()
         if row is None or bool(row.draft):
             return None
-        label = label_override or row.title
-        return {"href": post_public_path(slug), "label": label}
+        label = links[0].get("label") or row.title
+        return {
+            "slug": slug,
+            "href": post_public_path(slug),
+            "label": label,
+            "fixed_label": label,
+        }
 
 
 def get_post_image_crop_og() -> bool:

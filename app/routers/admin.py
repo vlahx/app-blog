@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.models.db_models import Post as PostModel, User, Category
 
 from app.core.config import (
+    APP_DIR,
     ADMIN_ENABLE_CONTAINER_RESTART,
     PROJECT_ROOT,
     TELEGRAM_BOT_TOKEN,
@@ -24,6 +25,7 @@ from app.core.config import (
     get_active_theme,
     get_flat_post_urls,
     get_nav_fixed_post_label_setting,
+    get_nav_fixed_post_links,
     get_nav_fixed_post_slug_setting,
     get_og_card_image_path,
     get_post_image_crop_og,
@@ -63,10 +65,11 @@ from app.core.plugin_package import (
 from app.core.process_restart import sigterm_self_after_delay
 from app.core.site_uploads import unlink_site_upload_file
 from app.core.templates import render_template
-from app.core.themes import list_installed_themes
+from app.core.themes import list_installed_themes, set_active_theme
 from app.core.translation_db import (
     DEFAULT_LOCALE,
     delete_translation_entry,
+    ensure_default_locale,
     get_available_locales,
     list_translation_catalog,
     seed_locale_from_default,
@@ -232,11 +235,13 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
             if row:
                 from app.core.posts_db import get_post_translations
                 post_trans = get_post_translations(db_sess, row.id)
-        cur_nav = get_nav_fixed_post_slug_setting()
-        editor_nav_fixed = cur_nav == post.slug
-        editor_nav_fixed_label = (
-            get_nav_fixed_post_label_setting() if editor_nav_fixed else ""
-        )
+        cur_nav_links = [item.get("slug", "") for item in get_nav_fixed_post_links(locale=getattr(request.state, "locale", None))]
+        editor_nav_fixed = post.slug in cur_nav_links
+        editor_nav_fixed_label = ""
+        for item in get_nav_fixed_post_links(locale=getattr(request.state, "locale", None)):
+            if item.get("slug") == post.slug:
+                editor_nav_fixed_label = item.get("label", "")
+                break
         return render_template(
             templates,
             request=request,
@@ -348,25 +353,37 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
             if row:
                 save_post_translations(db, row.id, translations_to_save)
 
-        cur_nav = (read_settings().get("NAV_FIXED_POST_SLUG") or "").strip()
+        cur_links = read_settings().get("STATIC_NAV_LINKS") or []
+        if not isinstance(cur_links, list):
+            cur_links = []
+        cleaned_links = []
+        for item in cur_links:
+            if isinstance(item, dict):
+                slug = str(item.get("slug") or item.get("value") or "").strip()
+                if slug:
+                    cleaned_links.append({
+                        "slug": slug,
+                        "label": str(item.get("label") or item.get("fixed_label") or slug).strip(),
+                        "fixed_label": str(item.get("fixed_label") or item.get("label") or slug).strip(),
+                    })
+
         if nav_fixed:
-            write_settings(
-                {
-                    "NAV_FIXED_POST_SLUG": post.slug,
-                    "NAV_FIXED_POST_LABEL": nav_fixed_label,
-                }
-            )
+            # Label-ul static este derivat din titlul postării în limba activă; câmpul vechi este doar fallback legacy.
+            derived_label = post.title or slug_final
+            new_item = {"slug": post.slug, "label": derived_label, "fixed_label": derived_label}
+            filtered = [item for item in cleaned_links if str(item.get("slug") or "").strip() != post.slug]
+            filtered.append(new_item)
+            write_settings({"STATIC_NAV_LINKS": filtered})
         else:
             if editing_original_slug:
-                if cur_nav and (
-                    cur_nav == editing_original_slug or cur_nav == post.slug
-                ):
-                    write_settings(
-                        {
-                            "NAV_FIXED_POST_SLUG": None,
-                            "NAV_FIXED_POST_LABEL": None,
-                        }
-                    )
+                filtered = [
+                    item for item in cleaned_links
+                    if str(item.get("slug") or "").strip() not in {editing_original_slug, post.slug}
+                ]
+                if filtered:
+                    write_settings({"STATIC_NAV_LINKS": filtered})
+                else:
+                    write_settings({"STATIC_NAV_LINKS": []})
 
 
 
@@ -434,21 +451,28 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
     async def admin_settings_page(request: Request):
         themes = list_installed_themes()
         cur_theme = get_active_theme()
+        active_locales = [loc for loc in get_available_locales() if loc.get("enabled")]
         with SessionLocal() as db:
             app_settings = {row.key: row.value for row in db.query(AppSetting).all() if row and row.key}
+        localized_site_names = {
+            loc["code"]: (app_settings.get(f"SITE_DISPLAY_NAME_{loc['code']}") or "").strip()
+            for loc in active_locales
+        }
+        localized_site_taglines = {
+            loc["code"]: (app_settings.get(f"SITE_TAGLINE_{loc['code']}") or "").strip()
+            for loc in active_locales
+        }
         return render_template(
             templates,
             request=request,
             name="admin/settings.html",
             context={
                 "title": "Setări site",
-                # Nu folosi cheile site_display_name / site_tagline — ar umbri funcțiile globale Jinja.
                 "settings_site_name": get_site_display_name(),
-                "settings_site_name_ro": (app_settings.get("SITE_DISPLAY_NAME_ro") or "").strip(),
-                "settings_site_name_en": (app_settings.get("SITE_DISPLAY_NAME_en") or "").strip(),
                 "settings_site_tagline": get_site_tagline(),
-                "settings_site_tagline_ro": (app_settings.get("SITE_TAGLINE_ro") or "").strip(),
-                "settings_site_tagline_en": (app_settings.get("SITE_TAGLINE_en") or "").strip(),
+                "active_locales": active_locales,
+                "localized_site_names": localized_site_names,
+                "localized_site_taglines": localized_site_taglines,
                 "env_public_url": get_public_site_url(),
                 "site_favicon_path": get_site_favicon_path(),
                 "site_brand_image_path": get_site_brand_image_path(),
@@ -460,7 +484,6 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                 "post_image_output_height": get_post_image_output_height(),
                 "flat_post_urls": get_flat_post_urls(),
                 "installed_themes": themes,
-                # NU folosi cheia "active_theme" (ar umbri globalul Jinja `active_theme()`).
                 "active_theme_slug": cur_theme,
             },
         )
@@ -469,12 +492,56 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
     @router.get("/admin/translations/", response_class=HTMLResponse)
     @role_required("admin")
     async def admin_translations_page(request: Request):
+        ensure_default_locale()
         locales = get_available_locales()
         preferred_locale = next((loc["code"] for loc in locales if loc.get("code") and loc["code"] != DEFAULT_LOCALE), None)
         selected_locale = (request.query_params.get("locale") or "").strip() or preferred_locale or (
             next((loc["code"] for loc in locales if loc.get("is_default")), None) or (locales[0]["code"] if locales else DEFAULT_LOCALE)
         )
         translation_items = list_translation_catalog(selected_locale, source_locale=DEFAULT_LOCALE) if selected_locale else []
+
+        grouped_sections: dict[str, list[dict[str, Any]]] = {}
+        def get_section_title(key: str) -> str:
+            parts = key.split(".")
+            if len(parts) >= 2 and parts[0] == "admin":
+                sub = parts[1]
+                if sub in ("dashboard", "nav"):
+                    return "⚡ Admin Dashboard & Navigation"
+                elif sub in ("users", "roles"):
+                    return "👥 Admin Users & Roles"
+                elif sub == "settings":
+                    return "⚙️ Admin Site Settings"
+                elif sub == "translations":
+                    return "🌐 Admin Translations"
+                elif sub == "themes":
+                    return "🎨 Admin Themes"
+                elif sub == "plugins":
+                    return "🔌 Admin Plugins"
+                elif sub == "categories":
+                    return "📁 Admin Categories"
+                elif sub == "editor":
+                    return "📝 Admin Post Editor"
+                elif sub in ("status", "actions", "confirm", "common"):
+                    return "🛠️ Admin Common & Actions"
+                else:
+                    return f"⚙️ Admin {sub.capitalize()}"
+            elif parts[0] == "footer":
+                return "🦶 Footer Section"
+            elif parts[0] == "home":
+                return "🏠 Home Page & Blog"
+            elif parts[0] == "ui":
+                return "💻 UI & User Interface"
+            elif parts[0] == "newsletter":
+                return "📧 Newsletter"
+            else:
+                return f"📌 {parts[0].capitalize()}"
+
+        for item in translation_items:
+            sec = get_section_title(item.get("key", ""))
+            if sec not in grouped_sections:
+                grouped_sections[sec] = []
+            grouped_sections[sec].append(item)
+
         return render_template(
             templates,
             request=request,
@@ -484,6 +551,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                 "locales": locales,
                 "selected_locale": selected_locale,
                 "translation_items": translation_items,
+                "grouped_sections": grouped_sections,
                 "default_locale": DEFAULT_LOCALE,
             },
         )
@@ -495,7 +563,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
     async def admin_set_default_locale(request: Request, locale_code: str = Form(...)):
         from app.core.translation_db import set_default_locale
         set_default_locale(locale_code)
-        return RedirectResponse(url=f"/admin/translations?locale={{locale_code}}&msg=Limba+implicită+a+fost+schimbată!", status_code=303)
+        return RedirectResponse(url=f"/admin/translations?locale={locale_code}&msg=Limba+implicită+a+fost+schimbată!", status_code=303)
 
     async def admin_add_locale(request: Request):
         form = await request.form()
@@ -780,9 +848,9 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                     + hint
                 )
 
-            theme_dest = PROJECT_ROOT / "themes" / slug
+            theme_dest = APP_DIR / "themes" / slug
             static_src = extract_root / "static" / "themes" / slug
-            static_dest = PROJECT_ROOT / "static" / "themes" / slug
+            static_dest = APP_DIR / "static" / "themes" / slug
 
             if theme_dest.exists() or static_dest.exists():
                 if not overwrite:
@@ -854,6 +922,28 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                 status_code=400,
             )
 
+    @router.post("/admin/themes/activate", response_class=HTMLResponse)
+    @role_required("admin")
+    async def admin_themes_activate(request: Request, slug: str = Form(...)):
+        s = _safe_theme_slug(slug)
+        cur_theme = get_active_theme()
+        if s and s != cur_theme:
+            set_active_theme(s)
+        themes = list_installed_themes()
+        cur_theme = get_active_theme()
+        return render_template(
+            templates,
+            request=request,
+            name="admin/themes.html",
+            context={
+                "title": "Teme",
+                "installed_themes": themes,
+                "active_theme_slug": cur_theme,
+                "error": "",
+                "message": f"Tema '{slug}' a fost activată cu succes!",
+            },
+        )
+
     @router.post("/admin/themes/delete", response_class=HTMLResponse)
     @role_required("admin")
     async def admin_themes_delete(request: Request, slug: str = Form(...)):
@@ -869,14 +959,29 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                     "title": "Teme",
                     "installed_themes": themes,
                     "active_theme_slug": cur_theme,
-                    "error": "Slug invalid (sau default).",
+                    "error": "Slug invalid.",
                     "message": "",
                 },
                 status_code=400,
             )
 
-        theme_dir = PROJECT_ROOT / "themes" / s
-        static_dir = PROJECT_ROOT / "static" / "themes" / s
+        if s == cur_theme:
+            return render_template(
+                templates,
+                request=request,
+                name="admin/themes.html",
+                context={
+                    "title": "Teme",
+                    "installed_themes": themes,
+                    "active_theme_slug": cur_theme,
+                    "error": "Nu poți șterge tema activă în folosință!",
+                    "message": "",
+                },
+                status_code=400,
+            )
+
+        theme_dir = APP_DIR / "themes" / s
+        static_dir = APP_DIR / "static" / "themes" / s
         try:
             if theme_dir.is_dir():
                 shutil.rmtree(theme_dir)
@@ -1004,7 +1109,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                 ),
                 status_code=400,
             )
-        dest = PROJECT_ROOT / "plugins" / s
+        dest = APP_DIR / "plugins" / s
         try:
             if dest.is_dir():
                 shutil.rmtree(dest)
@@ -1101,15 +1206,14 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                         row.value = str(value).strip()
                 db.commit()
 
-        for key, value in {
-            "SITE_DISPLAY_NAME": _txt("site_display_name") or None,
-            "SITE_DISPLAY_NAME_ro": _txt("site_display_name_ro") or None,
-            "SITE_DISPLAY_NAME_en": _txt("site_display_name_en") or None,
-            "SITE_TAGLINE": _txt("site_tagline") or None,
-            "SITE_TAGLINE_ro": _txt("site_tagline_ro") or None,
-            "SITE_TAGLINE_en": _txt("site_tagline_en") or None,
-        }.items():
-            _save_app_setting(key, value)
+        _save_app_setting("SITE_DISPLAY_NAME", _txt("site_display_name") or None)
+        _save_app_setting("SITE_TAGLINE", _txt("site_tagline") or None)
+
+        for loc in get_available_locales():
+            code = loc.get("code")
+            if code:
+                _save_app_setting(f"SITE_DISPLAY_NAME_{code}", _txt(f"site_display_name_{code}") or None)
+                _save_app_setting(f"SITE_TAGLINE_{code}", _txt(f"site_tagline_{code}") or None)
 
         write_settings(
             {
@@ -1216,11 +1320,18 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
     ):
         success = delete_post(db, slug)
         if success:
-            cur = (read_settings().get("NAV_FIXED_POST_SLUG") or "").strip()
-            if cur == slug:
-                write_settings(
-                    {"NAV_FIXED_POST_SLUG": None, "NAV_FIXED_POST_LABEL": None}
-                )
+            cur_links = read_settings().get("STATIC_NAV_LINKS") or []
+            if isinstance(cur_links, list):
+                filtered = [
+                    item for item in cur_links
+                    if isinstance(item, dict) and str(item.get("slug") or "").strip() != slug
+                ]
+                if filtered:
+                    write_settings({"STATIC_NAV_LINKS": filtered})
+                else:
+                    write_settings({"STATIC_NAV_LINKS": []})
+            else:
+                write_settings({"STATIC_NAV_LINKS": []})
             return RedirectResponse(url="/admin", status_code=303)
         return JSONResponse(
             {"error": "Nu am putut șterge postarea!"},

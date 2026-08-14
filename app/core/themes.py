@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from app.core.config import PROJECT_ROOT, get_active_theme
+from app.core.config import APP_DIR, PROJECT_ROOT, get_active_theme
 
 
 @dataclass(frozen=True)
@@ -28,12 +28,10 @@ def _safe_theme_slug(raw: str) -> str | None:
 
 def list_installed_themes() -> list[ThemeInfo]:
     """
-    Detectează teme fie prin `themes/<slug>/templates/` (template override),
-    fie prin `static/themes/<slug>/theme.css` (CSS-only).
-    Include mereu "default".
+    Detectează teme instalate din `app/themes/<slug>/` sau `app/static/themes/<slug>/theme.css`.
     """
-    out: list[ThemeInfo] = [load_theme_info("default")]
-    base = PROJECT_ROOT / "themes"
+    out: list[ThemeInfo] = []
+    base = APP_DIR / "themes"
     slugs: set[str] = set()
 
     if base.is_dir():
@@ -41,19 +39,22 @@ def list_installed_themes() -> list[ThemeInfo]:
             if not p.is_dir():
                 continue
             slug = _safe_theme_slug(p.name)
-            if slug and slug != "default":
+            if slug:
                 slugs.add(slug)
 
-    static_themes = PROJECT_ROOT / "static" / "themes"
+    static_themes = APP_DIR / "static" / "themes"
     if static_themes.is_dir():
         for p in static_themes.iterdir():
             if not p.is_dir():
                 continue
             slug = _safe_theme_slug(p.name)
-            if slug and slug != "default":
+            if slug:
                 css = p / "theme.css"
                 if css.is_file():
                     slugs.add(slug)
+
+    if not slugs:
+        slugs.add("minimal" if (base / "minimal").is_dir() else "default")
 
     for slug in sorted(slugs):
         out.append(load_theme_info(slug))
@@ -62,7 +63,7 @@ def list_installed_themes() -> list[ThemeInfo]:
 
 def load_theme_info(theme_slug: str) -> ThemeInfo:
     slug = _safe_theme_slug(theme_slug) or "default"
-    manifest = PROJECT_ROOT / "themes" / slug / "theme.json"
+    manifest = APP_DIR / "themes" / slug / "theme.json"
     if not manifest.is_file():
         if slug == "default":
             # Default theme is always present even without a manifest.
@@ -79,7 +80,7 @@ def load_theme_info(theme_slug: str) -> ThemeInfo:
             raise ValueError("invalid manifest")
         name = str(data.get("name") or slug).strip() or slug
         author = str(data.get("author") or "Unknown").strip() or "Unknown"
-        version = str(data.get("version")).strip() if data.get("version") else None
+        version = str(data.get("version")).strip() if data.get("version") else "1.0.0"
         supports = bool(
             data.get(
                 "supports_color_scheme_toggle", True if slug == "default" else False
@@ -98,11 +99,20 @@ def load_theme_info(theme_slug: str) -> ThemeInfo:
                 slug="default",
                 name="Default",
                 author="Core",
+                version="1.0.0",
                 supports_color_scheme_toggle=True,
             )
-        return ThemeInfo(slug=slug, name=slug, author="Unknown")
+        return ThemeInfo(slug=slug, name=slug, author="Unknown", version="1.0.0")
 
 
 def active_theme_info() -> ThemeInfo:
     return load_theme_info(get_active_theme())
+
+
+def set_active_theme(slug: str) -> None:
+    from app.core.site_settings import write_settings
+    s = _safe_theme_slug(slug)
+    if s:
+        write_settings({"ACTIVE_THEME": s})
+
 

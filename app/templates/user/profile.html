@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+  <!-- Header Profil -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4 bg-body-tertiary">
+    <div class="card-body p-4 p-md-5">
+      <div class="d-flex flex-column flex-md-row align-items-center gap-4">
+        <div class="position-relative">
+          {% if user.image_url %}
+          <img src="{{ user.image_url }}" alt="{{ user.first_name or user.username }}" class="rounded-circle object-fit-cover shadow" width="100" height="100">
+          {% else %}
+          <div class="rounded-circle bg-primary bg-opacity-20 text-primary d-flex align-items-center justify-content-center fs-1 fw-bold shadow" style="width: 100px; height: 100px;">
+            {{ (user.first_name or user.username or 'U')[0]|upper }}
+          </div>
+          {% endif %}
+          <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle p-2" title="{{ t('profile.activeAccount') }}"></span>
+        </div>
+
+        <div class="text-center text-md-start flex-grow-1">
+          <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-2 mb-1">
+            <h2 class="fw-bold mb-0">{{ user.first_name or user.username or t('profile.member') }} {{ user.last_name or '' }}</h2>
+            {% if user.role == 'admin' %}
+            <span class="badge bg-danger text-white">⚡ Admin</span>
+            {% elif user.role in ['editor', 'author'] %}
+            <span class="badge bg-primary text-white">📝 Author</span>
+            {% elif user.role == 'seller' %}
+            <span class="badge bg-success text-white">🛒 Seller</span>
+            {% else %}
+            <span class="badge bg-secondary text-white">👤 {{ t('profile.member') }}</span>
+            {% endif %}
+          </div>
+          <p class="text-secondary small mb-2">
+            📧 {{ user.email or 'Connected with ' ~ user.provider|title }} • 📅 {{ t('profile.memberSince') }} {{ user.created_at.strftime('%d.%m.%Y') if user.created_at else t('profile.recent') }}
+          </p>
+          {% if user.bio %}
+          <p class="text-body small mb-0 max-w-600" style="white-space: pre-line;">{{ user.bio }}</p>
+          {% endif %}
+        </div>
+
+        <div class="d-flex gap-2">
+          {% if user.role in ['admin', 'editor', 'author'] %}
+          <a href="/admin" class="btn btn-outline-primary btn-sm fw-semibold px-3">{{ t('profile.adminPanel') }}</a>
+          {% endif %}
+          <a href="/auth/logout" class="btn btn-outline-secondary btn-sm px-3">{{ t('profile.logout') }}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if request.query_params.get('requested') == '1' %}
+  <div class="alert alert-success d-flex align-items-center gap-2 mb-4 rounded-4 shadow-sm" role="alert">
+    <span>✅ Request sent to admin team!</span>
+  </div>
+  {% endif %}
+
+  <!-- Cerere Schimbare Rol (dacă nu e deja Admin/Editor) -->
+  {% if user.role not in ['admin', 'editor'] %}
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-4">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div>
+          <h5 class="fw-bold mb-1">{{ t('profile.requestRole') }}</h5>
+          <p class="text-secondary small mb-0">{{ t('profile.requestRoleHelp') }}</p>
+        </div>
+        <button class="btn btn-outline-primary btn-sm fw-semibold rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#roleRequestCollapse" aria-expanded="false" aria-controls="roleRequestCollapse">
+          {{ t('profile.requestRoleBtn') }}
+        </button>
+      </div>
+
+      <div class="collapse mt-3" id="roleRequestCollapse">
+        <form action="/profile/request-role" method="POST" class="p-3 bg-body-tertiary rounded-3 border">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">{{ t('profile.selectRole') }}</label>
+            <select name="requested_role" class="form-select form-select-sm" required>
+              <option value="author">✍️ Author (Write articles and guides)</option>
+              <option value="editor">📝 Editor (Manage content)</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">{{ t('profile.motivation') }}</label>
+            <textarea name="motivation" class="form-control form-control-sm" rows="2" placeholder="{{ t('profile.motivationPlaceholder') }}"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-sm fw-bold px-4 rounded-pill">
+            {{ t('profile.sendRequest') }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Navigare Tab-uri Profil + Plugin Area for Profile Tabs -->
+  <ul class="nav nav-pills gap-2 mb-4 border-bottom pb-3" id="profileTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active fw-bold" id="tab-info-btn" data-bs-toggle="tab" data-bs-target="#tab-info" type="button" role="tab">
+        {{ t('profile.tabInfo') }}
+      </button>
+    </li>
+    {% if plugin_area_profile_tabs %}
+      {{ plugin_area_profile_tabs | safe }}
+    {% endif %}
+  </ul>
+
+  <div class="tab-content" id="profileTabsContent">
+    <!-- Tab 1: Detalii & Editare Profil -->
+    <div class="tab-pane fade show active" id="tab-info" role="tabpanel">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+          <h4 class="fw-bold mb-4">{{ t('profile.editTitle') }}</h4>
+
+          {% if request.query_params.get('updated') == '1' %}
+          <div class="alert alert-success d-flex align-items-center gap-2 mb-4" role="alert">
+            <span>✅ {{ t('profile.updatedSuccess') }}</span>
+          </div>
+          {% endif %}
+
+          <form action="/profile/update" method="POST">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">{{ t('profile.firstName') }}</label>
+                <input type="text" name="first_name" class="form-control" value="{{ user.first_name or '' }}" required>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">{{ t('profile.lastName') }}</label>
+                <input type="text" name="last_name" class="form-control" value="{{ user.last_name or '' }}">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">{{ t('profile.email') }}</label>
+                <input type="email" name="email" class="form-control" value="{{ user.email or '' }}" placeholder="email@domain.com">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">{{ t('profile.phone') }}</label>
+                <input type="tel" name="phone" class="form-control" value="{{ user.phone or '' }}" placeholder="+1234567890">
+              </div>
+
+              <div class="col-12">
+                <label class="form-label small fw-semibold">{{ t('profile.avatarUrl') }}</label>
+                <input type="url" name="image_url" class="form-control" value="{{ user.image_url or '' }}" placeholder="https://site.com/avatar.jpg">
+                <div class="form-text small">{{ t('profile.avatarHelp') }} {{ user.provider|title }}.</div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label small fw-semibold">{{ t('profile.bio') }}</label>
+                <textarea name="bio" class="form-control" rows="3" placeholder="{{ t('profile.bioPlaceholder') }}">{{ user.bio or '' }}</textarea>
+              </div>
+
+              <div class="col-12 mt-4">
+                <button type="submit" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">
+                  {{ t('profile.saveChanges') }}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plugin Area for Profile Tab Contents -->
+    {% if plugin_area_profile_content %}
+      {{ plugin_area_profile_content | safe }}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -3,11 +3,11 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from app.core.config import PROJECT_ROOT
+from app.core.config import APP_DIR, PROJECT_ROOT
 
 logger = logging.getLogger(__name__)
 
-_SITE_UPLOADS_ROOT = (PROJECT_ROOT / "static" / "images" / "site_uploads").resolve()
+_SITE_UPLOADS_ROOT = (APP_DIR / "static" / "images" / "site_uploads").resolve()
 
 
 def unlink_site_upload_file(public_path: str) -> bool:
@@ -19,7 +19,7 @@ def unlink_site_upload_file(public_path: str) -> bool:
     if not raw.startswith("/static/images/site_uploads/"):
         return False
     rel_fs = raw.lstrip("/")
-    target = (PROJECT_ROOT / rel_fs).resolve()
+    target = (APP_DIR / rel_fs).resolve()
     try:
         target.relative_to(_SITE_UPLOADS_ROOT)
     except ValueError:

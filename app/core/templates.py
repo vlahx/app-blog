@@ -7,8 +7,11 @@ from fastapi.templating import Jinja2Templates
 from jinja2 import ChoiceLoader, FileSystemLoader
 
 from app.core.config import (
+    APP_DIR,
+    PROJECT_ROOT,
     get_active_theme,
     get_nav_fixed_post_link,
+    get_nav_fixed_post_links,
     get_site_brand_image_path,
     get_site_display_name,
     get_site_favicon_path,
@@ -27,32 +30,72 @@ from app.core.i18n import (
 )
 from app.core.themes import active_theme_info
 from app.core.translation_db import get_available_locales
+from app.core.plugin_manager import is_plugin_enabled
 from app.utils.open_graph import public_site_origin
 
 
-def _apply_theme_loader(templates: Jinja2Templates, *, directory: str = "templates") -> None:
+def is_plugin_active(plugin_id: str) -> bool:
+    """Verifică dacă un plugin este instalat fizic și activat"""
+    p_file = APP_DIR / "plugins" / plugin_id / "plugin.py"
+    if not p_file.is_file():
+        return False
+    try:
+        return is_plugin_enabled(plugin_id)
+    except Exception:
+        return False
+
+
+_LAST_APPLIED_THEME: str | None = None
+
+
+def _apply_theme_loader(templates: Jinja2Templates, *, directory: str = "app/templates", force: bool = False) -> None:
     """
     Reconfigurează loader-ul în funcție de tema curentă.
     Asta permite schimbarea temei din Admin fără restart.
     """
-    active = get_active_theme()
+    global _LAST_APPLIED_THEME
+    active = get_active_theme() or "minimal"
+    if active == "default":
+        active = "minimal"
+
+    if not force and _LAST_APPLIED_THEME == active and isinstance(templates.env.loader, ChoiceLoader):
+        return
+
+    _LAST_APPLIED_THEME = active
     loaders = []
-    if active:
-        theme_dir = os.path.join("themes", active, "templates")
-        if os.path.isdir(theme_dir):
-            loaders.append(FileSystemLoader(theme_dir))
-    # Default theme is always available as fallback.
-    default_dir = os.path.join("themes", "default", "templates")
-    if os.path.isdir(default_dir):
-        loaders.append(FileSystemLoader(default_dir))
-    loaders.append(FileSystemLoader(directory))
+
+    # Active theme templates (e.g. themes/elevate/templates)
+    if active and active != "minimal":
+        theme_dir = APP_DIR / "themes" / active / "templates"
+        if theme_dir.is_dir():
+            loaders.append(FileSystemLoader(str(theme_dir)))
+
+    # Fallback minimal theme templates (themes/minimal/templates)
+    minimal_dir = APP_DIR / "themes" / "minimal" / "templates"
+    if minimal_dir.is_dir():
+        loaders.append(FileSystemLoader(str(minimal_dir)))
+
+    # Support plugin-specific template directories inside app/plugins/<plugin_id>/templates/
+    plugins_dir = APP_DIR / "plugins"
+    if plugins_dir.is_dir():
+        for p in sorted(plugins_dir.iterdir()):
+            if p.is_dir() and not p.name.startswith(("_", ".")) and not p.name.endswith(("_to_del", "_bak")):
+                p_tpl = p / "templates"
+                if p_tpl.is_dir():
+                    loaders.append(FileSystemLoader(str(p_tpl)))
+
+    base_dir = APP_DIR / "templates"
+    if base_dir.is_dir():
+        loaders.append(FileSystemLoader(str(base_dir)))
+
     templates.env.loader = ChoiceLoader(loaders)
 
 
-def build_templates(directory: str = "templates") -> Jinja2Templates:
-    templates = Jinja2Templates(directory=directory)
-    # THEME LOADER: caută întâi în `themes/<active>/templates`, apoi în `templates/` (default).
-    _apply_theme_loader(templates, directory=directory)
+def build_templates(directory: str = "app/templates") -> Jinja2Templates:
+    target_dir = str(APP_DIR / "templates")
+    templates = Jinja2Templates(directory=target_dir)
+    # THEME LOADER: caută întâi în `app/themes/<active>/templates`, apoi în `app/templates/`.
+    _apply_theme_loader(templates, force=True)
     templates.env.globals["now"] = lambda: datetime.now(timezone.utc)
     templates.env.globals["site_display_name"] = get_site_display_name
     templates.env.globals["site_tagline"] = get_site_tagline
@@ -66,6 +109,7 @@ def build_templates(directory: str = "templates") -> Jinja2Templates:
     templates.env.globals["get_available_locales"] = get_available_locales
     templates.env.globals["get_translations"] = get_translations
     templates.env.globals["translate"] = lambda locale, key: get_translation(locale, key)
+    templates.env.globals["is_plugin_active"] = is_plugin_active
 
     def _safe_translation_lookup(data: dict | None, path: str, default: str = "") -> str:
         if not isinstance(data, dict):
@@ -94,6 +138,7 @@ def render_template(
     status_code: int = 200,
 ):
     _apply_theme_loader(templates, directory="templates")
+    templates.env.globals["is_plugin_active"] = is_plugin_active
     ctx = dict(context)
     ctx.setdefault("request", request)
     root = public_site_origin(request)
@@ -117,7 +162,14 @@ def render_template(
     if not locale:
         locale = DEFAULT_LOCALE
     ctx.setdefault("seo_site_name", get_site_display_name(locale))
-    ctx.setdefault("nav_fixed_post_link", get_nav_fixed_post_link())
+    available_locales = get_available_locales()
+    ctx.setdefault("available_locales", available_locales)
+    fixed_nav_posts = []
+    for item in get_nav_fixed_post_links(locale=locale):
+        if item.get("slug"):
+            fixed_nav_posts.append(item)
+    ctx.setdefault("nav_fixed_post_link", fixed_nav_posts[0] if fixed_nav_posts else None)
+    ctx.setdefault("fixed_nav_posts", fixed_nav_posts)
     from app.utils.auth import get_current_user_from_request
     current_user = getattr(request.state, "current_user", None) or get_current_user_from_request(request)
     ctx["current_user"] = current_user
@@ -127,20 +179,50 @@ def render_template(
     ctx["site_tagline"] = lambda: get_site_tagline(locale)
     ctx["translations"] = getattr(request.state, "translations", None) or get_translations(locale)
     ctx["lang"] = locale
+    from app.core.i18n import get_plugin_translation
     ctx["t"] = lambda key: get_translation(locale, key)
+    ctx["t_shop"] = lambda key, default_val="": get_plugin_translation("minishop", locale, key, default_val)
+    ctx["t_plugin"] = lambda plugin_id, key, default_val="": get_plugin_translation(plugin_id, locale, key, default_val)
     ctx["current_locale"] = locale
+    cur_path = request.url.path if hasattr(request, "url") else "/"
+    cur_query = ("?" + request.url.query) if hasattr(request, "url") and request.url.query else ""
+    ctx.setdefault("current_path", cur_path)
+    ctx.setdefault("current_path_with_query", f"{cur_path}{cur_query}")
+    ctx.setdefault("common", {"langSelector": "Limbă" if locale == "ro" else "Language"})
+    ctx.setdefault("year", datetime.now(timezone.utc).year)
+    ctx.setdefault("footer", {"company": get_site_display_name(locale)})
+    ctx.setdefault("total_pages", 1)
+    ctx.setdefault("current_page", 1)
+    ctx.setdefault("pages", [1])
     ctx.setdefault("get_available_locales", get_available_locales)
     ctx.setdefault("get_translations", get_translations)
     ctx.setdefault("translate", lambda key: get_translation(locale, key))
+    ctx["is_plugin_active"] = is_plugin_active
     # NU seta cheia "active_theme" aici: ar umbri globalul Jinja `active_theme()` (funcție),
     # iar în template ar apărea TypeError: 'str' object is not callable.
-    ctx.setdefault("active_theme_slug", get_active_theme())
+    ctx.setdefault("active_theme_slug", get_active_theme() or "minimal")
     ctx.setdefault("og_image_width", None)
     ctx.setdefault("og_image_height", None)
     ctx.setdefault("og_image_type", None)
-    # admin/editor.html: |tojson pe cheie lipsă → Undefined → TypeError la serializare (500)
+    from app.core.template_hooks import (
+        render_admin_navs,
+        render_admin_top_bars,
+        render_footer_col1,
+        render_footer_col2,
+        render_footer_col3,
+        render_footer_col4,
+        render_footer_bottom,
+        render_navbar_links,
+    )
+    ctx.setdefault("plugin_area_admin_nav", render_admin_navs(request))
+    ctx.setdefault("plugin_area_admin_top_bar", render_admin_top_bars(request))
+    ctx.setdefault("plugin_area_navbar_links", render_navbar_links(request))
+    ctx.setdefault("plugin_area_footer_col1", render_footer_col1(request))
+    ctx.setdefault("plugin_area_footer_col2", render_footer_col2(request))
+    ctx.setdefault("plugin_area_footer_col3", render_footer_col3(request))
+    ctx.setdefault("plugin_area_footer_col4", render_footer_col4(request))
+    ctx.setdefault("plugin_area_footer_bottom", render_footer_bottom(request))
     ctx.setdefault("editor_document_base", f"{root.rstrip('/')}/")
     response = templates.TemplateResponse(request, name, ctx, status_code=status_code)
     set_locale_cookie(response, locale)
     return response
-

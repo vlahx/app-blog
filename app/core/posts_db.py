@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
-from app.core.config import PROJECT_ROOT
+from app.core.config import APP_DIR, PROJECT_ROOT
 from app.models.db_models import Category as CategoryModel
 from app.models.db_models import Post as PostModel
 from app.models.db_models import PostTranslation as PostTranslationModel
@@ -435,7 +435,7 @@ def _resolve_local_post_image_path(url: str) -> Path | None:
     filename = path[len(_POST_IMAGE_PREFIX) :].strip("/")
     if not filename or ".." in filename or filename.startswith("/"):
         return None
-    return PROJECT_ROOT / "static" / "images" / "post_images" / filename
+    return APP_DIR / "static" / "images" / "post_images" / filename
 
 
 def _collect_post_image_paths(post: PostModel) -> list[Path]:

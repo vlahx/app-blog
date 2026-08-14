@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from zipfile import ZipFile
 
-from app.core.config import PROJECT_ROOT
+from app.core.config import APP_DIR, PROJECT_ROOT
 from app.core.plugin_manager import register_plugin_in_db
 
 _PLUGIN_ID_OK = frozenset("abcdefghijklmnopqrstuvwxyz0123456789_-")
@@ -109,7 +109,7 @@ def extract_plugin_zip(data: bytes, *, overwrite: bool) -> tuple[str, str]:
                     f"Lipsește `plugins/{plugin_id}/plugin.py` după extract."
                 )
 
-            dest_dir = PROJECT_ROOT / "plugins" / plugin_id
+            dest_dir = APP_DIR / "plugins" / plugin_id
             if dest_dir.exists():
                 if not overwrite:
                     raise ValueError(
@@ -137,7 +137,7 @@ class PluginInfo:
 
 
 def list_installed_plugins() -> list[PluginInfo]:
-    root = PROJECT_ROOT / "plugins"
+    root = APP_DIR / "plugins"
     out: list[PluginInfo] = []
     if not root.is_dir():
         return out

@@ -193,4 +193,16 @@ def build_blog_router(templates: Jinja2Templates) -> APIRouter:
             return RedirectResponse(url=post_public_path(slug), status_code=301)
         return serve_blog_post(request, templates, db, slug)
 
+    @router.post("/lang", response_class=RedirectResponse)
+    async def switch_language(request: Request):
+        form = await request.form()
+        target_locale = str(form.get("locale") or "ro").strip().lower()
+        next_url = str(form.get("next") or "/").strip()
+        if not next_url.startswith("/") or next_url.startswith("//") or "\\" in next_url:
+            next_url = "/"
+        response = RedirectResponse(url=next_url, status_code=303)
+        from app.core.i18n import set_locale_cookie
+        set_locale_cookie(response, target_locale)
+        return response
+
     return router

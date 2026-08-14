@@ -7,4 +7,5 @@ python-dotenv>=1.0
 itsdangerous
 greenlet
 sqlalchemy
-Pillow>=10.0stripe
+Pillow>=10.0
+stripe

@@ -1,0 +1,142 @@
+{# Base 4-column responsive footer with plugin_area hooks on all 4 columns #}
+<footer class="footer mt-auto bg-body-tertiary border-top py-5">
+  <div class="container px-4">
+    <div class="row g-4 mb-4">
+      <!-- Col 1: Brand & Tagline -->
+      <div class="col-12 col-md-6 col-lg-3" id="footer-newsletter-widget">
+        <div class="d-flex align-items-center mb-2">
+          {% if site_nav_icon_abs %}
+          <img class="me-2 rounded-1 flex-shrink-0" src="{{ site_nav_icon_abs|e }}" width="28" height="28" alt="" style="object-fit:contain" loading="lazy" decoding="async" />
+          {% else %}
+          <svg class="me-2 text-primary flex-shrink-0" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          {% endif %}
+          <h5 class="fw-bold mb-0 text-body">{{ site_display_name() }}</h5>
+        </div>
+        <p class="text-secondary small mb-3">{{ site_tagline() }}</p>
+
+        {% if is_plugin_active and is_plugin_active('newsletter') %}
+        <h6 class="fw-bold mb-2 text-body" style="font-size: 0.9rem;">📧 {{ t('newsletter.title') }}</h6>
+        <form id="footer-newsletter-form" onsubmit="submitFooterNewsletter(event)">
+          <div class="input-group input-group-sm mb-2">
+            <input type="email" id="footer-newsletter-email" class="form-control" placeholder="adresa@email.com" required />
+            <button type="submit" id="footer-newsletter-btn" class="btn btn-primary fw-semibold px-3">OK</button>
+          </div>
+          <div id="footer-newsletter-status" class="small" style="font-size: 0.8rem;"></div>
+        </form>
+        <script>
+        async function submitFooterNewsletter(e) {
+          e.preventDefault();
+          const em = document.getElementById('footer-newsletter-email');
+          const st = document.getElementById('footer-newsletter-status');
+          const btn = document.getElementById('footer-newsletter-btn');
+          if (!em || !em.value) return;
+          btn.disabled = true;
+          st.innerHTML = '<span class="text-secondary">Se procesează...</span>';
+          const fd = new FormData();
+          fd.append('email', em.value);
+          try {
+            const r = await fetch('/newsletter/subscribe', {
+              method: 'POST',
+              body: fd,
+              headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            });
+            const d = await r.json();
+            if (d.ok) {
+              st.innerHTML = '<span class="text-success fw-semibold">✅ ' + (d.msg || 'Abonat cu succes!') + '</span>';
+              em.value = '';
+            } else {
+              st.innerHTML = '<span class="text-danger fw-semibold">❌ ' + (d.err || 'Eroare la abonare.') + '</span>';
+            }
+          } catch(err) {
+            st.innerHTML = '<span class="text-danger fw-semibold">❌ Eroare de rețea. Încearcă din nou.</span>';
+          } finally {
+            btn.disabled = false;
+          }
+        }
+        </script>
+        {% endif %}
+
+        {% if plugin_area_footer_col1 %}
+          <div class="mt-3">
+            {{ plugin_area_footer_col1 | safe }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Col 2: Quick Navigation -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <h6 class="fw-bold mb-3 text-body">{{ t('footer.quickNav') }}</h6>
+        <ul class="list-unstyled mb-0 small">
+          <li class="mb-2">
+            <a href="/" class="text-secondary text-decoration-none hover-primary">{{ t('footer.home') }}</a>
+          </li>
+          <li class="mb-2">
+            <a href="/#categories" class="text-secondary text-decoration-none hover-primary">{{ t('footer.categories') }}</a>
+          </li>
+          {% if is_plugin_active and is_plugin_active('newsletter') %}
+          <li class="mb-2">
+            <a href="#footer-newsletter-widget" class="text-secondary text-decoration-none hover-primary">{{ t('footer.newsletter') }}</a>
+          </li>
+          {% endif %}
+          <li>
+            <a href="/admin" class="text-secondary text-decoration-none hover-primary">{{ t('footer.admin') }}</a>
+          </li>
+        </ul>
+
+        {% if plugin_area_footer_col2 %}
+          <div class="mt-3">
+            {{ plugin_area_footer_col2 | safe }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Col 3: Info & Theme -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <h6 class="fw-bold mb-3 text-body">{{ t('footer.aboutBlog') }}</h6>
+        {% set _t = active_theme_info() %}
+        <p class="text-secondary small mb-2">
+          {{ t('footer.theme') }}: <strong>{{ _t.name|e }}</strong> (v{{ _t.version or '1.0.0' }})
+        </p>
+        <p class="text-secondary small mb-0">
+          Versiune aplicație: <strong>2.0 Core</strong>
+        </p>
+
+        {% if plugin_area_footer_col3 %}
+          <div class="mt-3">
+            {{ plugin_area_footer_col3 | safe }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Col 4: Community -->
+      <div class="col-12 col-md-6 col-lg-3">
+        <h6 class="fw-bold mb-3 text-body">{{ t('footer.communityTitle') }}</h6>
+        <p class="text-secondary small mb-0">
+          🚛 <strong>{{ site_display_name() }}</strong> — {{ t('footer.communityText') }}
+        </p>
+
+        {% if plugin_area_footer_col4 %}
+          <div class="mt-3">
+            {{ plugin_area_footer_col4 | safe }}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Bottom Copyright Divider -->
+    <div class="border-top pt-4 text-center">
+      <p class="text-secondary small mb-0">
+        © {{ now().strftime("%Y") }} <strong>{{ site_display_name() }}</strong>. {{ t('footer.rights') }}
+        <span class="ms-2 opacity-75">| {{ t('footer.craftedBy') }}</span>
+      </p>
+      {% if plugin_area_footer_bottom %}
+        <div class="mt-2">
+          {{ plugin_area_footer_bottom | safe }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</footer>

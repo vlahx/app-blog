@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from typing import Any, Dict
 
-from app.core.config import PROJECT_ROOT
+from app.core.config import APP_DIR, PROJECT_ROOT
 from app.core.plugin_manager import (
     get_installed_plugins,
     get_plugin_settings,
@@ -34,7 +34,7 @@ def build_plugin_settings_router(templates) -> APIRouter:
         if not plugin:
             return HTMLResponse("<h1>Plugin not found</h1>", status_code=404)
         
-        plugin_dir = PROJECT_ROOT / "plugins" / plugin_id
+        plugin_dir = APP_DIR / "plugins" / plugin_id
         metadata = load_plugin_metadata(plugin_dir)
         current_settings = get_plugin_settings(plugin_id)
         
@@ -47,9 +47,11 @@ def build_plugin_settings_router(templates) -> APIRouter:
             "newsletter_subscribers": [],
         }
         if plugin_id == "newsletter":
-            from app.utils.newsletter_subscribers import list_subscribers
-
-            context["newsletter_subscribers"] = list_subscribers()
+            try:
+                from app.plugins.newsletter.db import list_all_subscribers
+                context["newsletter_subscribers"] = [s["email"] for s in list_all_subscribers()]
+            except Exception:
+                context["newsletter_subscribers"] = []
         
 
         plugin_locales = {}
@@ -98,7 +100,7 @@ def build_plugin_settings_router(templates) -> APIRouter:
         form = await request.form()
         settings_updates: Dict[str, str] = {}
         
-        plugin_dir = PROJECT_ROOT / "plugins" / plugin_id
+        plugin_dir = APP_DIR / "plugins" / plugin_id
         metadata = load_plugin_metadata(plugin_dir)
         
         if metadata and metadata.settings:
@@ -153,11 +155,11 @@ def build_plugin_settings_router(templates) -> APIRouter:
     async def newsletter_subscriber_remove(
         request: Request, email: str = Form(...)
     ):
-        from app.utils.newsletter_subscribers import normalize_email, remove_subscriber
-
-        em = normalize_email(email)
-        if em:
-            remove_subscriber(em)
+        try:
+            from app.plugins.newsletter.db import delete_subscriber
+            delete_subscriber(email)
+        except Exception:
+            pass
         return RedirectResponse(
             url="/admin/plugins/newsletter/settings", status_code=303
         )
@@ -165,32 +167,30 @@ def build_plugin_settings_router(templates) -> APIRouter:
     @router.post("/admin/plugins/newsletter/test-email")
     @role_required("admin")
     async def newsletter_test_email(request: Request):
-        from app.utils.email_notify import _newsletter_mail_params, _smtp_connected
-        from email.message import EmailMessage
-
-        p = _newsletter_mail_params()
-        if not p:
-            msg = "Eroare: Nu ai completat Host-ul SMTP sau adresa de e-mail expeditor (from_email)."
-            return HTMLResponse(f"<script>alert('{msg}'); window.location.href='/admin/plugins/newsletter/settings';</script>")
-
-        from app.core.plugin_manager import get_plugin_setting
-        to_addr = get_plugin_setting("newsletter", "notify_email") or p["from_addr"]
-        if not to_addr:
-            msg = "Eroare: Vă rugăm să specificați adresa E-mail notificări sau E-mail expeditor."
-            return HTMLResponse(f"<script>alert('{msg}'); window.location.href='/admin/plugins/newsletter/settings';</script>")
-
-        email_msg = EmailMessage()
-        email_msg["Subject"] = "Test SMTP Newsletter - Blog Camionagiu"
-        email_msg["From"] = p["from_addr"]
-        email_msg["To"] = to_addr
-        email_msg.set_content("Felicitări! Setările SMTP ale newsletter-ului funcționează cu succes.")
-
         try:
-            with _smtp_connected(p) as smtp:
-                smtp.send_message(email_msg)
-            res_msg = f"✅ E-mail de test trimis cu succes către {to_addr}!"
+            from app.plugins.newsletter.email import get_smtp_params, send_single_email
+            p = get_smtp_params()
+            if not p:
+                msg = "Eroare: Nu ai completat Host-ul SMTP sau adresa de e-mail expeditor (from_email)."
+                return HTMLResponse(f"<script>alert('{msg}'); window.location.href='/admin/plugins/newsletter/settings';</script>")
+
+            from app.core.plugin_manager import get_plugin_setting
+            to_addr = get_plugin_setting("newsletter", "notify_email") or p["from_addr"]
+            if not to_addr:
+                msg = "Eroare: Vă rugăm să specificați adresa E-mail notificări sau E-mail expeditor."
+                return HTMLResponse(f"<script>alert('{msg}'); window.location.href='/admin/plugins/newsletter/settings';</script>")
+
+            success = send_single_email(
+                to_email=to_addr,
+                subject="Test SMTP Newsletter - Blog 2.0",
+                body_text="Felicitări! Setările SMTP ale newsletter-ului funcționează cu succes."
+            )
+            if success:
+                res_msg = f"✅ E-mail de test trimis cu succes către {to_addr}!"
+            else:
+                res_msg = "❌ Trimiterea a eșuat. Verificați logurile serverului SMTP."
         except Exception as e:
-            res_msg = f"❌ Trimiterea a eșuat. Eroare SMTP: {type(e).__name__}"
+            res_msg = f"❌ Trimiterea a eșuat. Eroare: {e}"
 
         return HTMLResponse(f"<script>alert('{res_msg}'); window.location.href='/admin/plugins/newsletter/settings';</script>")
 
