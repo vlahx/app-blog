@@ -492,13 +492,17 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
     @router.get("/admin/translations/", response_class=HTMLResponse)
     @role_required("admin")
     async def admin_translations_page(request: Request):
-        ensure_default_locale()
+        from app.core.i18n import (
+            DEFAULT_LOCALE,
+            get_available_locales,
+            list_translation_catalog,
+        )
         locales = get_available_locales()
         preferred_locale = next((loc["code"] for loc in locales if loc.get("code") and loc["code"] != DEFAULT_LOCALE), None)
         selected_locale = (request.query_params.get("locale") or "").strip() or preferred_locale or (
             next((loc["code"] for loc in locales if loc.get("is_default")), None) or (locales[0]["code"] if locales else DEFAULT_LOCALE)
         )
-        translation_items = list_translation_catalog(selected_locale, source_locale=DEFAULT_LOCALE) if selected_locale else []
+        translation_items = list_translation_catalog(selected_locale) if selected_locale else []
 
         grouped_sections: dict[str, list[dict[str, Any]]] = {}
         def get_section_title(key: str) -> str:
@@ -556,16 +560,17 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
             },
         )
 
-    @router.post("/admin/translations/add-locale")
-    @role_required("admin")
     @router.post("/admin/translations/set-default")
     @role_required("admin")
     async def admin_set_default_locale(request: Request, locale_code: str = Form(...)):
-        from app.core.translation_db import set_default_locale
+        from app.core.i18n import set_default_locale
         set_default_locale(locale_code)
         return RedirectResponse(url=f"/admin/translations?locale={locale_code}&msg=Limba+implicită+a+fost+schimbată!", status_code=303)
 
+    @router.post("/admin/translations/add-locale")
+    @role_required("admin")
     async def admin_add_locale(request: Request):
+        from app.core.i18n import add_locale
         form = await request.form()
 
         def _txt(key: str) -> str:
@@ -580,37 +585,24 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
 
         locale_code = _txt("locale_code").strip().lower()
         locale_name = _txt("locale_name") or locale_code.upper()
-        is_default = False
-        if not locale_code:
-            return RedirectResponse(url="/admin/translations", status_code=303)
-        with SessionLocal() as db:
-            from app.models.db_models import TranslationLocale
-
-            existing = db.get(TranslationLocale, locale_code)
-            if existing is None:
-                db.add(TranslationLocale(code=locale_code, name=locale_name, enabled=True, is_default=False))
-            else:
-                existing.name = locale_name
-                existing.enabled = True
-            db.commit()
-        from app.core.translation_db import invalidate_translation_cache
-        invalidate_translation_cache()
-        seed_locale_from_default(locale_code)
+        if locale_code:
+            add_locale(locale_code, locale_name)
         return RedirectResponse(url="/admin/translations?locale=" + locale_code, status_code=303)
 
     @router.post("/admin/translations/delete-locale")
     @role_required("admin")
     async def admin_delete_locale(request: Request):
+        from app.core.i18n import delete_locale
         form = await request.form()
         locale_code = str(form.get("locale_code") or "").strip().lower()
         if locale_code:
-            from app.core.translation_db import delete_locale
             delete_locale(locale_code)
         return RedirectResponse(url="/admin/translations", status_code=303)
 
     @router.post("/admin/translations/save")
     @role_required("admin")
     async def admin_save_translation(request: Request):
+        from app.core.i18n import save_translation_values
         form = await request.form()
 
         def _txt(key: str) -> str:
@@ -636,12 +628,13 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
             if key:
                 values[key] = value
         if locale_code and values:
-            set_translation_values(locale_code, values)
+            save_translation_values(locale_code, values)
         return RedirectResponse(url=f"/admin/translations?locale={locale_code}", status_code=303)
 
     @router.get("/admin/translations/delete")
     @role_required("admin")
     async def admin_delete_translation(request: Request):
+        from app.core.i18n import delete_translation_entry
         locale_code = (request.query_params.get("locale") or "").strip()
         key = (request.query_params.get("key") or "").strip()
         if locale_code and key:

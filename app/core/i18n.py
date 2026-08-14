@@ -7,31 +7,83 @@ from typing import Any
 from starlette.requests import Request
 from starlette.responses import Response
 
-from app.core.translation_db import (
-    DEFAULT_LOCALE,
-    get_available_locales,
-    get_translation_from_db,
-    get_translations_from_db,
-    ensure_default_locale,
-)
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 APP_DIR = PROJECT_ROOT / "app"
-TRANSLATIONS_DIR = PROJECT_ROOT / "translations"
-SUPPORTED_LOCALES = {"en", "ro"}
-DEFAULT_FALLBACK_LOCALE = DEFAULT_LOCALE
+LOCALES_DIR = APP_DIR / "locales"
+
+DEFAULT_LOCALE = "en"
+
+_IN_MEMORY_TRANSLATIONS: dict[str, dict[str, Any]] = {}
+_IN_MEMORY_LOCALES_META: dict[str, dict[str, Any]] = {}
+
+
+def _ensure_locales_dir() -> Path:
+    LOCALES_DIR.mkdir(parents=True, exist_ok=True)
+    return LOCALES_DIR
+
+
+def load_all_translations() -> None:
+    global _IN_MEMORY_TRANSLATIONS, _IN_MEMORY_LOCALES_META
+    _ensure_locales_dir()
+    
+    new_translations: dict[str, dict[str, Any]] = {}
+    new_meta: dict[str, dict[str, Any]] = {}
+
+    for file_path in LOCALES_DIR.glob("*.json"):
+        code = file_path.stem.lower().strip()
+        if not code:
+            continue
+        try:
+            with file_path.open("r", encoding="utf-8") as f:
+                content = json.load(f)
+                meta = content.get("_meta", {})
+                trans = content.get("translations", {})
+                
+                new_meta[code] = {
+                    "code": code,
+                    "name": meta.get("name") or code.upper(),
+                    "enabled": meta.get("enabled", True),
+                    "is_default": meta.get("is_default", code == DEFAULT_LOCALE),
+                }
+                new_translations[code] = trans if isinstance(trans, dict) else {}
+        except Exception:
+            pass
+
+    if DEFAULT_LOCALE not in new_meta:
+        new_meta[DEFAULT_LOCALE] = {
+            "code": DEFAULT_LOCALE,
+            "name": "English",
+            "enabled": True,
+            "is_default": True,
+        }
+        new_translations[DEFAULT_LOCALE] = {}
+
+    _IN_MEMORY_TRANSLATIONS = new_translations
+    _IN_MEMORY_LOCALES_META = new_meta
+
+
+load_all_translations()
+
+
+def get_available_locales() -> list[dict[str, Any]]:
+    if not _IN_MEMORY_LOCALES_META:
+        load_all_translations()
+    locales = list(_IN_MEMORY_LOCALES_META.values())
+    locales.sort(key=lambda x: (not x.get("is_default", False), x.get("code", "")))
+    return locales
 
 
 def get_supported_locales() -> set[str]:
-    locales = get_available_locales()
-    if locales:
-        return {row["code"] for row in locales}
-    return set(SUPPORTED_LOCALES)
+    locs = get_available_locales()
+    return {loc["code"] for loc in locs if loc.get("enabled")}
 
 
-def _load_locale_data(locale: str) -> dict[str, Any]:
-    normalized = (locale or DEFAULT_LOCALE).strip().lower()
-    return get_translations_from_db(normalized)
+def get_site_default_locale() -> str:
+    locs = get_available_locales()
+    for loc in locs:
+        if loc.get("is_default"):
+            return loc["code"]
+    return DEFAULT_LOCALE
 
 
 def resolve_locale(request: Request | None = None, fallback: str = DEFAULT_LOCALE) -> str:
@@ -98,63 +150,30 @@ def set_locale_cookie(response: Response, locale: str, *, path: str = "/", max_a
 
 
 def get_translation(locale: str, key: str) -> str:
-    normalized = (locale or DEFAULT_LOCALE).strip().lower()
-    if normalized in get_supported_locales():
-        val = get_translation_from_db(normalized, key, )
-        if val:
-            return val
-        if normalized != DEFAULT_LOCALE:
-            fb = get_translation_from_db(DEFAULT_LOCALE, key, )
-            if fb:
-                return fb
-    data = _load_locale_data(normalized)
-    value: Any = data
-    for part in key.split("."):
-        if isinstance(value, dict) and part in value:
-            value = value[part]
-        else:
-            return key
-    if isinstance(value, str) and value:
-        return value
+    norm = (locale or DEFAULT_LOCALE).strip().lower()
+    if norm not in _IN_MEMORY_TRANSLATIONS:
+        norm = DEFAULT_LOCALE
+
+    cat = _IN_MEMORY_TRANSLATIONS.get(norm, {})
+    if key in cat and isinstance(cat[key], str) and cat[key].strip():
+        return cat[key].strip()
+
+    fb_cat = _IN_MEMORY_TRANSLATIONS.get(DEFAULT_LOCALE, {})
+    if key in fb_cat and isinstance(fb_cat[key], str) and fb_cat[key].strip():
+        return fb_cat[key].strip()
+
     return key
-_COMPOSED_TRANSLATIONS_CACHE: dict[str, dict[str, Any]] = {}
-
-
-def clear_i18n_cache() -> None:
-    global _COMPOSED_TRANSLATIONS_CACHE
-    _COMPOSED_TRANSLATIONS_CACHE.clear()
 
 
 def get_translations(locale: str) -> dict[str, Any]:
-    global _COMPOSED_TRANSLATIONS_CACHE
-    normalized = (locale or DEFAULT_LOCALE).strip().lower()
-    if normalized not in get_supported_locales():
-        normalized = DEFAULT_LOCALE
-
-    if normalized in _COMPOSED_TRANSLATIONS_CACHE:
-        return _COMPOSED_TRANSLATIONS_CACHE[normalized]
-
-    data = _load_locale_data(normalized)
-    if normalized == DEFAULT_LOCALE:
-        _COMPOSED_TRANSLATIONS_CACHE[normalized] = data
-        return data
-
-    fallback = _load_locale_data(DEFAULT_LOCALE)
-
-    def _merge(a: Any, b: Any) -> Any:
-        if isinstance(a, dict) and isinstance(b, dict):
-            merged = dict(b)
-            for key, value in a.items():
-                if key not in merged:
-                    merged[key] = value
-                else:
-                    merged[key] = _merge(value, merged[key])
-            return merged
-        return a if a is not None else b
-
-    res = _merge(data, fallback)
-    _COMPOSED_TRANSLATIONS_CACHE[normalized] = res
-    return res
+    norm = (locale or DEFAULT_LOCALE).strip().lower()
+    cat = dict(_IN_MEMORY_TRANSLATIONS.get(DEFAULT_LOCALE, {}))
+    if norm != DEFAULT_LOCALE:
+        loc_cat = _IN_MEMORY_TRANSLATIONS.get(norm, {})
+        for k, v in loc_cat.items():
+            if isinstance(v, str) and v.strip():
+                cat[k] = v.strip()
+    return cat
 
 
 def get_translation_value(locale: str, key: str) -> str:
@@ -166,29 +185,120 @@ def build_context(locale: str, **extra: Any) -> dict[str, Any]:
     return {"locale": locale, "translations": translations, **extra}
 
 
-def get_site_default_locale() -> str:
-    try:
-        from app.core.translation_db import get_available_locales
-        locales = get_available_locales()
-        for loc in locales:
-            if loc.get("is_default"):
-                return loc["code"]
-    except Exception:
-        pass
-    return "ro"
+def clear_i18n_cache() -> None:
+    load_all_translations()
+
+
+def save_translation_values(locale: str, values: dict[str, str]) -> None:
+    norm = (locale or DEFAULT_LOCALE).strip().lower()
+    file_path = LOCALES_DIR / f"{norm}.json"
+    content: dict[str, Any] = {"_meta": {"name": norm.upper(), "is_default": False, "enabled": True}, "translations": {}}
+    
+    if file_path.is_file():
+        try:
+            with file_path.open("r", encoding="utf-8") as f:
+                content = json.load(f)
+        except Exception:
+            pass
+
+    trans = content.setdefault("translations", {})
+    for k, v in values.items():
+        if k:
+            trans[k] = v or ""
+
+    with file_path.open("w", encoding="utf-8") as f:
+        json.dump(content, f, ensure_ascii=False, indent=2)
+
+    load_all_translations()
+
+
+def add_locale(code: str, name: str = "") -> None:
+    norm = code.strip().lower()
+    if not norm:
+        return
+    file_path = LOCALES_DIR / f"{norm}.json"
+    if not file_path.is_file():
+        source_file = LOCALES_DIR / f"{DEFAULT_LOCALE}.json"
+        source_trans = {}
+        if source_file.is_file():
+            try:
+                with source_file.open("r", encoding="utf-8") as f:
+                    source_trans = json.load(f).get("translations", {})
+            except Exception:
+                pass
+        
+        content = {
+            "_meta": {
+                "name": name.strip() or norm.upper(),
+                "is_default": False,
+                "enabled": True,
+            },
+            "translations": source_trans,
+        }
+        with file_path.open("w", encoding="utf-8") as f:
+            json.dump(content, f, ensure_ascii=False, indent=2)
+
+    load_all_translations()
+
+
+def delete_locale(code: str) -> bool:
+    norm = code.strip().lower()
+    if norm == DEFAULT_LOCALE:
+        return False
+    file_path = LOCALES_DIR / f"{norm}.json"
+    if file_path.is_file():
+        meta = _IN_MEMORY_LOCALES_META.get(norm, {})
+        if meta.get("is_default"):
+            return False
+        try:
+            file_path.unlink()
+            load_all_translations()
+            return True
+        except Exception:
+            return False
+    return False
+
+
+def set_default_locale(code: str) -> bool:
+    norm = code.strip().lower()
+    if norm not in _IN_MEMORY_LOCALES_META:
+        return False
+
+    for file_path in LOCALES_DIR.glob("*.json"):
+        c = file_path.stem.lower().strip()
+        try:
+            with file_path.open("r", encoding="utf-8") as f:
+                content = json.load(f)
+            meta = content.setdefault("_meta", {})
+            meta["is_default"] = (c == norm)
+            with file_path.open("w", encoding="utf-8") as f:
+                json.dump(content, f, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
+
+    load_all_translations()
+    return True
+
+
+def list_translation_catalog(locale: str) -> list[dict[str, Any]]:
+    norm = (locale or DEFAULT_LOCALE).strip().lower()
+    source_cat = _IN_MEMORY_TRANSLATIONS.get(DEFAULT_LOCALE, {})
+    target_cat = _IN_MEMORY_TRANSLATIONS.get(norm, {})
+
+    keys = sorted(set(source_cat.keys()) | set(target_cat.keys()))
+    return [
+        {
+            "key": k,
+            "source_value": source_cat.get(k, ""),
+            "target_value": target_cat.get(k, ""),
+        }
+        for k in keys
+    ]
 
 
 def get_plugin_translation(plugin_id: str, locale: str, key: str, default_val: str = "") -> str:
     def_locale = get_site_default_locale()
     norm_locale = (locale or def_locale).strip().lower()
-    
-    db_val = get_translation_from_db(norm_locale, f"plugins.{plugin_id}.{key}")
-    if db_val:
-        return db_val
-    if norm_locale != def_locale:
-        db_fb = get_translation_from_db(def_locale, f"plugins.{plugin_id}.{key}")
-        if db_fb:
-            return db_fb
 
     p_dir = APP_DIR / "plugins" / plugin_id / "locales"
 
