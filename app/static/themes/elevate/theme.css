@@ -68,11 +68,17 @@ body {
 
 /* Container & Wrapper Margins */
 .elevate-container,
-.container,
-.container-fluid {
-  max-width: 1200px !important;
+.container {
+  max-width: 1280px !important;
   margin-left: auto !important;
   margin-right: auto !important;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
+.container-fluid {
+  width: 100% !important;
+  max-width: 100% !important;
   padding-left: 1.5rem !important;
   padding-right: 1.5rem !important;
 }
