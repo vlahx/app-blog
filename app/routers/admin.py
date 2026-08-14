@@ -580,7 +580,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
 
         locale_code = _txt("locale_code").strip().lower()
         locale_name = _txt("locale_name") or locale_code.upper()
-        is_default = _txt("is_default") == "1"
+        is_default = False
         if not locale_code:
             return RedirectResponse(url="/admin/translations", status_code=303)
         with SessionLocal() as db:
@@ -588,14 +588,10 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
 
             existing = db.get(TranslationLocale, locale_code)
             if existing is None:
-                db.add(TranslationLocale(code=locale_code, name=locale_name, enabled=True, is_default=is_default))
+                db.add(TranslationLocale(code=locale_code, name=locale_name, enabled=True, is_default=False))
             else:
                 existing.name = locale_name
                 existing.enabled = True
-                existing.is_default = is_default
-            if is_default:
-                for row in db.query(TranslationLocale).filter(TranslationLocale.code != locale_code).all():
-                    row.is_default = False
             db.commit()
         from app.core.translation_db import invalidate_translation_cache
         invalidate_translation_cache()

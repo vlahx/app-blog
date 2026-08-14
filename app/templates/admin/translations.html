@@ -14,23 +14,16 @@
     <div class="card-body">
       <h2 class="h5 mb-3">{{ t("admin.translations.languages") }}</h2>
       <form method="post" action="/admin/translations/add-locale" class="row g-3 align-items-end">
-        <div class="col-md-4">
-          <label class="form-label">{{ t("admin.translations.localeCode") }}</label>
-          <input class="form-control" name="locale_code" placeholder="en" required />
+        <div class="col-md-5">
+          <label class="form-label fw-bold">{{ t("admin.translations.localeCode") }}</label>
+          <input class="form-control" name="locale_code" placeholder="ex: ro, en, fr, de" required />
         </div>
-        <div class="col-md-4">
-          <label class="form-label">{{ t("admin.translations.localeName") }}</label>
-          <input class="form-control" name="locale_name" placeholder="English" />
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">Default</label>
-          <div class="form-check mt-2">
-            <input class="form-check-input" type="checkbox" name="is_default" value="1" />
-            <label class="form-check-label">Default</label>
-          </div>
+        <div class="col-md-5">
+          <label class="form-label fw-bold">{{ t("admin.translations.localeName") }}</label>
+          <input class="form-control" name="locale_name" placeholder="ex: Română, English, Français" />
         </div>
         <div class="col-md-2">
-          <button class="btn btn-primary" type="submit">{{ t("admin.actions.add") }}</button>
+          <button class="btn btn-primary w-100 fw-bold" type="submit">➕ {{ t("admin.actions.add") }}</button>
         </div>
       </form>
       <div class="mt-3 d-flex flex-wrap gap-2 align-items-center">
