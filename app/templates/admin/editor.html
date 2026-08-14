@@ -240,6 +240,27 @@ function selectHeroImageFromMedia(file) {
 
 
 
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabBtns = document.querySelectorAll('#langTabs button[data-bs-toggle="tab"]');
+    tabBtns.forEach(function(btn) {
+      btn.addEventListener('shown.bs.tab', function(e) {
+        const targetSelector = e.target.getAttribute('data-bs-target');
+        if (targetSelector) {
+          const targetPane = document.querySelector(targetSelector);
+          if (targetPane) {
+            const textarea = targetPane.querySelector('textarea[id^="my_editor_"]');
+            if (textarea && typeof tinymce !== 'undefined') {
+              const ed = tinymce.get(textarea.id);
+              if (ed) {
+                ed.show();
+              }
+            }
+          }
+        }
+      });
+    });
+  });
+
   document.getElementById('hero_remove_btn')?.addEventListener('click', function () {
     document.getElementById('hero_image_url').value = '';
     document.getElementById('hero_image_preview').innerHTML = '';

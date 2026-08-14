@@ -488,12 +488,12 @@ def delete_translation_entry(locale_code: str, key: str) -> None:
 
 def delete_locale(locale_code: str) -> bool:
     locale = _normalize_locale(locale_code)
-    if locale == DEFAULT_LOCALE:
-        return False
     init_db()
     with SessionLocal() as db:
         locale_row = db.query(TranslationLocale).filter(TranslationLocale.code == locale).first()
         if locale_row is None:
+            return False
+        if locale_row.is_default:
             return False
         db.query(TranslationEntry).filter(TranslationEntry.locale_code == locale).delete()
         db.delete(locale_row)
