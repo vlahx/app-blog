@@ -471,9 +471,8 @@ def seed_locale_from_default(locale: str) -> None:
         db.commit()
 
 
-def delete_translation_entry(locale: str, key: str) -> None:
-    locale = _normalize_locale(locale)
-    invalidate_translation_cache(locale)
+def delete_translation_entry(locale_code: str, key: str) -> None:
+    locale = _normalize_locale(locale_code)
     init_db()
     with SessionLocal() as db:
         row = (
@@ -484,6 +483,7 @@ def delete_translation_entry(locale: str, key: str) -> None:
         if row is not None:
             db.delete(row)
             db.commit()
+    invalidate_translation_cache(locale)
 
 
 def delete_locale(locale_code: str) -> bool:
@@ -498,7 +498,8 @@ def delete_locale(locale_code: str) -> bool:
         db.query(TranslationEntry).filter(TranslationEntry.locale_code == locale).delete()
         db.delete(locale_row)
         db.commit()
-        return True
+    invalidate_translation_cache()
+    return True
 
 
 def set_translation_locale_enabled(locale_code: str, enabled: bool) -> bool:
@@ -510,7 +511,8 @@ def set_translation_locale_enabled(locale_code: str, enabled: bool) -> bool:
             return False
         locale_row.enabled = enabled
         db.commit()
-        return True
+    invalidate_translation_cache()
+    return True
 
 
 def set_default_locale(locale_code: str) -> bool:
@@ -526,4 +528,5 @@ def set_default_locale(locale_code: str) -> bool:
             row.is_default = True
             row.enabled = True
         db.commit()
-        return True
+    invalidate_translation_cache()
+    return True

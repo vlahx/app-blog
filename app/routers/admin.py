@@ -597,6 +597,8 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                 for row in db.query(TranslationLocale).filter(TranslationLocale.code != locale_code).all():
                     row.is_default = False
             db.commit()
+        from app.core.translation_db import invalidate_translation_cache
+        invalidate_translation_cache()
         seed_locale_from_default(locale_code)
         return RedirectResponse(url="/admin/translations?locale=" + locale_code, status_code=303)
 
