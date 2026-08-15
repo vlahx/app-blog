@@ -84,7 +84,7 @@
         <ul class="nav nav-pills card-header-pills" id="langTabs" role="tablist">
           {% for loc in locales %}
           <li class="nav-item" role="presentation">
-            <button class="nav-link {% if loop.first %}active{% endif %} fw-bold me-1" id="tab-{{ loc.code }}" data-bs-toggle="tab" data-bs-target="#content-{{ loc.code }}" type="button" role="tab">
+            <button class="nav-link {% if loop.first %}active{% endif %} fw-bold me-1" id="tab-{{ loc.code }}" data-bs-toggle="tab" data-bs-target="#content-{{ loc.code }}" type="button" role="tab" aria-controls="content-{{ loc.code }}" aria-selected="{% if loop.first %}true{% else %}false{% endif %}" onclick="switchLangTab('{{ loc.code }}')">
               🌐 {{ loc.name or loc.code|upper }} {% if loc.is_default %}<span class="badge bg-primary ms-1">default</span>{% endif %}
             </button>
           </li>
@@ -239,6 +239,33 @@ function selectHeroImageFromMedia(file) {
   }
 
 
+
+  function switchLangTab(code) {
+    const tabBtns = document.querySelectorAll('#langTabs .nav-link');
+    const tabPanes = document.querySelectorAll('#langTabsContent .tab-pane');
+
+    tabBtns.forEach(btn => {
+      const isTarget = btn.getAttribute('data-bs-target') === '#content-' + code;
+      btn.classList.toggle('active', isTarget);
+      btn.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+    });
+
+    tabPanes.forEach(pane => {
+      const isTarget = (pane.id === 'content-' + code);
+      if (isTarget) {
+        pane.classList.add('show', 'active');
+      } else {
+        pane.classList.remove('show', 'active');
+      }
+    });
+
+    if (typeof tinymce !== 'undefined') {
+      const ed = tinymce.get('my_editor_' + code);
+      if (ed) {
+        setTimeout(() => { ed.show(); }, 50);
+      }
+    }
+  }
 
   document.addEventListener('DOMContentLoaded', function() {
     const tabBtns = document.querySelectorAll('#langTabs button[data-bs-toggle="tab"]');
