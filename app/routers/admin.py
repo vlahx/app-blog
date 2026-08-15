@@ -744,6 +744,17 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                         )
 
                 if not slug:
+                    if "theme.json" in members:
+                        try:
+                            tj_data = json.loads(zipf.read("theme.json").decode("utf-8"))
+                            cand = _safe_theme_slug(tj_data.get("slug") or "")
+                            if cand:
+                                slug = cand
+                                mode = "flat_root"
+                        except Exception:
+                            pass
+
+                if not slug:
                     sample = ", ".join(members[:8]) if members else "(gol)"
                     raise ValueError(
                         "Zip invalid: aștept `themes/<slug>/...` sau `<slug>/...` (un singur folder la rădăcină cu numele temei). "
@@ -765,6 +776,17 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                             f"static/themes/{slug}/"
                         ):
                             dest = extract_root / n
+                        else:
+                            continue
+                    elif mode == "flat_root":
+                        if n == "theme.json":
+                            dest = extract_root / "themes" / slug / "theme.json"
+                        elif n.startswith("templates/"):
+                            dest = extract_root / "themes" / slug / n
+                        elif n == "theme.css":
+                            dest = extract_root / "static" / "themes" / slug / "theme.css"
+                        elif n.startswith("static/"):
+                            dest = extract_root / "static" / "themes" / slug / n[len("static/"):]
                         else:
                             continue
                     else:
