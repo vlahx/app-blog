@@ -151,7 +151,7 @@ function closeMediaManagerModal() {
 
   try {
     if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-      const bsModal = bootstrap.Modal.getInstance(modalEl);
+      const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
       if (bsModal) {
         bsModal.hide();
       }
@@ -160,15 +160,23 @@ function closeMediaManagerModal() {
     console.warn('Bootstrap modal hide warning:', e);
   }
 
+  modalEl.classList.remove('show');
+  modalEl.style.display = 'none';
+  modalEl.setAttribute('aria-hidden', 'true');
+  document.querySelectorAll('.modal-backdrop, .fade.show.modal-backdrop').forEach(b => b.remove());
+  document.body.classList.remove('modal-open');
+  document.body.style.overflow = '';
+  document.body.style.paddingRight = '';
+
   setTimeout(() => {
     modalEl.classList.remove('show');
     modalEl.style.display = 'none';
     modalEl.setAttribute('aria-hidden', 'true');
-    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+    document.querySelectorAll('.modal-backdrop, .fade.show.modal-backdrop').forEach(b => b.remove());
     document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
     document.body.style.paddingRight = '';
-  }, 100);
+  }, 150);
 }
 
 function confirmMediaSelection() {
