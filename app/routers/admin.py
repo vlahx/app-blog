@@ -379,6 +379,9 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                 else:
                     write_settings({"STATIC_NAV_LINKS": []})
 
+        from app.core.config import invalidate_nav_fixed_post_links_cache
+        invalidate_nav_fixed_post_links_cache()
+
 
 
         return RedirectResponse(url="/admin?msg=Postare+salvată+cu+succes!", status_code=303)

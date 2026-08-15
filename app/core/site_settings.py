@@ -117,6 +117,9 @@ def write_settings(updates: dict[str, Any]) -> None:
         _SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
         with open(_SETTINGS_PATH, "w", encoding="utf-8") as f:
             json.dump(cur, f, ensure_ascii=False, indent=2)
+        if "STATIC_NAV_LINKS" in updates:
+            from app.core.config import invalidate_nav_fixed_post_links_cache
+            invalidate_nav_fixed_post_links_cache()
     except Exception:
         pass
 
