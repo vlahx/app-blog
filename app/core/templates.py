@@ -53,15 +53,14 @@ def _apply_theme_loader(templates: Jinja2Templates, *, directory: str = "app/tem
     Reconfigurează loader-ul în funcție de tema curentă.
     Asta permite schimbarea temei din Admin fără restart.
     """
-    global _LAST_APPLIED_THEME
     active = get_active_theme() or "minimal"
     if active == "default":
         active = "minimal"
 
-    if not force and _LAST_APPLIED_THEME == active and isinstance(templates.env.loader, ChoiceLoader):
+    if not force and getattr(templates, "_applied_theme", None) == active and isinstance(templates.env.loader, ChoiceLoader):
         return
 
-    _LAST_APPLIED_THEME = active
+    templates._applied_theme = active
     loaders = []
 
     # Active theme templates (e.g. themes/elevate/templates)
