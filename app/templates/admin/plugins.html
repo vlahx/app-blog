@@ -32,11 +32,6 @@
       </form>
       <div class="d-flex flex-wrap gap-2 align-items-center mt-3">
         <button class="btn btn-primary" type="submit" form="plugin-upload-form">{{ t('admin.actions.install') }}</button>
-        {% if container_restart_enabled %}
-        <form method="post" action="/admin/app/restart" class="d-inline" onsubmit="setTimeout(function(){ window.location.reload(); }, 2500);">
-          <button class="btn btn-warning" type="submit" onclick="return confirm('Oprești procesul aplicației; Docker va reporni containerul. Continui?');">{{ t('admin.plugins.restartContainer') }}</button>
-        </form>
-        {% endif %}
       </div>
     </div>
   </div>
