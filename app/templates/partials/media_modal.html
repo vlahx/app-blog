@@ -4,7 +4,7 @@
     <div class="modal-content shadow-lg border-0">
       <div class="modal-header bg-body-tertiary border-bottom py-3">
         <h5 class="modal-title fw-bold" id="mediaModalLabel">🖼️ {{ t('media.modal.title') }}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="closeMediaManagerModal()" aria-label="Close"></button>
       </div>
       <div class="modal-body p-0">
         <ul class="nav nav-tabs px-3 pt-3 bg-light border-bottom" id="mediaModalTabs" role="tablist">
@@ -118,7 +118,7 @@
         </div>
       </div>
       <div class="modal-footer bg-light py-2">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">{{ t('media.modal.cancel') }}</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" onclick="closeMediaManagerModal()">{{ t('media.modal.cancel') }}</button>
         <button type="button" class="btn btn-primary btn-sm px-4 fw-semibold" id="insertMediaBtn" disabled onclick="confirmMediaSelection()">
           ✅ {{ t('media.modal.insertSelected') }}
         </button>

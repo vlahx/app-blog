@@ -145,14 +145,13 @@ function closeMediaManagerModal() {
   const modalEl = document.getElementById('mediaModal');
   if (!modalEl) return;
 
-  // Remove focus from any child element inside the modal before aria-hidden="true" is set
   if (document.activeElement && modalEl.contains(document.activeElement)) {
     document.activeElement.blur();
   }
 
   try {
     if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-      const bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+      const bsModal = bootstrap.Modal.getInstance(modalEl);
       if (bsModal) {
         bsModal.hide();
       }
@@ -160,13 +159,16 @@ function closeMediaManagerModal() {
   } catch (e) {
     console.warn('Bootstrap modal hide warning:', e);
   }
-  modalEl.classList.remove('show');
-  modalEl.style.display = 'none';
-  modalEl.setAttribute('aria-hidden', 'true');
-  document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-  document.body.classList.remove('modal-open');
-  document.body.style.overflow = '';
-  document.body.style.paddingRight = '';
+
+  setTimeout(() => {
+    modalEl.classList.remove('show');
+    modalEl.style.display = 'none';
+    modalEl.setAttribute('aria-hidden', 'true');
+    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+  }, 100);
 }
 
 function confirmMediaSelection() {
