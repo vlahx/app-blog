@@ -128,9 +128,12 @@
 
     <!-- Bottom Copyright Divider -->
     <div class="border-top pt-4 text-center">
+      {% set _t = active_theme_info() %}
       <p class="text-secondary small mb-0">
         © {{ now().strftime("%Y") }} <strong>{{ site_display_name() }}</strong>. {{ t('footer.rights') }}
-        <span class="ms-2 opacity-75">| {{ t('footer.craftedBy') }}</span>
+        {% if _t and _t.author %}
+        <span class="ms-2 opacity-75">| {{ t('footer.craftedBy') }} {{ _t.author|e }}</span>
+        {% endif %}
       </p>
       {% if plugin_area_footer_bottom %}
         <div class="mt-2">
