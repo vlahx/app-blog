@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Header Magazin -->
+  <div class="text-center mb-5">
+    <h1 class="fw-bold display-5 mb-2">{{ t_shop('title', '🛒 Magazin Club') }}</h1>
+    <p class="text-secondary lead mb-0">{{ t_shop('subtitle', 'Produse exclusive, echipamente de drum și plugin-uri digitale pentru comunitate.') }}</p>
+  </div>
+
+  <!-- Categorii Pills -->
+  {% if categories %}
+  <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+    <a href="/shop" class="btn btn-sm {% if not current_category %}btn-primary text-white{% else %}btn-outline-primary{% endif %} shadow-sm">
+      {{ t_shop('all_products', 'Toate produsele') }}
+    </a>
+    {% for cat in categories %}
+    <a href="/shop?category={{ cat.slug }}" class="btn btn-sm {% if current_category == cat.slug %}btn-primary text-white{% else %}btn-outline-primary{% endif %} shadow-sm">
+      {{ cat.icon }} {{ cat.name }}
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Grid Produse -->
+  {% if products %}
+  <div class="row row-cols-1 row-cols-md-2 g-4 mb-5">
+    {% for p in products %}
+    <div class="col">
+      <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden position-relative hover-top transition">
+        <!-- Badges -->
+        <div class="position-absolute top-0 start-0 m-3 d-flex gap-1 z-3">
+          {% if p.product_type == 'digital' %}
+          <span class="badge bg-primary text-white shadow-sm">{{ t_shop('digital_badge', '⚡ Digital') }}</span>
+          {% else %}
+          <span class="badge bg-success text-white shadow-sm">{{ t_shop('physical_badge', '📦 Livrare Fizică') }}</span>
+          {% endif %}
+          {% if p.category_name %}
+          <span class="badge bg-secondary text-white shadow-sm">{{ p.category_name }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Imagine Featured (1200x630 OG Standard) -->
+        <div class="ratio ratio-16x9 bg-body-tertiary rounded-top" style="aspect-ratio: 1200 / 630;">
+          {% if p.featured_image %}
+          <img src="{{ p.featured_image }}" class="card-img-top object-fit-cover" alt="{{ p.title }}" loading="lazy">
+          {% else %}
+          <div class="d-flex align-items-center justify-content-center bg-body-secondary text-secondary fs-1">
+            📦
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Body Card -->
+        <div class="card-body d-flex flex-column p-4">
+          <h5 class="card-title fw-bold text-body mb-2">
+            <a href="/shop/product/{{ p.slug }}" class="text-decoration-none text-body hover-primary">
+              {{ p.title }}
+            </a>
+          </h5>
+          <p class="card-text text-secondary small flex-grow-1 mb-3">
+            {{ p.short_description or p.short_description_display or 'Descoperă detaliile acestui produs exclusiv din magazinul nostru.' }}
+          </p>
+
+          <!-- Bottom Bar: Preț & Buton Acțiune -->
+          <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">
+            <div>
+              <span class="fs-4 fw-bold text-primary">{{ "%.2f"|format(p.price) }}</span>
+              <span class="small fw-semibold text-secondary ms-1">{{ p.currency }}</span>
+            </div>
+            <a href="/shop/product/{{ p.slug }}" class="btn btn-primary btn-sm px-3 fw-semibold shadow-sm">
+              {{ t_shop('view_details', 'Vezi Detalii →') }}
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <div class="fs-1 mb-3">📦</div>
+    <h4 class="fw-bold">Momentan nu există produse în această categorie</h4>
+    <p class="text-secondary">Revin-o curând pentru noi produse și echipamente!</p>
+    <a href="/shop" class="btn btn-outline-primary btn-sm mt-2">Vezi toate produsele</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

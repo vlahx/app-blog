@@ -1,0 +1,103 @@
+{# Elevate theme: navbar with Theme Switcher & Language Selector on left next to Title, and Static Pages + Auth on right / hamburger #}
+<header class="navbar navbar-expand-lg border-bottom sticky-top elevate-navbar py-3">
+  <div class="container-fluid px-4">
+    
+    <!-- LEFT SIDE: Brand Title + Theme Switcher + Language Selector -->
+    <div class="d-flex align-items-center gap-2 me-auto">
+      <a class="navbar-brand fw-bold d-flex align-items-center gap-2 mb-0 me-2" href="/">
+        {% if site_nav_icon_abs %}
+        <img class="rounded-2 flex-shrink-0" src="{{ site_nav_icon_abs|e }}" width="32" height="32" alt="" style="object-fit:contain" loading="lazy" decoding="async" />
+        {% else %}
+        <div class="rounded-2 bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:32px; height:32px;">
+          ⚡
+        </div>
+        {% endif %}
+        <span class="fs-5 text-body fw-bold">{{ site_display_name() }}</span>
+      </a>
+
+      <!-- Dark/Light Theme Toggle Button -->
+      <button type="button" class="theme-toggle-btn" onclick="toggleElevateTheme()" title="Comută modul Dark / Light">
+        <span id="elevate-theme-icon">🌙</span>
+        <span id="elevate-theme-text" class="d-none d-sm-inline">Dark</span>
+      </button>
+
+      <!-- Language Selector -->
+      {% if available_locales and available_locales|length > 1 %}
+      <form action="/lang" method="post" class="d-inline-flex align-items-center ms-1">
+        <input type="hidden" name="next" value="{{ current_path_with_query }}" />
+        <select name="locale" class="form-select form-select-sm border border-secondary-subtle rounded-pill" onchange="this.form.submit()" aria-label="Limba site-ului">
+          {% for loc in available_locales %}
+          <option value="{{ loc.code }}" {% if loc.code == current_locale %}selected{% endif %}>
+            🌐 {{ loc.code|upper }}
+          </option>
+          {% endfor %}
+        </select>
+      </form>
+      {% endif %}
+    </div>
+
+    <!-- HAMBURGER BUTTON (Mobile) -->
+    <button class="navbar-toggler border-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#elevateNav" aria-controls="elevateNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- RIGHT SIDE / HAMBURGER COLLAPSIBLE: Static Pages + Auth/Login -->
+    <div class="collapse navbar-collapse" id="elevateNav">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-2 mt-3 mt-lg-0">
+        {% if fixed_nav_posts and fixed_nav_posts|length > 0 %}
+          {% for nav_p in fixed_nav_posts %}
+          <li class="nav-item">
+            <a class="nav-link py-1 px-3 rounded-pill" href="{{ post_public_path(nav_p.slug) }}">
+              📌 {{ nav_p.fixed_label }}
+            </a>
+          </li>
+          {% endfor %}
+        {% endif %}
+
+        <!-- Plugin Area for Navbar Links -->
+        {% if plugin_area_navbar_links %}
+          {{ plugin_area_navbar_links | safe }}
+        {% endif %}
+
+        <!-- User Authentication / Profile Menu / Login -->
+        {% if user %}
+        <li class="nav-item dropdown ms-lg-2">
+          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 py-1 px-3 border rounded-pill bg-body-tertiary" href="#" id="elevateUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            {% if user.image_url %}
+            <img src="{{ user.image_url }}" alt="{{ user.first_name or user.username }}" class="rounded-circle object-fit-cover" width="26" height="26">
+            {% else %}
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width:26px; height:26px; font-size:0.75rem;">
+              {{ (user.first_name or user.username or 'U')[0]|upper }}
+            </div>
+            {% endif %}
+            <span class="fw-semibold small">{{ user.first_name or user.username or t('ui.member') }}</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 mt-2" aria-labelledby="elevateUserDropdown">
+            <li><a class="dropdown-item d-flex align-items-center gap-2" href="/profile">👤 {{ t('ui.profile') if t else 'Profil' }}</a></li>
+            {% if is_plugin_active and is_plugin_active('minishop') %}
+            <li><a class="dropdown-item d-flex align-items-center gap-2" href="/profile#tab-orders">📦 Comenzile Mele</a></li>
+            {% endif %}
+            {% if plugin_area_user_dropdown %}
+            {{ plugin_area_user_dropdown | safe }}
+            {% endif %}
+            {% if user.role in ['admin', 'editor'] %}
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item d-flex align-items-center gap-2 fw-semibold text-primary" href="/admin">⚡ Panou Admin</a></li>
+            <li><a class="dropdown-item d-flex align-items-center gap-2" href="/admin/new">✍️ Articol Nou</a></li>
+            {% endif %}
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="/auth/logout">🚪 Logout</a></li>
+          </ul>
+        </li>
+        {% else %}
+        <li class="nav-item ms-lg-2">
+          <a class="btn btn-sm btn-primary rounded-pill px-4 fw-semibold" href="/admin/login">
+            🔑 {{ t('ui.login') if t else 'Autentificare' }}
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+
+  </div>
+</header>
