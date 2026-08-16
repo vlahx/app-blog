@@ -112,15 +112,17 @@ def build_templates(directory: str = "app/templates") -> Jinja2Templates:
 
     def _safe_translation_lookup(data: dict | None, path: str, default: str = "") -> str:
         if not isinstance(data, dict):
-            return ""
+            return default or path
+        if path in data and isinstance(data[path], str) and data[path].strip():
+            return data[path].strip()
         cur = data
         for part in path.split("."):
             if not isinstance(cur, dict) or part not in cur:
-                return ""
+                return default or path
             cur = cur[part]
-        if isinstance(cur, str):
-            return cur
-        return ""
+        if isinstance(cur, str) and cur.strip():
+            return cur.strip()
+        return default or path
 
     templates.env.globals["t_safe"] = _safe_translation_lookup
     # Some Jinja2 versions can build an unhashable cache key; disabling cache avoids 500s.
