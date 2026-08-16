@@ -120,6 +120,35 @@ def extract_plugin_zip(data: bytes, *, overwrite: bool) -> tuple[str, str]:
             dest_dir.parent.mkdir(parents=True, exist_ok=True)
             shutil.copytree(plugin_src, dest_dir)
 
+            # Auto-install plugin dependencies if requirements.txt exists in plugin zip
+            req_file = dest_dir / "requirements.txt"
+            if req_file.is_file():
+                try:
+                    import sys
+                    import subprocess
+                    import logging
+                    logger.info(f"Auto-installing requirements for plugin `{plugin_id}` from {req_file}...")
+                    subprocess.run(
+                        [sys.executable, "-m", "pip", "install", "-r", str(req_file)],
+                        check=False
+                    )
+
+                    # Merge missing lines into root requirements.txt
+                    root_req = PROJECT_ROOT / "requirements.txt"
+                    if root_req.is_file():
+                        root_content = root_req.read_text(encoding="utf-8")
+                        root_lines = set(root_content.splitlines())
+                        plugin_lines = req_file.read_text(encoding="utf-8").splitlines()
+                        new_reqs = [
+                            line.strip() for line in plugin_lines
+                            if line.strip() and not line.strip().startswith("#") and line.strip() not in root_lines
+                        ]
+                        if new_reqs:
+                            with open(root_req, "a", encoding="utf-8") as f:
+                                f.write("\n" + "\n".join(new_reqs) + "\n")
+                except Exception as ex:
+                    logger.warning(f"Could not auto-install requirements for plugin `{plugin_id}`: {ex}")
+
             # Înregistrăm plugin-ul în baza de date
             from app.core.plugin_manager import load_plugin_metadata
             metadata = load_plugin_metadata(dest_dir)
