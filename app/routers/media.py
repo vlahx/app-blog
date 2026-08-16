@@ -23,16 +23,23 @@ from app.utils.db import get_db
 logger = logging.getLogger(__name__)
 
 
-def crop_and_resize_image(input_file_path: Path, target_w: int = 1200, target_h: int = 630, quality: int = 88):
+def crop_and_resize_image(input_file_path: Path, target_w: int = 1200, target_h: int = 630, quality: int = 85) -> Path:
     try:
         with Image.open(input_file_path) as img:
             fmt = (img.format or "JPEG").upper()
             if fmt in ("SVG", "PDF"):
-                return False
+                return input_file_path
+            if fmt == "GIF" and getattr(img, "n_frames", 1) > 1:
+                return input_file_path
 
             img = ImageOps.exif_transpose(img)
 
-            if fmt in ("JPEG", "JPG") and img.mode in ("RGBA", "P"):
+            if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+                bg = Image.new("RGB", img.size, (255, 255, 255))
+                rgba = img.convert("RGBA")
+                bg.paste(rgba, mask=rgba.split()[3])
+                img = bg
+            else:
                 img = img.convert("RGB")
 
             target_ratio = target_w / target_h
@@ -55,50 +62,59 @@ def crop_and_resize_image(input_file_path: Path, target_w: int = 1200, target_h:
             img_cropped = img.crop((left, top, right, bottom))
             img_resized = img_cropped.resize((target_w, target_h), Image.Resampling.LANCZOS)
 
-            save_kwargs = {}
-            if fmt in ("JPEG", "JPG"):
-                save_kwargs = {"quality": quality, "optimize": True}
-            elif fmt == "WEBP":
-                save_kwargs = {"quality": quality, "method": 4}
-            elif fmt == "PNG":
-                save_kwargs = {"optimize": True}
+            target_jpg_path = input_file_path.with_suffix(".jpg")
+            img_resized.save(target_jpg_path, format="JPEG", quality=quality, optimize=True, progressive=True)
 
-            img_resized.save(input_file_path, **save_kwargs)
-            return True
+            if target_jpg_path != input_file_path and input_file_path.exists() and target_jpg_path.exists():
+                try:
+                    input_file_path.unlink()
+                except Exception:
+                    pass
+
+            return target_jpg_path
     except Exception as e:
         logger.warning(f"Error cropping image {input_file_path}: {e}")
-        return False
+        return input_file_path
 
-def process_and_optimize_image(input_file_path: Path, max_dimension: int = 1920, quality: int = 85):
+def process_and_optimize_image(input_file_path: Path, max_dimension: int = 1920, quality: int = 85) -> Path:
     ext = input_file_path.suffix.lower()
     if ext in (".zip", ".rar", ".7z", ".pdf", ".gz", ".tar", ".doc", ".docx", ".xls", ".xlsx"):
-        return
+        return input_file_path
     try:
         with Image.open(input_file_path) as img:
             fmt = (img.format or "").upper()
             if fmt in ("SVG", "PDF"):
-                return
+                return input_file_path
+            if fmt == "GIF" and getattr(img, "n_frames", 1) > 1:
+                return input_file_path
 
             img = ImageOps.exif_transpose(img)
 
-            if fmt in ("JPEG", "JPG") and img.mode in ("RGBA", "P"):
+            if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+                bg = Image.new("RGB", img.size, (255, 255, 255))
+                rgba = img.convert("RGBA")
+                bg.paste(rgba, mask=rgba.split()[3])
+                img = bg
+            else:
                 img = img.convert("RGB")
 
             width, height = img.size
             if width > max_dimension or height > max_dimension:
                 img.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
 
-            save_kwargs = {}
-            if fmt in ("JPEG", "JPG"):
-                save_kwargs = {"quality": quality, "optimize": True}
-            elif fmt == "WEBP":
-                save_kwargs = {"quality": quality, "method": 4}
-            elif fmt == "PNG":
-                save_kwargs = {"optimize": True}
+            target_jpg_path = input_file_path.with_suffix(".jpg")
+            img.save(target_jpg_path, format="JPEG", quality=quality, optimize=True, progressive=True)
 
-            img.save(input_file_path, **save_kwargs)
+            if target_jpg_path != input_file_path and input_file_path.exists() and target_jpg_path.exists():
+                try:
+                    input_file_path.unlink()
+                except Exception:
+                    pass
+
+            return target_jpg_path
     except Exception as e:
         logger.warning(f"Pillow optimization skipped/failed for {input_file_path}: {e}")
+        return input_file_path
 
 router = APIRouter(tags=["media"])
 
@@ -116,37 +132,35 @@ async def api_list_media_files(
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     query = select(MediaFile)
-
     if not user_has_role(user, "admin", "editor"):
         query = query.where(MediaFile.user_id == user.id)
 
-    if category and category.strip():
+    if category and category.strip().lower() != "all":
         query = query.where(MediaFile.category == category.strip().lower())
 
     if search and search.strip():
         term = f"%{search.strip()}%"
         query = query.where(MediaFile.filename.ilike(term) | MediaFile.alt_text.ilike(term))
 
-    query = query.order_by(MediaFile.id.desc())
-    files = db.execute(query).scalars().all()
+    query = query.order_by(MediaFile.created_at.desc())
+    records = db.scalars(query).all()
 
     res = []
-    for f in files:
+    for r in records:
         res.append(
             {
-                "id": f.id,
-                "user_id": f.user_id,
-                "filename": f.filename,
-                "file_path": f.file_path,
-                "file_url": f.file_url,
-                "file_size": f.file_size,
-                "mime_type": f.mime_type,
-                "alt_text": f.alt_text or f.filename,
-                "category": f.category,
-                "created_at": f.created_at.strftime("%Y-%m-%d %H:%M:%S") if f.created_at else "",
+                "id": r.id,
+                "user_id": r.user_id,
+                "filename": r.filename,
+                "file_path": r.file_path,
+                "file_url": r.file_url,
+                "file_size": r.file_size,
+                "mime_type": r.mime_type,
+                "alt_text": r.alt_text or r.filename,
+                "category": r.category,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
             }
         )
-
     return JSONResponse({"ok": True, "files": res})
 
 
@@ -185,21 +199,22 @@ async def api_upload_media(
             shutil.copyfileobj(uf.file, buffer)
 
         if cat_clean in ("blog", "shop"):
-            crop_and_resize_image(dest_file, target_w=1200, target_h=630)
+            dest_file = crop_and_resize_image(dest_file, target_w=1200, target_h=630)
         else:
-            process_and_optimize_image(dest_file)
+            dest_file = process_and_optimize_image(dest_file)
 
+        final_filename = dest_file.name
         file_size = dest_file.stat().st_size
-        rel_url = f"/static/uploads/users/{user.id}/{cat_clean}/{safe_filename}"
-        rel_path = f"static/uploads/users/{user.id}/{cat_clean}/{safe_filename}"
+        rel_url = f"/static/uploads/users/{user.id}/{cat_clean}/{final_filename}"
+        rel_path = f"static/uploads/users/{user.id}/{cat_clean}/{final_filename}"
 
         m_record = MediaFile(
             user_id=user.id,
-            filename=uf.filename,
+            filename=final_filename,
             file_path=rel_path,
             file_url=rel_url,
             file_size=file_size,
-            mime_type=uf.content_type,
+            mime_type="image/jpeg" if final_filename.endswith(".jpg") else uf.content_type,
             alt_text=uf.filename.rsplit(".", 1)[0].replace("_", " "),
             category=cat_clean,
             created_at=now,
