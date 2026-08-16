@@ -6,6 +6,7 @@
   },
   "translations": {
     "blog.empty.title": "No posts yet",
+    "blog.author": "Author",
     "blog.empty.description": "The first post will appear soon. In the meantime, you can explore the available categories.",
     "blog.empty.cta": "Create the first post",
     "blog.notFound.message": "There is no article with the slug:",

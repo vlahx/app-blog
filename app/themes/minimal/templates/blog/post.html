@@ -18,7 +18,7 @@
             <span class="badge text-bg-light border">{{ post.category }}</span>
           {% endif %}
           {% if post.author_name %}
-            <small class="text-muted">✍️ Autor: {{ post.author_name }}</small>
+            <small class="text-muted">✍️ {{ t_safe(translations, 'blog.author', 'Autor') }}: {{ post.author_name }}</small>
           {% endif %}
           {% if post.published_at %}
             <small class="text-muted">• {{ post.published_at_utc.strftime("%d.%m.%Y") }}</small>
@@ -61,10 +61,6 @@
         </div>
       </div>
       {% endif %}
-
-      <footer class="mt-4 d-flex flex-wrap justify-content-between gap-2 align-items-center">
-        <small class="text-secondary">{{ t_safe(translations, 'home.postPage.byRoad') }} — {{ site_display_name() }}</small>
-      </footer>
     </div>
   </div>
 </article>
