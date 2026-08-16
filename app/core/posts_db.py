@@ -618,30 +618,28 @@ def save_post(
     db.refresh(post)
 
     if not post.draft:
-        became_public = existing is None or (was_draft_before is True)
-        if became_public:
-            from app.core import events
-            rel = post_public_path(post.slug)
-            base = (get_public_site_url() or "").strip().rstrip("/")
-            post_url = f"{base}{rel}" if base else rel
-            hero_abs: str | None = None
-            hero_raw = _clean_optional_image_url(post.hero_image_url)
-            if hero_raw:
-                if hero_raw.startswith(("http://", "https://")):
-                    hero_abs = hero_raw
-                elif base:
-                    pth = hero_raw if hero_raw.startswith("/") else f"/{hero_raw}"
-                    hero_abs = f"{base}{pth}"
-            post_translations = get_post_translations(db, post.id)
-            events.publish(
-                "blog.post_published",
-                slug=post.slug,
-                title=post.title or post.slug,
-                excerpt=(post.excerpt or "")[:800],
-                post_url=post_url,
-                hero_image_abs=hero_abs,
-                translations=post_translations,
-            )
+        from app.core import events
+        rel = post_public_path(post.slug)
+        base = (get_public_site_url() or "").strip().rstrip("/")
+        post_url = f"{base}{rel}" if base else rel
+        hero_abs: str | None = None
+        hero_raw = _clean_optional_image_url(post.hero_image_url)
+        if hero_raw:
+            if hero_raw.startswith(("http://", "https://")):
+                hero_abs = hero_raw
+            elif base:
+                pth = hero_raw if hero_raw.startswith("/") else f"/{hero_raw}"
+                hero_abs = f"{base}{pth}"
+        post_translations = get_post_translations(db, post.id)
+        events.publish(
+            "blog.post_published",
+            slug=post.slug,
+            title=post.title or post.slug,
+            excerpt=(post.excerpt or "")[:800],
+            post_url=post_url,
+            hero_image_abs=hero_abs,
+            translations=post_translations,
+        )
 
     # Dacă hero s-a schimbat / a fost scos, încercăm să ștergem fișierul vechi.
     if existing is not None:
