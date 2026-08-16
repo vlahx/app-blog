@@ -619,6 +619,7 @@ def save_post(
 
     if not post.draft:
         from app.core import events
+        from app.core.config import get_public_site_url, post_public_path
         rel = post_public_path(post.slug)
         base = (get_public_site_url() or "").strip().rstrip("/")
         post_url = f"{base}{rel}" if base else rel
