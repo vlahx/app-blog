@@ -217,12 +217,16 @@ def load_plugins_with_metadata(app: FastAPI) -> None:
         # Încărcăm codul plugin-ului
         try:
             import importlib.util
+            import sys
             mod_name = f"site_plugin_{plugin_id}"
+            if mod_name in sys.modules:
+                del sys.modules[mod_name]
             spec = importlib.util.spec_from_file_location(mod_name, plugin_file)
             if spec is None or spec.loader is None:
                 logger.warning("Plugin %s: nu pot încărca spec", plugin_id)
                 continue
             mod = importlib.util.module_from_spec(spec)
+            sys.modules[mod_name] = mod
             spec.loader.exec_module(mod)
             register = getattr(mod, "register", None)
             if not callable(register):
