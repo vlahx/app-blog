@@ -9,3 +9,5 @@ greenlet
 sqlalchemy
 Pillow>=10.0
 stripe
+google-api-python-client
+google-auth
