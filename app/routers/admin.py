@@ -282,6 +282,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
         hero_image_url = _txt("hero_image_url")
         content_html = _txt("content_html")
         draft = _chk("draft")
+        published_at_raw = _txt("published_at")
         meta_keywords = _txt("meta_keywords")
         editing_original_slug = _txt("editing_original_slug")
         nav_fixed = _chk("nav_fixed")
