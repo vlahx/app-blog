@@ -146,6 +146,7 @@ class Post(Base):
     hero_image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     image_url: Mapped[str | None] = mapped_column(Text, nullable=True)  # pentru og_image, fallback la hero
     images_url_json: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON list/dict
+    meta_keywords: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     draft: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -169,6 +170,7 @@ class PostTranslation(Base):
     title: Mapped[str] = mapped_column(String(220), nullable=False)
     excerpt: Mapped[str | None] = mapped_column(Text, nullable=True)
     content_html: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    meta_keywords: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     post: Mapped["Post"] = relationship(back_populates="translations")
 

@@ -112,6 +112,13 @@
             </div>
 
             <div class="mb-3">
+              <label class="form-label fw-bold">🏷️ Cuvinte Cheie / Meta Keywords ({{ code|upper }})</label>
+              {% set val_keywords = trans.get('meta_keywords') or (post.meta_keywords if loop.first and post else '') %}
+              <input class="form-control" type="text" name="meta_keywords_{{ code }}" value="{{ val_keywords }}" placeholder="ex: python, algoritmi, tutorial, programare..." />
+              <div class="form-text small">Cuvinte cheie separate prin virgulă pentru optimizare SEO și metadate Google.</div>
+            </div>
+
+            <div class="mb-3">
               <label class="form-label fw-bold">{{ t("admin.editor.contentLabel") }} ({{ code|upper }})</label>
               <textarea id="my_editor_{{ code }}" name="content_html_{{ code }}">{{ val_content }}</textarea>
             </div>

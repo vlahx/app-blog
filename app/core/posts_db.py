@@ -119,6 +119,7 @@ class PostView:
     author_name: str | None = None
     author_username: str | None = None
     author_avatar: str | None = None
+    meta_keywords: str | None = None
 
     @property
     def published_at_utc(self) -> datetime:
@@ -224,6 +225,7 @@ def get_post(db: Session, slug: str, locale: str | None = None) -> PostView | No
     title = row.title
     excerpt = row.excerpt or ""
     content_html = row.content_html
+    meta_keywords = getattr(row, "meta_keywords", None) or ""
 
     if locale:
         t_stmt = select(PostTranslationModel).where(
@@ -238,6 +240,8 @@ def get_post(db: Session, slug: str, locale: str | None = None) -> PostView | No
                 excerpt = trans.excerpt.strip()
             if trans.content_html and trans.content_html.strip():
                 content_html = trans.content_html.strip()
+            if hasattr(trans, "meta_keywords") and trans.meta_keywords and trans.meta_keywords.strip():
+                meta_keywords = trans.meta_keywords.strip()
 
     aid, aname, auser, aavatar = _resolve_author_info(db, row.author_id)
     return PostView(
@@ -255,6 +259,7 @@ def get_post(db: Session, slug: str, locale: str | None = None) -> PostView | No
         author_name=aname,
         author_username=auser,
         author_avatar=aavatar,
+        meta_keywords=meta_keywords,
     )
 
 
@@ -542,6 +547,7 @@ def save_post(
     hero_image_url: str | None,
     content_html: str,
     draft: bool,
+    meta_keywords: str | None = None,
     published_at: datetime | None = None,
 ) -> PostView:
     now = datetime.now(timezone.utc)
@@ -554,6 +560,7 @@ def save_post(
     if not image_url and hero_norm:
         image_url = hero_norm
     images_url_json = json.dumps(images, ensure_ascii=False) if images else None
+    keywords_norm = (meta_keywords or "").strip() or None
 
     def _normalize_published_at(dt: datetime) -> datetime:
         return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
@@ -580,6 +587,7 @@ def save_post(
             hero_image_url=hero_norm,
             image_url=image_url,
             images_url_json=images_url_json,
+            meta_keywords=keywords_norm,
             draft=bool(draft),
             published_at=published_at_final,
             created_at=now,
@@ -600,6 +608,7 @@ def save_post(
         existing.hero_image_url = hero_norm
         existing.image_url = image_url
         existing.images_url_json = images_url_json
+        existing.meta_keywords = keywords_norm
         existing.draft = bool(draft)
         existing.published_at = published_at_final
         existing.updated_at = now
@@ -612,8 +621,6 @@ def save_post(
         became_public = existing is None or (was_draft_before is True)
         if became_public:
             from app.core import events
-            from app.core.config import get_public_site_url, post_public_path
-
             rel = post_public_path(post.slug)
             base = (get_public_site_url() or "").strip().rstrip("/")
             post_url = f"{base}{rel}" if base else rel

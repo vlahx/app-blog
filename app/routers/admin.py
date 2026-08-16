@@ -282,7 +282,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
         hero_image_url = _txt("hero_image_url")
         content_html = _txt("content_html")
         draft = _chk("draft")
-        published_at_raw = _txt("published_at")
+        meta_keywords = _txt("meta_keywords")
         editing_original_slug = _txt("editing_original_slug")
         nav_fixed = _chk("nav_fixed")
         nav_fixed_label = _txt("nav_fixed_label") or None
@@ -294,11 +294,13 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
             t_title = _txt(f"title_{code_loc}") or title
             t_excerpt = _txt(f"excerpt_{code_loc}") or excerpt
             t_content = _txt(f"content_html_{code_loc}") or content_html
-            if t_title or t_content or t_excerpt:
+            t_keywords = _txt(f"meta_keywords_{code_loc}") or meta_keywords
+            if t_title or t_content or t_excerpt or t_keywords:
                 translations_to_save[code_loc] = {
                     "title": t_title,
                     "excerpt": t_excerpt,
                     "content_html": t_content,
+                    "meta_keywords": t_keywords,
                 }
 
         primary_title = title
@@ -315,6 +317,11 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
         if not primary_content and translations_to_save:
             first_code = list(translations_to_save.keys())[0]
             primary_content = translations_to_save[first_code]["content_html"]
+
+        primary_keywords = meta_keywords
+        if not primary_keywords and translations_to_save:
+            first_code = list(translations_to_save.keys())[0]
+            primary_keywords = translations_to_save[first_code].get("meta_keywords", "")
 
         slug_final = slugify(slug_in or primary_title)
         dt = None
@@ -336,6 +343,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
             hero_image_url=hero_image_url or None,
             content_html=primary_content,
             draft=draft,
+            meta_keywords=primary_keywords,
             published_at=dt,
         )
 
