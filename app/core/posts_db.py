@@ -675,12 +675,17 @@ def save_post_translations(
     post_id: int,
     translations: dict[str, dict[str, str]],
 ) -> None:
+    from app.models.db_models import TranslationLocale as TranslationLocaleModel
     for locale_code, data in translations.items():
         title = (data.get("title") or "").strip()
         excerpt = (data.get("excerpt") or "").strip()
         content_html = (data.get("content_html") or "").strip()
         if not title and not content_html:
             continue
+        loc_row = db.get(TranslationLocaleModel, locale_code)
+        if loc_row is None:
+            db.add(TranslationLocaleModel(code=locale_code, name=locale_code.upper(), enabled=True, is_default=(locale_code == "en")))
+            db.flush()
         stmt = select(PostTranslationModel).where(
             (PostTranslationModel.post_id == post_id)
             & (PostTranslationModel.locale_code == locale_code)

@@ -73,6 +73,20 @@ def init_db() -> None:
                 except Exception:
                     db.rollback()
 
+    with SessionLocal() as db:
+        from app.core.i18n import get_available_locales
+        from app.models.db_models import TranslationLocale as TranslationLocaleModel
+        for loc in get_available_locales():
+            code = loc["code"]
+            if not db.get(TranslationLocaleModel, code):
+                db.add(TranslationLocaleModel(
+                    code=code,
+                    name=loc.get("name") or code.upper(),
+                    enabled=bool(loc.get("enabled", True)),
+                    is_default=bool(loc.get("is_default", False)),
+                ))
+        db.commit()
+
     # One-time seed from old JSON posts if the DB is empty.
     with SessionLocal() as db:
         posts_count = db.query(Post).count()
