@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import json
 import shutil
 import tempfile
@@ -9,6 +10,8 @@ from zipfile import ZipFile
 
 from app.core.config import APP_DIR, PROJECT_ROOT
 from app.core.plugin_manager import register_plugin_in_db
+
+logger = logging.getLogger(__name__)
 
 _PLUGIN_ID_OK = frozenset("abcdefghijklmnopqrstuvwxyz0123456789_-")
 _PLUGIN_ID_RESERVED = frozenset(
