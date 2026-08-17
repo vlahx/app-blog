@@ -127,19 +127,8 @@ def build_blog_router(templates: Jinja2Templates) -> APIRouter:
         categories = list_categories(db)
         from app.core.posts_db import list_authors_with_posts
         authors = list_authors_with_posts(db)
-        seo_image: str | None = None
-        seo_image_is_card = False
-        seo_image_alt: str | None = None
-        for p in posts:
-            rel = post_preview_image_src(p)
-            if rel:
-                seo_image, seo_image_is_card = resolve_og_image_url(base, rel)
-                if seo_image:
-                    seo_image_alt = p.title
-                    break
-        if not seo_image:
-            seo_image, seo_image_is_card = resolve_og_image_url(base, None)
-            seo_image_alt = "Blog de camionagiu"
+        seo_image, seo_image_is_card = resolve_og_image_url(base, None)
+        seo_image_alt = get_site_display_name(locale)
         og_img_meta = og_image_meta_for_url(base, seo_image, is_card=seo_image_is_card)
         canonical = f"{base}/"
         locale = getattr(request.state, "locale", None)
