@@ -33,11 +33,13 @@ app/plugins/*
 zips/
 *.zip
 
-# Fără nicio poză sau fișier media (static/images și static/uploads)
+# Fără nicio poză sau fișier media (static/images, static/uploads, static/downloads)
 app/static/images/*
 !app/static/images/.gitkeep
 app/static/uploads/*
 !app/static/uploads/.gitkeep
+app/static/downloads/*
+!app/static/downloads/.gitkeep
 
 # Temporary backup folders
 *_old*/

@@ -107,5 +107,17 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/bootstrap.bundle.min.js"></script>
   <script src="/static/js/media-manager.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const toggler = document.querySelector(".navbar-toggler");
+      const nav = document.getElementById("adminNavbarNav");
+      if (toggler && nav) {
+        toggler.addEventListener("click", function(e) {
+          e.preventDefault();
+          nav.classList.toggle("show");
+        });
+      }
+    });
+  </script>
 </body>
 </html>
