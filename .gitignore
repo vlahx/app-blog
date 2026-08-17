@@ -29,9 +29,9 @@ app/static/themes/*
 app/plugins/*
 !app/plugins/.gitkeep
 
-# Arhive ZIP cu plugin-uri și teme gata de instalare
-!zips
-!zips/**
+# Arhive ZIP cu plugin-uri (excluse din Git; descărcare oficială exclusivă de pe camionagiul.club)
+zips/
+*.zip
 
 # Fără nicio poză sau fișier media (static/images și static/uploads)
 app/static/images/*

