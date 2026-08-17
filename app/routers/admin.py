@@ -292,16 +292,16 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
         translations_to_save = {}
         for loc in locales:
             code_loc = loc["code"]
-            t_title = _txt(f"title_{code_loc}") or title
-            t_excerpt = _txt(f"excerpt_{code_loc}") or excerpt
-            t_content = _txt(f"content_html_{code_loc}") or content_html
-            t_keywords = _txt(f"meta_keywords_{code_loc}") or meta_keywords
+            t_title = _txt(f"title_{code_loc}")
+            t_excerpt = _txt(f"excerpt_{code_loc}")
+            t_content = _txt(f"content_html_{code_loc}")
+            t_keywords = _txt(f"meta_keywords_{code_loc}")
             if t_title or t_content or t_excerpt or t_keywords:
                 translations_to_save[code_loc] = {
-                    "title": t_title,
-                    "excerpt": t_excerpt,
-                    "content_html": t_content,
-                    "meta_keywords": t_keywords,
+                    "title": t_title or "",
+                    "excerpt": t_excerpt or "",
+                    "content_html": t_content or "",
+                    "meta_keywords": t_keywords or "",
                 }
 
         primary_title = title
