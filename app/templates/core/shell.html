@@ -29,6 +29,9 @@
     <link rel="apple-touch-icon" href="{{ site_brand_image_abs|e }}" />
 
     <meta property="og:site_name" content="{{ _site|e }}" />
+    {% if site_brand_image_abs %}
+    <meta property="og:logo" content="{{ site_brand_image_abs|e }}" />
+    {% endif %}
     <meta property="og:locale" content="{{ locale }}_{{ locale|upper }}" />
     {% if get_available_locales %}
       {% for loc in get_available_locales() %}
