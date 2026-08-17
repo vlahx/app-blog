@@ -1266,9 +1266,21 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
             return RedirectResponse(url="/admin/settings", status_code=303)
         dest_dir = APP_DIR / "static" / "images" / "site_uploads"
         dest_dir.mkdir(parents=True, exist_ok=True)
-        name = f"{uuid4().hex}{ext}"
-        dest = dest_dir / name
-        dest.write_bytes(raw)
+
+        if ext in (".png", ".jpg", ".jpeg", ".webp") and setting_key in ("OG_CARD_IMAGE_PATH", "SITE_BRAND_IMAGE_PATH", "SITE_NAV_ICON_PATH"):
+            from app.routers.media import crop_and_resize_image, process_and_optimize_image
+            temp_dest = dest_dir / f"{uuid4().hex}{ext}"
+            temp_dest.write_bytes(raw)
+            if setting_key == "OG_CARD_IMAGE_PATH":
+                final_dest = crop_and_resize_image(temp_dest, target_w=1200, target_h=630, quality=85)
+            else:
+                final_dest = process_and_optimize_image(temp_dest, max_dimension=1200, quality=85)
+            name = final_dest.name
+        else:
+            name = f"{uuid4().hex}{ext}"
+            dest = dest_dir / name
+            dest.write_bytes(raw)
+
         rel = f"/static/images/site_uploads/{name}"
         prev = read_settings().get(setting_key)
         write_settings({setting_key: rel})
