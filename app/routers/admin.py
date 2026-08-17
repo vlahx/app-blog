@@ -1264,7 +1264,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
             ext = f".{ext}"
         if ext not in _SITE_IMAGE_EXTS:
             return RedirectResponse(url="/admin/settings", status_code=303)
-        dest_dir = pathlib.Path("static/images/site_uploads")
+        dest_dir = APP_DIR / "static" / "images" / "site_uploads"
         dest_dir.mkdir(parents=True, exist_ok=True)
         name = f"{uuid4().hex}{ext}"
         dest = dest_dir / name
@@ -1304,7 +1304,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
     @role_required("admin", "editor", "author")
     async def admin_upload_image(request: Request, file: UploadFile = File(...)):
         try:
-            base = pathlib.Path("static/images/post_images")
+            base = APP_DIR / "static" / "images" / "post_images"
             base.mkdir(parents=True, exist_ok=True)
 
             original = (file.filename or "upload").strip()
