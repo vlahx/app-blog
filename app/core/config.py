@@ -351,13 +351,13 @@ def get_nav_fixed_post_links(locale: str | None = None) -> list[dict[str, str]]:
                     continue
                 fallback = str(item.get("label") or item.get("fixed_label") or slug).strip()
                 row = post_lookup.get(slug)
-                label = fallback
-                if row:
-                    label = row.title.strip() or fallback
-                    if locale:
-                        title = translated_titles.get(row.id)
-                        if title and title.strip():
-                            label = title.strip()
+                if not row or getattr(row, "draft", False):
+                    continue
+                label = row.title.strip() or fallback
+                if locale:
+                    title = translated_titles.get(row.id)
+                    if title and title.strip():
+                        label = title.strip()
                 items.append({
                     "slug": slug,
                     "label": label,
