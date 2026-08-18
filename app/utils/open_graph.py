@@ -125,7 +125,7 @@ def resolve_og_image_url(base_url: str, post_image_src: str | None) -> tuple[str
     if not root:
         return None, False
     card_rel = _card_rel()
-    card_abs = f"{root}{card_rel}"
+    card_abs = f"{root}{card_rel}" if card_rel else None
 
     if post_image_src:
         s = str(post_image_src).strip()
