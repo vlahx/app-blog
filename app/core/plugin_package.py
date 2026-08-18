@@ -81,10 +81,22 @@ def extract_plugin_zip(data: bytes, *, overwrite: bool) -> tuple[str, str]:
                         + ", ".join(candidates[:8])
                     )
 
+            if not plugin_id and any(m == "plugin.py" for m in members):
+                try:
+                    if "plugin.json" in members:
+                        with zipf.open("plugin.json") as jf:
+                            meta = json.loads(jf.read().decode("utf-8"))
+                            cand = safe_plugin_id(meta.get("id"))
+                            if cand:
+                                plugin_id = cand
+                                mode = "root_flat"
+                except Exception:
+                    pass
+
             if not plugin_id:
                 sample = ", ".join(members[:8]) if members else "(gol)"
                 raise ValueError(
-                    "Zip invalid: aștept `plugins/<id>/plugin.py` sau `<id>/plugin.py`. "
+                    "Zip invalid: aștept `plugins/<id>/plugin.py` sau `<id>/plugin.py` sau `plugin.py`. "
                     f"Exemple: {sample}"
                 )
 
@@ -97,6 +109,8 @@ def extract_plugin_zip(data: bytes, *, overwrite: bool) -> tuple[str, str]:
                     if not n.startswith(f"plugins/{plugin_id}/"):
                         continue
                     dest = extract_root / n
+                elif mode == "root_flat":
+                    dest = extract_root / "plugins" / plugin_id / n
                 else:
                     if not n.startswith(f"{plugin_id}/"):
                         continue
