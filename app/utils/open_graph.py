@@ -16,12 +16,18 @@ from app.core.config import (
 OG_DESCRIPTION_MAX_CHARS = 300
 
 
-def public_site_origin(request) -> str:
+def public_site_origin(request=None) -> str:
     """Originea absolută (scheme + host, fără slash final)."""
+    if request is not None and hasattr(request, "base_url"):
+        base_str = str(request.base_url).rstrip("/")
+        if base_str and "camionagiul" not in base_str:
+            return base_str
     url = get_public_site_url()
-    if url:
+    if url and "camionagiul" not in url:
         return url.rstrip("/")
-    return str(request.base_url).rstrip("/")
+    if request is not None and hasattr(request, "base_url"):
+        return str(request.base_url).rstrip("/")
+    return ""
 
 
 def truncate_og_description(text: str, max_chars: int = OG_DESCRIPTION_MAX_CHARS) -> str:
@@ -32,8 +38,8 @@ def truncate_og_description(text: str, max_chars: int = OG_DESCRIPTION_MAX_CHARS
 
 
 def _card_rel() -> str:
-    p = (get_og_card_image_path() or "/static/images/og/camionagiul.png").strip()
-    return p if p.startswith("/") else f"/{p}"
+    p = (get_og_card_image_path() or "").strip()
+    return p if p.startswith("/") else f"/{p}" if p else ""
 
 
 # Extensii acceptate în URL (fără verificare pe disc — fișierul poate fi servit de nginx/volume).

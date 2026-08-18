@@ -26,12 +26,8 @@ SESSION_SECRET = (
 # URL public (https://domeniu.tld) — doar din .env (Caddy / domeniu). Folosit la OG, TinyMCE, canonice.
 # Nu se suprascrie din admin; fiecare container își are .env-ul lui.
 def _normalize_public_site_url(raw: str) -> str:
-    """
-    Docker / .env greșit pot lăsa literal ``PUBLIC_SITE_URL=None`` → string ``"None"``.
-    Asta rupe TinyMCE (document_base_url) și poate genera request-uri ciudate.
-    """
     u = (raw or "").strip().rstrip("/")
-    if not u or u.lower() in ("none", "null", "undefined"):
+    if not u or u.lower() in ("none", "null", "undefined") or "camionagiul.club" in u:
         return ""
     return u
 
@@ -61,8 +57,7 @@ SITE_BRAND_IMAGE_PATH = (
 # og:image / twitter:image — fișier static PNG sau JPEG (~1200×630), cale relativă cu `/`.
 # Dacă articolul are doar WebP sau altceva, meta folosește tot acest fișier.
 OG_CARD_IMAGE_PATH = (
-    os.environ.get("OG_CARD_IMAGE_PATH", "/static/images/og/camionagiul.png").strip()
-    or "/static/images/og/camionagiul.png"
+    os.environ.get("OG_CARD_IMAGE_PATH", "").strip()
 )
 
 # Icon navbar / hero (opțional). Gol → SVG implicit în template.
