@@ -17,6 +17,7 @@ from app.core.config import (
     get_site_favicon_path,
     get_site_nav_icon_path,
     get_site_tagline,
+    get_twitter_site,
     post_public_path,
 )
 from app.core.i18n import (
@@ -163,6 +164,7 @@ def render_template(
     if not locale:
         locale = DEFAULT_LOCALE
     ctx.setdefault("seo_site_name", get_site_display_name(locale))
+    ctx.setdefault("twitter_site", get_twitter_site())
     available_locales = get_available_locales()
     ctx.setdefault("available_locales", available_locales)
     fixed_nav_posts = []

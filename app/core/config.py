@@ -218,6 +218,14 @@ def get_og_card_image_path() -> str:
     return OG_CARD_IMAGE_PATH
 
 
+def get_twitter_site() -> str:
+    d = _runtime()
+    raw = d.get("TWITTER_SITE")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return os.environ.get("TWITTER_SITE", "").strip()
+
+
 def get_site_nav_icon_path() -> str:
     """Cale relativă cu `/` sau gol pentru fallback SVG în template."""
     d = _runtime()
