@@ -12,6 +12,7 @@ from app.core.config import (
     ROOT_SLUG_BLOCKLIST,
     get_flat_post_urls,
     get_site_display_name,
+    get_site_tagline,
     post_public_path,
 )
 from app.core.template_hooks import render_post_article_footers, render_post_header_metas
@@ -132,9 +133,8 @@ def build_blog_router(templates: Jinja2Templates) -> APIRouter:
         og_img_meta = og_image_meta_for_url(base, seo_image, is_card=seo_image_is_card)
         canonical = f"{base}/"
         locale = getattr(request.state, "locale", None)
-        idx_desc = truncate_og_description(
-            "Jurnal de drum, articole și povești de pe șosea."
-        )
+        tagline = get_site_tagline(locale)
+        idx_desc = truncate_og_description(tagline) if tagline else ""
         return render_template(
             templates,
             request=request,

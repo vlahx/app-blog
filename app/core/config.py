@@ -44,7 +44,6 @@ SITE_DISPLAY_NAME = (
 )
 SITE_TAGLINE = (
     os.environ.get("SITE_TAGLINE", "").strip()
-    or "Road journal, technical articles, and stories from the road."
 )
 
 # Favicon (`<link rel="icon">`). Cale relativă, începe cu `/`.
