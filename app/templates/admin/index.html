@@ -2,14 +2,9 @@
 
 {% block content %}
 <section class="py-4">
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
-    <div>
-      <h1 class="h3 mb-1">{{ t('admin.dashboard.title') }}</h1>
-      <p class="text-secondary mb-0">{{ t('admin.dashboard.subtitle') }}</p>
-    </div>
-    <div class="d-flex gap-2 align-items-center flex-wrap">
-      <a class="btn btn-primary fw-semibold" href="/admin/new">✏️ {{ t('admin.nav.newPost') }}</a>
-    </div>
+  <div class="mb-4">
+    <h1 class="h3 mb-1">{{ t('admin.dashboard.title') }}</h1>
+    <p class="text-secondary mb-0">{{ t('admin.dashboard.subtitle') }}</p>
   </div>
 
   {% if categories %}
