@@ -38,6 +38,8 @@ from app.core.config import (
     get_site_favicon_path,
     get_site_nav_icon_path,
     get_site_tagline,
+    get_homepage_mode,
+    is_static_page_slug,
 )
 from app.core.posts_db import (
     create_category,
@@ -474,7 +476,6 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
             loc["code"]: (app_settings.get(f"SITE_TAGLINE_{loc['code']}") or "").strip()
             for loc in active_locales
         }
-        from app.core.config import get_homepage_mode
         return render_template(
             templates,
             request=request,
