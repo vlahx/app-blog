@@ -460,7 +460,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
         active_locales = [loc for loc in get_available_locales() if loc.get("enabled")]
         with SessionLocal() as db:
             app_settings = {row.key: row.value for row in db.query(AppSetting).all() if row and row.key}
-            all_posts = db.query(Post).filter(Post.draft == False).order_by(Post.title.asc()).all()
+            all_posts = db.query(PostModel).filter(PostModel.draft == False).order_by(PostModel.title.asc()).all()
             static_pages = [
                 {"id": p.id, "slug": p.slug, "title": p.title}
                 for p in all_posts
