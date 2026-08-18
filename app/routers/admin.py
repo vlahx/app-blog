@@ -460,6 +460,10 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
         active_locales = [loc for loc in get_available_locales() if loc.get("enabled")]
         with SessionLocal() as db:
             app_settings = {row.key: row.value for row in db.query(AppSetting).all() if row and row.key}
+            static_pages = [
+                {"id": p.id, "slug": p.slug, "title": p.title}
+                for p in db.query(Post).filter(Post.is_static == True, Post.is_published == True).order_by(Post.title.asc()).all()
+            ]
         localized_site_names = {
             loc["code"]: (app_settings.get(f"SITE_DISPLAY_NAME_{loc['code']}") or "").strip()
             for loc in active_locales
@@ -468,6 +472,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
             loc["code"]: (app_settings.get(f"SITE_TAGLINE_{loc['code']}") or "").strip()
             for loc in active_locales
         }
+        from app.core.config import get_homepage_mode
         return render_template(
             templates,
             request=request,
@@ -491,6 +496,8 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                 "flat_post_urls": get_flat_post_urls(),
                 "installed_themes": themes,
                 "active_theme_slug": cur_theme,
+                "homepage_mode": get_homepage_mode(),
+                "static_pages": static_pages,
             },
         )
 
@@ -1227,6 +1234,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
 
         _save_app_setting("SITE_DISPLAY_NAME", _txt("site_display_name") or None)
         _save_app_setting("SITE_TAGLINE", _txt("site_tagline") or None)
+        _save_app_setting("HOMEPAGE_MODE", _txt("homepage_mode") or "blog")
 
         for loc in get_available_locales():
             code = loc.get("code")

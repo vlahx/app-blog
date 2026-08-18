@@ -64,6 +64,29 @@
 
           <div class="card card-modern">
             <div class="card-body">
+              <h2 class="h5 mb-3">🏠 Prima pagină a site-ului (Root Router)</h2>
+              <div class="mb-0">
+                <label class="form-label">Alege ce se deschide când vizitatorii intră pe domeniul principal (<code>/</code>):</label>
+                <select class="form-select" name="homepage_mode">
+                  <option value="blog" {% if homepage_mode == 'blog' %}selected{% endif %}>📚 Feed articole Blog (Implicit)</option>
+                  {% for p in static_pages %}
+                  <option value="page:{{ p.slug|e }}" {% if homepage_mode == 'page:' ~ p.slug %}selected{% endif %}>
+                    📄 Pagină statică: {{ p.title|e }} ({{ p.slug|e }})
+                  </option>
+                  {% endfor %}
+                  {% if is_plugin_active and is_plugin_active('minishop') %}
+                  <option value="shop" {% if homepage_mode == 'shop' %}selected{% endif %}>🛍️ Magazin Online (Minishop)</option>
+                  {% endif %}
+                </select>
+                <small class="text-secondary d-block mt-2">
+                  Dacă alegi o pagină statică ca primă pagină, articolele de pe blog vor fi accesibile la <code>/blog</code>.
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-modern">
+            <div class="card-body">
               <h2 class="h5 mb-3">{{ t('admin.settings.theme') }}</h2>
               <div class="mb-0">
                 <label class="form-label">{{ t('admin.settings.activeTheme') }}</label>

@@ -160,17 +160,36 @@ def build_blog_router(templates: Jinja2Templates) -> APIRouter:
 
     @router.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
     async def blog_home(request: Request, db=Depends(get_db)):
+        from app.core.config import get_homepage_mode
+        hp_mode = get_homepage_mode()
+
+        if hp_mode.startswith("page:"):
+            target_slug = hp_mode.split(":", 1)[1].strip()
+            if target_slug:
+                post = get_post(db, target_slug)
+                if post:
+                    return serve_blog_post(request, templates, db, target_slug)
+
+        if hp_mode == "shop":
+            from app.core.templates import is_plugin_active
+            if is_plugin_active("minishop"):
+                return RedirectResponse(url="/shop", status_code=302)
+
         category = request.query_params.get("category", "").strip() or None
         author = request.query_params.get("author", "").strip() or None
         return _render_blog_index(request, db, current_category=category, current_author=author)
 
-    @router.api_route("/blog", methods=["GET", "HEAD"], response_class=RedirectResponse)
-    async def blog_index_redirect():
-        return RedirectResponse(url="/", status_code=301)
+    @router.api_route("/blog", methods=["GET", "HEAD"], response_class=HTMLResponse)
+    async def blog_index_feed(request: Request, db=Depends(get_db)):
+        category = request.query_params.get("category", "").strip() or None
+        author = request.query_params.get("author", "").strip() or None
+        return _render_blog_index(request, db, current_category=category, current_author=author)
 
-    @router.api_route("/blog/", methods=["GET", "HEAD"], response_class=RedirectResponse)
-    async def blog_index_redirect_trailing_slash():
-        return RedirectResponse(url="/", status_code=301)
+    @router.api_route("/blog/", methods=["GET", "HEAD"], response_class=HTMLResponse)
+    async def blog_index_feed_trailing_slash(request: Request, db=Depends(get_db)):
+        category = request.query_params.get("category", "").strip() or None
+        author = request.query_params.get("author", "").strip() or None
+        return _render_blog_index(request, db, current_category=category, current_author=author)
 
     @router.api_route("/blog/{slug}", methods=["GET", "HEAD"], response_class=HTMLResponse)
     async def blog_post(request: Request, slug: str, db=Depends(get_db)):

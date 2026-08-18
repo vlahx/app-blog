@@ -242,6 +242,20 @@ def get_site_nav_icon_path() -> str:
     return ""
 
 
+def get_homepage_mode() -> str:
+    """
+    Modul primei pagini (root '/'):
+    - 'blog': lista de articole pe blog (implicit).
+    - 'page:<slug>': o pagină statică cu slug-ul respectiv.
+    - 'shop': magazinul minishop (dacă pluginul e activ).
+    """
+    d = _runtime()
+    raw = d.get("HOMEPAGE_MODE")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return os.environ.get("HOMEPAGE_MODE", "blog").strip() or "blog"
+
+
 def _runtime_static_nav_items(d: dict) -> list[dict[str, str]]:
     raw_links = d.get("STATIC_NAV_LINKS")
     items: list[dict[str, str]] = []
@@ -426,6 +440,8 @@ def is_static_page_slug(slug: str) -> bool:
 def post_public_path(slug: str) -> str:
     s = (slug or "").strip().strip("/")
     if not s:
+        return "/"
+    if get_homepage_mode() == f"page:{s}":
         return "/"
     if get_flat_post_urls() or is_static_page_slug(s):
         return f"/{s}"
