@@ -214,8 +214,11 @@ def get_og_card_image_path() -> str:
     raw = d.get("OG_CARD_IMAGE_PATH")
     if isinstance(raw, str) and raw.strip():
         v = raw.strip()
-        return v if v.startswith("/") else f"/{v}"
-    return OG_CARD_IMAGE_PATH
+        if "camionagiul" not in v:
+            return v if v.startswith("/") else f"/{v}"
+    if OG_CARD_IMAGE_PATH and "camionagiul" not in OG_CARD_IMAGE_PATH:
+        return OG_CARD_IMAGE_PATH if OG_CARD_IMAGE_PATH.startswith("/") else f"/{OG_CARD_IMAGE_PATH}"
+    return ""
 
 
 def get_twitter_site() -> str:
