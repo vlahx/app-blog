@@ -1,12 +1,12 @@
-# 🎨 Guide: How to Create a Custom Theme for Blog 2.0 Core
+# 🎨 Guide: How to Create a Custom Theme for VlahX Core 2.0
 
-This guide explains step-by-step how to design, build, package, and install a custom theme for **Blog 2.0 Core**.
+This guide explains step-by-step how to design, build, package, and install a custom theme for **VlahX Core 2.0**.
 
 ---
 
 ## 📁 1. Theme Directory Architecture
 
-Every theme in Blog 2.0 Core lives in two clean locations:
+Every theme in VlahX Core 2.0 lives in two clean locations:
 
 ```text
 /themes/<theme_slug>/

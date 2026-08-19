@@ -1,12 +1,12 @@
-# 🔌 Guide: How to Create a Custom Plugin for App-Blog (Blog 2.0 Core)
+# 🔌 Guide: How to Create a Custom Plugin for VlahX Core 2.0
 
-This guide explains step-by-step how to design, develop, package, and install a custom plugin for **App-Blog / Blog 2.0 Core**.
+This guide explains step-by-step how to design, develop, package, and install a custom plugin for **VlahX Core 2.0**.
 
 ---
 
 ## 📁 1. Plugin Directory Architecture
 
-Every plugin in **Blog 2.0 Core** must be **100% self-contained** inside its own directory in `plugins/<plugin_id>/`. Nothing should spill over into core `templates/` or `app/` folders.
+Every plugin in **VlahX Core 2.0** must be **100% self-contained** inside its own directory in `plugins/<plugin_id>/`. Nothing should spill over into core `templates/` or `app/` folders.
 
 ```text
 plugins/<plugin_id>/
