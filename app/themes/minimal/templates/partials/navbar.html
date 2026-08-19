@@ -41,8 +41,11 @@
         {% if fixed_nav_posts and fixed_nav_posts|length > 0 %}
           {% for nav_p in fixed_nav_posts %}
           <li class="nav-item">
-            <a class="nav-link py-1 px-3 border rounded-pill bg-body-tertiary text-body fw-semibold me-1" href="{{ post_public_path(nav_p.slug) }}">
-              {{ nav_p.fixed_label }}
+            <a class="nav-link py-1 px-3 border rounded-pill bg-body-tertiary text-body fw-semibold me-1" 
+               href="{{ nav_p.href or nav_p.url or post_public_path(nav_p.slug) }}"
+               target="{{ nav_p.target|default('_self')|e }}"
+               {% if nav_p.target == '_blank' %}rel="noopener noreferrer"{% endif %}>
+              {{ nav_p.fixed_label or nav_p.label }}
             </a>
           </li>
           {% endfor %}
