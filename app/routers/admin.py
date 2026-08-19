@@ -1274,6 +1274,8 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
             })
 
         _save_app_setting("STATIC_NAV_LINKS", json.dumps(new_nav_links, ensure_ascii=False))
+        from app.core.config import invalidate_nav_fixed_post_links_cache
+        invalidate_nav_fixed_post_links_cache()
 
         write_settings(
             {
