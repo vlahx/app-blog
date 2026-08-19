@@ -268,11 +268,20 @@ def _runtime_static_nav_items(d: dict) -> list[dict[str, str]]:
         for item in raw_links:
             if not isinstance(item, dict):
                 continue
+            url = str(item.get("url") or item.get("href") or "").strip()
             slug = str(item.get("slug") or item.get("value") or "").strip()
-            if not slug:
+            label = str(item.get("label") or item.get("fixed_label") or item.get("title") or slug or url).strip()
+            target = str(item.get("target") or "_self").strip()
+            if not label and not url and not slug:
                 continue
-            label = str(item.get("label") or item.get("fixed_label") or item.get("title") or slug).strip()
-            items.append({"slug": slug, "label": label, "fixed_label": label})
+            items.append({
+                "slug": slug,
+                "label": label,
+                "fixed_label": label,
+                "url": url,
+                "href": url if url else (f"/{slug.strip('/')}" if slug else "/"),
+                "target": target if target in ("_self", "_blank") else "_self",
+            })
     return items
 
 
@@ -286,14 +295,13 @@ def _get_static_nav_items_raw() -> list[dict[str, str]]:
     if isinstance(raw_single, str) and raw_single.strip():
         slug = raw_single.strip()
         label = str(d.get("NAV_FIXED_POST_LABEL") or slug).strip()
-        return [{"slug": slug, "label": label, "fixed_label": label}]
+        return [{"slug": slug, "label": label, "fixed_label": label, "url": f"/{slug}", "href": f"/{slug}", "target": "_self"}]
 
     if not d:
         return []
 
     legacy = d.get("STATIC_NAV_LINKS")
     if isinstance(legacy, list):
-        # keep compatibility with old runtime values that may be stored as JSON-encoded values
         return _runtime_static_nav_items(d)
     return []
 
@@ -366,24 +374,60 @@ def get_nav_fixed_post_links(locale: str | None = None) -> list[dict[str, str]]:
                     translated_titles.setdefault(tr.post_id, tr.title.strip())
 
             for item in _get_static_nav_items_raw():
+                url = str(item.get("url") or item.get("href") or "").strip()
                 slug = str(item.get("slug") or "").strip()
+                target = str(item.get("target") or "_self").strip()
+                target = target if target in ("_self", "_blank") else "_self"
+                fallback = str(item.get("label") or item.get("fixed_label") or slug or url).strip()
+
+                if url and not slug:
+                    items.append({
+                        "slug": "",
+                        "label": fallback,
+                        "fixed_label": fallback,
+                        "url": url,
+                        "href": url,
+                        "target": target,
+                    })
+                    continue
+
                 if not slug:
+                    if url:
+                        items.append({
+                            "slug": "",
+                            "label": fallback,
+                            "fixed_label": fallback,
+                            "url": url,
+                            "href": url,
+                            "target": target,
+                        })
                     continue
-                fallback = str(item.get("label") or item.get("fixed_label") or slug).strip()
+
                 row = post_lookup.get(slug)
-                if not row or getattr(row, "draft", False):
-                    continue
-                label = row.title.strip() or fallback
-                if locale:
-                    title = translated_titles.get(row.id)
-                    if title and title.strip():
-                        label = title.strip()
-                items.append({
-                    "slug": slug,
-                    "label": label,
-                    "fixed_label": label,
-                    "href": f"/{slug.strip('/')}" if slug else "/",
-                })
+                if row and not getattr(row, "draft", False):
+                    label = row.title.strip() or fallback
+                    if locale:
+                        title = translated_titles.get(row.id)
+                        if title and title.strip():
+                            label = title.strip()
+                    item_href = post_public_path(slug) if not url else url
+                    items.append({
+                        "slug": slug,
+                        "label": label,
+                        "fixed_label": label,
+                        "url": item_href,
+                        "href": item_href,
+                        "target": target,
+                    })
+                elif url:
+                    items.append({
+                        "slug": slug,
+                        "label": fallback,
+                        "fixed_label": fallback,
+                        "url": url,
+                        "href": url,
+                        "target": target,
+                    })
     except Exception:
         pass
 

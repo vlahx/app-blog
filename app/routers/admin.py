@@ -501,6 +501,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                 "active_theme_slug": cur_theme,
                 "homepage_mode": get_homepage_mode(),
                 "static_pages": static_pages,
+                "nav_items": get_nav_fixed_post_links(),
             },
         )
 
@@ -1244,6 +1245,35 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
             if code:
                 _save_app_setting(f"SITE_DISPLAY_NAME_{code}", _txt(f"site_display_name_{code}") or None)
                 _save_app_setting(f"SITE_TAGLINE_{code}", _txt(f"site_tagline_{code}") or None)
+
+        nav_labels = form.getlist("nav_label")
+        nav_urls = form.getlist("nav_url")
+        nav_targets = form.getlist("nav_target")
+
+        new_nav_links = []
+        for i in range(len(nav_labels)):
+            lbl = str(nav_labels[i] or "").strip()
+            u = str(nav_urls[i] if i < len(nav_urls) else "").strip()
+            tgt = str(nav_targets[i] if i < len(nav_targets) else "_self").strip()
+            if not lbl and not u:
+                continue
+            slug = ""
+            if u and not u.startswith("/") and not u.startswith("http://") and not u.startswith("https://") and not u.startswith("#"):
+                slug = u
+                u = f"/{u}"
+            elif u.startswith("/"):
+                pot_slug = u.strip("/")
+                if "/" not in pot_slug:
+                    slug = pot_slug
+
+            new_nav_links.append({
+                "label": lbl,
+                "url": u,
+                "slug": slug,
+                "target": tgt if tgt in ("_self", "_blank") else "_self",
+            })
+
+        _save_app_setting("STATIC_NAV_LINKS", json.dumps(new_nav_links, ensure_ascii=False))
 
         write_settings(
             {
