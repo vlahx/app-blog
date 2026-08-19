@@ -410,7 +410,7 @@ def get_nav_fixed_post_links(locale: str | None = None) -> list[dict[str, str]]:
                         title = translated_titles.get(row.id)
                         if title and title.strip():
                             label = title.strip()
-                    item_href = post_public_path(slug) if not url else url
+                    item_href = url if url else post_public_path(slug)
                     items.append({
                         "slug": slug,
                         "label": label,
