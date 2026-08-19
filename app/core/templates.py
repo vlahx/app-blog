@@ -169,7 +169,7 @@ def render_template(
     ctx.setdefault("available_locales", available_locales)
     fixed_nav_posts = []
     for item in get_nav_fixed_post_links(locale=locale):
-        if item.get("slug"):
+        if item.get("label") or item.get("url") or item.get("slug"):
             fixed_nav_posts.append(item)
     ctx.setdefault("nav_fixed_post_link", fixed_nav_posts[0] if fixed_nav_posts else None)
     ctx.setdefault("fixed_nav_posts", fixed_nav_posts)
