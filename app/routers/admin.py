@@ -130,7 +130,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
 
     @router.post("/admin/users/{user_id}/role")
     @role_required("admin")
-    async def admin_user_change_role(request: Request, user_id: int, role: str = Form(...), db: Session = Depends(get_db)):
+    async def admin_user_change_role(request: Request, user_id: int, role: str | None = Form(None), db: Session = Depends(get_db)):
         from app.models.db_models import User
         from sqlalchemy import select, func
         target_user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
