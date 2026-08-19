@@ -24,8 +24,8 @@
       <link rel="alternate" hreflang="ro" href="{{ _canon|e }}" />
       <link rel="alternate" hreflang="en" href="{{ _canon|e }}?lang=en" />
     {% endif %}
-    <link rel="icon" href="{{ site_favicon_abs|e }}" sizes="32x32" type="image/x-icon" />
-    <link rel="shortcut icon" href="{{ site_favicon_abs|e }}" type="image/x-icon" />
+    <link rel="icon" href="{{ site_favicon_rel|default(site_favicon_abs)|e }}" sizes="32x32" type="image/x-icon" />
+    <link rel="shortcut icon" href="{{ site_favicon_rel|default(site_favicon_abs)|e }}" type="image/x-icon" />
     <link rel="apple-touch-icon" href="{{ site_brand_image_abs|e }}" />
 
     <meta property="og:site_name" content="{{ _site|e }}" />

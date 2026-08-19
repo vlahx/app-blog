@@ -17,16 +17,25 @@ OG_DESCRIPTION_MAX_CHARS = 300
 
 
 def public_site_origin(request=None) -> str:
-    """Originea absolută (scheme + host, fără slash final)."""
+    """Originea absolută (scheme + host, fără slash final). Respectă HTTPS prin Reverse Proxy."""
     if request is not None and hasattr(request, "base_url"):
+        headers = getattr(request, "headers", {})
+        proto = headers.get("x-forwarded-proto", "").strip().lower()
         base_str = str(request.base_url).rstrip("/")
+        if proto == "https" and base_str.startswith("http://"):
+            base_str = "https://" + base_str[7:]
         if base_str and "camionagiul" not in base_str:
             return base_str
     url = get_public_site_url()
     if url and "camionagiul" not in url:
         return url.rstrip("/")
     if request is not None and hasattr(request, "base_url"):
-        return str(request.base_url).rstrip("/")
+        headers = getattr(request, "headers", {})
+        proto = headers.get("x-forwarded-proto", "").strip().lower()
+        base_str = str(request.base_url).rstrip("/")
+        if proto == "https" and base_str.startswith("http://"):
+            base_str = "https://" + base_str[7:]
+        return base_str
     return ""
 
 

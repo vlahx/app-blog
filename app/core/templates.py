@@ -149,6 +149,7 @@ def render_template(
     ctx.setdefault("site_brand_image_abs", f"{root}{bpath}")
     fav = get_site_favicon_path()
     fpath = fav if fav.startswith("/") else f"/{fav}"
+    ctx.setdefault("site_favicon_rel", fpath)
     ctx.setdefault("site_favicon_abs", f"{root}{fpath}")
     nav_icon = get_site_nav_icon_path()
     if nav_icon:
