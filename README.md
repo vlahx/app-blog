@@ -37,7 +37,7 @@ Rețeaua **VlahX** este construită pe principiile open-source și pe puterea co
 
 Orice dezvoltator este invitat să creeze plugin-uri noi, teme personalizate și să contribuie la extinderea ecosistemului.
 
-* 📖 **Ghidul Oficial al Dezvoltatorului**: Consultă [vlahx_developer_api_guide.md](https://vlahx.org/) pentru lista completă a funcțiilor helper, carligelor de șablon (hooks), sistemului de evenimente Pub-Sub și rutelor API.
+* 📖 **Ghidul Oficial al Dezvoltatorului**: Consultă [vlahx_developer_api_guide.md](vlahx_developer_api_guide.md) pentru lista completă a funcțiilor helper, cârligelor de șablon (hooks), sistemului de evenimente Pub-Sub, rutelor API și To-Do Roadmap.
 * 🏬 **VlahX Ecosystem 1-Click Repository**: Descoperă pachetele oficiale și alătură-te comunității de creatori pe [https://vlahx.org/](https://vlahx.org/).
 
 ---
