@@ -1,85 +1,84 @@
-# ⚡ FastAPI Modular Blog & Shop Engine
+# ⚡ VlahX Engine (v2.0 Core) — Modular Web Platform
 
-A modern, lightweight, high-performance web platform built with **FastAPI**, **SQLAlchemy**, **Jinja2**, and **Bootstrap 5**. Designed with a modular plugin architecture, multi-theme engine, integrated MiniShop for digital & physical products, user profiles, and social OAuth authentication.
+[![VlahX Engine](https://img.shields.io/badge/VlahX_Engine-v2.0_Core-6f42c1?style=for-the-badge&logo=python&logoColor=white)](https://vlahx.org/)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+
+**VlahX Engine** este o platformă web modulară, ultra-rapidă și extrem de flexibilă, construită cu **Python (FastAPI)**, **SQLAlchemy**, **Jinja2** și **Bootstrap 5**. Este concepută pentru a construi și extinde aplicații web moderne, bloguri, magazine online și portaluri de comunitate prin intermediul unui sistem decuplat de **plugin-uri** și **teme**.
+
+🌐 **Site Oficial & Comunitate**: [https://vlahx.org/](https://vlahx.org/)
 
 ---
 
-## 🌟 Key Features
+## 🌟 Caracteristici Principale (Key Features)
 
-- ⚡ **High Performance Core**: Powered by Python 3.11+, FastAPI, Uvicorn, and SQLite / SQLAlchemy.
-- 🛍️ **MiniShop Subsystem**:
-  - Support for **Physical** (apparel, equipment) and **Virtual/Digital** products (ZIP, PDF, APK, Ebook).
-  - Automated secure digital file downloads post-purchase.
-  - Stripe Payment Gateway integration (Live Card & Test mode support).
-  - Preserved line-break descriptions (`white-space: pre-line`) for clean product copy.
-- 👤 **User Profiles & Social OAuth**:
-  - Personal User Dashboard (`/profile`) with profile editing and order history tracking.
-  - Google OAuth 2.0 & Telegram Widget authentication.
-  - Role Upgrade Request system sending instant Telegram notifications to site admins.
-- 🧩 **Modular Plugin Architecture**:
-  - Plug-and-play plugin system (`plugins/`).
-  - Available plugins include: **Google Indexing SEO**, **Analytics & Geo-IP Demographics**, **Comments Widget**, **Sitemap**, **Robots.txt**, **Social Share**, **Newsletter**, **Telegram Notify**, **MiniShop**.
-  - 📦 **Official Plugin Downloads**: Official pre-packaged plugin ZIPs are available for download exclusively at **[https://camionagiul.club](https://camionagiul.club)**!
+- ⚡ **Core De-a Dreptul Rapid**: Alimentat de Python 3.11+, FastAPI, Uvicorn și SQLite / SQLAlchemy.
+- 🗄️ **Single Source of Truth**: Toate setările aplicației sunt salvate direct în baza de date SQLite (`db/app.db`), oferind dinamism complet fără fișiere temporare de configurare.
+- 🔀 **Root Router Dinamic (Homepage Mode)**: Setează prima pagină pe Feed Blog (`/`), Pagină Statică (ex: `home`) sau Magazin Online (`minishop`).
+- 🧩 **Sistem Modular de Plugin-uri**:
+  - Plugin-uri oficiale disponibile: **Google SEO & Indexing API**, **Analytics & Surse de Trafic (Referrers)**, **Notificări Telegram**, **Sitemap XML**, **Robots.txt**, **Comentarii Widget**, **Newsletter**, **Social Share** și **MiniShop**.
 - 🎨 **Multi-Theme Engine**:
-  - Dynamic theme support (`themes/default`, `themes/minimal`).
-  - Native Dark Mode & Light Mode UI switching.
-- 🖼️ **Media Manager & SEO**:
-  - Integrated Pillow image processing & 500x500 square crop preset.
-  - Automatic OpenGraph & Twitter Card meta tag generator for posts and products.
+  - Teme dinamice decuplate (`themes/minimal`).
+  - Suport nativ pentru Dark Mode & Light Mode.
+- ⚡ **Manager de Navigare Navbar**:
+  - Control complet pe linkuri interne (`/blog`, `/shop`) și URL-uri externe cu suport `target="_blank"` și securitate `rel="noopener noreferrer"`.
+- 🔐 **Autentificare & Securitate**:
+  - Suport pentru Google OAuth 2.0 și Telegram Login Widget.
+  - Rezoluție dinamică a domeniului și protecție automată HTTPS (`X-Forwarded-Proto`).
+- 🌐 **Sistem Multilingv (RO / EN)**:
+  - Comutare dinamică a limbii site-ului și suport pentru pagini/articole traduse.
 
 ---
 
-## 🌐 Live Demo / Example Implementation
+## 📘 Invitație pentru Dezvoltatori & Comunitate
 
-A live production instance running this engine can be viewed at:  
-👉 **[https://camionagiul.club](https://camionagiul.club)**
+Rețeaua **VlahX** este construită pe principiile open-source și pe puterea comunității! 
+
+Orice dezvoltator este invitat să creeze plugin-uri noi, teme personalizate și să contribuie la extinderea ecosistemului.
+
+* 📖 **Ghidul Oficial al Dezvoltatorului**: Consultă [vlahx_developer_api_guide.md](https://vlahx.org/) pentru lista completă a funcțiilor helper, carligelor de șablon (hooks), sistemului de evenimente Pub-Sub și rutelor API.
+* 🏬 **VlahX Ecosystem 1-Click Repository**: Descoperă pachetele oficiale și alătură-te comunității de creatori pe [https://vlahx.org/](https://vlahx.org/).
 
 ---
 
-## 🚀 Quickstart Guide
+## 🚀 Ghid Rapid de Instalare
 
-### 1. Clone & Setup Environment
+### 1. Clonare & Mediu Virtual
 
 ```bash
-git clone https://github.com/<your-username>/app-blog.git
-cd app-blog
+git clone git@github.com:vlahx/vlahx-engine.git
+cd vlahx-engine
 
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Configuration (`.env`)
-
-Copy the example environment configuration:
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your settings (e.g., `SECRET_KEY`, `PUBLIC_SITE_URL`, Telegram / Google credentials).
-
-### 3. Run Locally
+### 2. Rulare Locală (Development)
 
 ```bash
 python main.py
 ```
-Or with Uvicorn:
+Sau cu Uvicorn:
 ```bash
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
-Open `http://localhost:8000` in your browser.
+Deschide `http://localhost:8000` în browser.
 
 ---
 
-## 🐳 Docker Deployment
+## 🐳 Rulare cu Docker
 
-Run with Docker Compose:
+Pornire container cu Docker Compose:
 ```bash
 docker compose up -d --build
 ```
 
 ---
 
-## 📜 License
+## 📜 Licență
 
-Distributed under the **Apache License 2.0**. See `LICENSE` for details.
+Distribuit sub licența **Apache License 2.0**. Vezi fișierul `LICENSE` pentru detalii.
+
+© 2026 **[VlahX Engine Community](https://vlahx.org/)** — Construiește și extinde aplicații web cu pluginuri și teme.
