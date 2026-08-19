@@ -586,11 +586,19 @@ def get_telegram_notify_chat_id() -> str:
 
 
 def get_telegram_bot_username() -> str:
+    import os
+    d = _runtime()
+    if d.get("TELEGRAM_BOT_USERNAME"):
+        v = str(d.get("TELEGRAM_BOT_USERNAME")).strip().lstrip("@")
+        if v:
+            return v
     from app.core.plugin_db_settings import get_plugin_setting as legacy_get
     from app.core.plugin_manager import get_plugin_setting as plugin_get
 
     v = legacy_get("telegram_bot_username")
     if v:
-        return v
+        return v.strip().lstrip("@")
     v2 = plugin_get("telegram_notify", "bot_username")
-    return v2 if v2 else TELEGRAM_BOT_USERNAME
+    if v2:
+        return v2.strip().lstrip("@")
+    return os.environ.get("TELEGRAM_BOT_USERNAME", "").strip().lstrip("@")
