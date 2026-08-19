@@ -62,7 +62,7 @@ def list_installed_themes() -> list[ThemeInfo]:
 
 
 def load_theme_info(theme_slug: str) -> ThemeInfo:
-    slug = _safe_theme_slug(theme_slug) or "default"
+    slug = _safe_theme_slug(theme_slug) or "minimal"
     manifest = APP_DIR / "themes" / slug / "theme.json"
     if not manifest.is_file():
         if slug == "default":

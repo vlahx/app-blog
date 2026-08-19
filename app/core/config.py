@@ -68,7 +68,7 @@ NAV_FIXED_POST_SLUG = os.environ.get("NAV_FIXED_POST_SLUG", "").strip()
 NAV_FIXED_POST_LABEL = os.environ.get("NAV_FIXED_POST_LABEL", "").strip()
 
 # Tema activă (numele folderului din `themes/<name>/templates`). Suprascrie din admin.
-ACTIVE_THEME = os.environ.get("ACTIVE_THEME", "").strip() or "default"
+ACTIVE_THEME = os.environ.get("ACTIVE_THEME", "").strip() or "minimal"
 
 
 # La upload, fără crop: imaginea încape în max_edge×max_edge (PIL thumbnail). Folosit dacă POST_IMAGE_CROP_OG=false.
@@ -462,15 +462,14 @@ def get_active_theme() -> str:
     else:
         v = ACTIVE_THEME
     v = (v or "").strip().lower()
-    if not v:
-        return "default"
+    if not v or v == "default":
+        return "minimal"
     ok = set("abcdefghijklmnopqrstuvwxyz0123456789_-")
     if any(ch not in ok for ch in v):
-        return "default"
-    if v != "default":
-        theme_templates = APP_DIR / "themes" / v / "templates"
-        if not theme_templates.is_dir():
-            return "default"
+        return "minimal"
+    theme_templates = APP_DIR / "themes" / v / "templates"
+    if not theme_templates.is_dir():
+        return "minimal"
     return v
 
 
