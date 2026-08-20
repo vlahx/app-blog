@@ -96,7 +96,7 @@
         <ul class="list-unstyled mb-0 small d-flex flex-column gap-2">
           {% if user %}
             <li>
-              <a href="/profile" class="text-secondary text-decoration-none hover-primary">👤 {{ t('profile.myAccount') if t else 'Contul Meu' }}</a>
+              <a href="/profile" class="text-secondary text-decoration-none hover-primary">👤 {{ t('footer.myAccount') if t else 'Contul Meu' }}</a>
             </li>
             {% if has_role('admin', 'editor', 'author', 'seller', 'developer') %}
               <li>
