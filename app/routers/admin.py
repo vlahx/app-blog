@@ -1108,8 +1108,8 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
     @router.get("/admin/repo/", response_class=HTMLResponse)
     @router.get("/admin/repo/store", response_class=HTMLResponse)
     @role_required("admin")
-    async def admin_repo_store_page(request: Request):
-        from app.core.config import get_repo_api_url
+    async def admin_repo_store_page(request: Request, message: str | None = None, error: str | None = None):
+        from app.core.config import get_repo_api_url, VLAH_CORE_VERSION
         from app.core.plugin_package import list_installed_plugins
         from app.core.themes import list_installed_themes
         import urllib.request
@@ -1118,7 +1118,13 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
         catalog = {"plugins": [], "themes": [], "online": False}
         repo_url = get_repo_api_url()
         try:
-            req = urllib.request.Request(repo_url, headers={"User-Agent": "VlahX-Core-2.0"})
+            req = urllib.request.Request(
+                repo_url,
+                headers={
+                    "User-Agent": f"VlahX-Core/{VLAH_CORE_VERSION}",
+                    "X-VlahX-Version": VLAH_CORE_VERSION,
+                },
+            )
             with urllib.request.urlopen(req, timeout=5) as resp:
                 raw_data = resp.read().decode("utf-8")
                 catalog_data = json.loads(raw_data)
@@ -1132,6 +1138,9 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
         installed_p_ids = {p.id for p in list_installed_plugins()}
         installed_t_slugs = {t.slug for t in list_installed_themes()}
 
+        msg = message or request.query_params.get("message")
+        err = error or request.query_params.get("error")
+
         return render_template(
             templates,
             request=request,
@@ -1142,6 +1151,9 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                 "installed_p_ids": installed_p_ids,
                 "installed_t_slugs": installed_t_slugs,
                 "repo_url": repo_url,
+                "core_version": VLAH_CORE_VERSION,
+                "message": msg,
+                "error": err,
             },
         )
 
@@ -1200,76 +1212,30 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
     @router.post("/admin/plugins/repo/install", response_class=HTMLResponse)
     @role_required("admin")
     async def admin_plugins_repo_install(request: Request, download_url: str = Form(...), plugin_id: str = Form(...)):
-        from app.core.plugin_manager import list_installed_plugins, sync_installed_plugins, set_plugin_enabled
+        from app.core.plugin_package import extract_plugin_zip
+        from app.core.plugin_manager import set_plugin_enabled
         import urllib.request
-        import zipfile
-        import io
-        import shutil
+        import urllib.parse
 
         try:
             req = urllib.request.Request(download_url, headers={"User-Agent": "VlahX-Core-2.0"})
             with urllib.request.urlopen(req, timeout=15) as resp:
                 data = resp.read()
 
-            zipf = zipfile.ZipFile(io.BytesIO(data))
-            members = zipf.namelist()
-            plugin_json_path = None
-            for m in members:
-                if m.endswith("plugin.json"):
-                    plugin_json_path = m
-                    break
-            
-            if not plugin_json_path:
-                raise ValueError("Arhiva nu conține un fișier plugin.json valid.")
-
-            root_folder = plugin_json_path.split("/plugin.json")[0] if "/plugin.json" in plugin_json_path else ""
-            extracted_id = plugin_id or (root_folder.split("/")[-1] if "/" in root_folder else root_folder)
-
-            target_dir = APP_DIR / "plugins" / extracted_id
-            target_dir.mkdir(parents=True, exist_ok=True)
-
-            for member in zipf.infolist():
-                filename = member.filename
-                if root_folder and filename.startswith(root_folder + "/"):
-                    rel_path = filename[len(root_folder) + 1:]
-                else:
-                    rel_path = filename
-                
-                if not rel_path or rel_path.startswith(("/", "..", "\\")):
-                    continue
-                
-                dest_path = target_dir / rel_path
-                if member.is_dir():
-                    dest_path.mkdir(parents=True, exist_ok=True)
-                else:
-                    dest_path.parent.mkdir(parents=True, exist_ok=True)
-                    with zipf.open(member) as source, open(dest_path, "wb") as target:
-                        shutil.copyfileobj(source, target)
-
-            sync_installed_plugins()
+            extracted_id, msg = extract_plugin_zip(data, overwrite=True)
             set_plugin_enabled(extracted_id, True)
-            msg = f"Plugin-ul `{extracted_id}` a fost instalat și activat cu succes din Repository!"
-            plugins = list_installed_plugins()
-            return render_template(
-                templates,
-                request=request,
-                name="admin/plugins.html",
-                context=_plugins_page_ctx(plugins, message=msg),
-            )
+            safe_msg = urllib.parse.quote(f"Plugin-ul `{extracted_id}` a fost instalat și activat cu succes!")
+            return RedirectResponse(url=f"/admin/repo?message={safe_msg}", status_code=303)
         except Exception as e:
-            return render_template(
-                templates,
-                request=request,
-                name="admin/plugins.html",
-                context=_plugins_page_ctx(list_installed_plugins(), error=f"Eroare instalare din Repository: {e}"),
-                status_code=400,
-            )
+            logger.exception("Plugin repo install failed")
+            safe_err = urllib.parse.quote(f"Eroare instalare {plugin_id}: {e}")
+            return RedirectResponse(url=f"/admin/repo?error={safe_err}", status_code=303)
 
     @router.post("/admin/themes/repo/install", response_class=HTMLResponse)
     @role_required("admin")
     async def admin_themes_repo_install(request: Request, download_url: str = Form(...)):
-        from app.core.themes import list_installed_themes, active_theme_slug
         import urllib.request
+        import urllib.parse
 
         try:
             req = urllib.request.Request(download_url, headers={"User-Agent": "VlahX-Core-2.0"})
@@ -1277,36 +1243,12 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                 data = resp.read()
 
             slug, msg = _extract_theme_zip(data, overwrite=True)
-            themes = list_installed_themes()
-            cur_theme = active_theme_slug()
-            return render_template(
-                templates,
-                request=request,
-                name="admin/themes.html",
-                context={
-                    "title": "Teme",
-                    "installed_themes": themes,
-                    "active_theme_slug": cur_theme,
-                    "error": "",
-                    "message": f"Tema `{slug}` a fost instalată cu succes din Repository!",
-                },
-            )
+            safe_msg = urllib.parse.quote(f"Tema `{slug}` a fost instalată cu succes!")
+            return RedirectResponse(url=f"/admin/repo?message={safe_msg}", status_code=303)
         except Exception as e:
-            themes = list_installed_themes()
-            cur_theme = active_theme_slug()
-            return render_template(
-                templates,
-                request=request,
-                name="admin/themes.html",
-                context={
-                    "title": "Teme",
-                    "installed_themes": themes,
-                    "active_theme_slug": cur_theme,
-                    "error": f"Eroare instalare temă din Repository: {e}",
-                    "message": "",
-                },
-                status_code=400,
-            )
+            logger.exception("Theme repo install failed")
+            safe_err = urllib.parse.quote(f"Eroare instalare temă: {e}")
+            return RedirectResponse(url=f"/admin/repo?error={safe_err}", status_code=303)
 
     @router.post("/admin/plugins/delete", response_class=HTMLResponse)
     @role_required("admin")

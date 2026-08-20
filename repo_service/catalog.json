@@ -1,11 +1,12 @@
 {
   "version": "1.0.0",
-  "updated_at": "2026-08-20T08:45:00Z",
+  "updated_at": "2026-08-20T09:00:00Z",
   "plugins": [
     {
       "id": "analytics",
       "name": "Analytics & View Counter",
       "version": "2.0.0",
+      "min_engine_version": "2.0.0",
       "author": "VlahX Core Team",
       "description": "Contorizare în timp real a vizualizărilor, timp de lectură, geolocație IP și surse de trafic (Referrers).",
       "icon": "📊",
@@ -16,6 +17,7 @@
       "id": "google_seo",
       "name": "Google SEO & Sitemap Pro",
       "version": "2.0.0",
+      "min_engine_version": "2.0.0",
       "author": "VlahX Core Team",
       "description": "Generare automată sitemap.xml, configurare robots.txt și meta-taguri OpenGraph pentru indexare pe Google.",
       "icon": "🔍",
@@ -26,6 +28,7 @@
       "id": "telegram_notify",
       "name": "Telegram Admin Alerts",
       "version": "2.0.0",
+      "min_engine_version": "2.0.0",
       "author": "VlahX Core Team",
       "description": "Notificări instant pe canalul/botul tău de Telegram pentru comentarii, comenzi și cereri de rol Developer.",
       "icon": "📢",
@@ -36,11 +39,56 @@
       "id": "minishop",
       "name": "VlahX MiniShop & E-commerce",
       "version": "2.0.0",
+      "min_engine_version": "2.0.0",
       "author": "VlahX Core Team",
       "description": "Modul complet de magazin online: produse, coș de cumpărături, plasare comenzi și administrare stocuri.",
       "icon": "🛒",
       "badge": "Oficial • Verificat",
       "download_url": "http://192.168.1.11:8088/download/plugins/minishop.zip"
+    },
+    {
+      "id": "comments",
+      "name": "Comments & Discussion System",
+      "version": "2.0.0",
+      "min_engine_version": "2.0.0",
+      "author": "VlahX Core Team",
+      "description": "Sistem modern de comentarii și discuții pentru articole cu moderare admin și protecție anti-spam.",
+      "icon": "💬",
+      "badge": "Oficial • Verificat",
+      "download_url": "http://192.168.1.11:8088/download/plugins/comments.zip"
+    },
+    {
+      "id": "newsletter",
+      "name": "Email Newsletter Subscriber",
+      "version": "2.0.0",
+      "min_engine_version": "2.0.0",
+      "author": "VlahX Core Team",
+      "description": "Widget de abonare la newsletter, colectare adrese de email și export abonați.",
+      "icon": "✉️",
+      "badge": "Oficial • Verificat",
+      "download_url": "http://192.168.1.11:8088/download/plugins/newsletter.zip"
+    },
+    {
+      "id": "robots_sitemap",
+      "name": "Robots.txt & XML Sitemap Manager",
+      "version": "2.0.0",
+      "min_engine_version": "2.0.0",
+      "author": "VlahX Core Team",
+      "description": "Manager nativ pentru editare robots.txt și generare automată a sitemap-ului XML pentru motoarele de căutare.",
+      "icon": "🤖",
+      "badge": "Oficial • Verificat",
+      "download_url": "http://192.168.1.11:8088/download/plugins/robots_sitemap.zip"
+    },
+    {
+      "id": "share",
+      "name": "Social Media Share Buttons",
+      "version": "2.0.0",
+      "min_engine_version": "2.0.0",
+      "author": "VlahX Core Team",
+      "description": "Butoane elegante de distribuire pe rețelele sociale (Facebook, Twitter, WhatsApp, Telegram, LinkedIn).",
+      "icon": "🔗",
+      "badge": "Oficial • Verificat",
+      "download_url": "http://192.168.1.11:8088/download/plugins/share.zip"
     }
   ],
   "themes": [
@@ -48,6 +96,7 @@
       "id": "minimal",
       "name": "Minimalist Clean Theme",
       "version": "2.0.0",
+      "min_engine_version": "2.0.0",
       "author": "VlahX Core Team",
       "description": "Tema oficială minimalistă, ultra-rapidă, optimizată pentru lizibilitate și indexare SEO pe orice ecran.",
       "icon": "🎨",
@@ -58,6 +107,7 @@
       "id": "elevate",
       "name": "Elevate Modern Glassmorphism",
       "version": "2.0.0",
+      "min_engine_version": "2.0.0",
       "author": "VlahX Core Team",
       "description": "Design modern Dark & Light cu efecte de Glassmorphism, animații fluide și antet dinamic pentru reviste web.",
       "icon": "🌟",

@@ -11,6 +11,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 APP_DIR = PROJECT_ROOT / "app"
 load_dotenv(PROJECT_ROOT / ".env", override=False)
 
+VLAH_CORE_VERSION = "2.0.0"
+
 
 def _get_required(name: str) -> str:
     value = os.environ.get(name, "").strip()
