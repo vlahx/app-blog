@@ -7,7 +7,7 @@ import urllib.request
 import urllib.parse
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request, Form, HTTPException
+from fastapi import APIRouter, Depends, Request, Form, File, UploadFile, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, select
@@ -324,6 +324,7 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
         phone: str = Form(None),
         image_url: str = Form(None),
         bio: str = Form(None),
+        avatar_file: UploadFile | None = File(None),
         db: Session = Depends(get_db),
     ):
         user = getattr(request.state, "current_user", None) or get_current_user_from_request(request)
@@ -339,8 +340,26 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
         db_user.last_name = last_name.strip() if last_name else None
         db_user.email = email.strip() if email else None
         db_user.phone = phone.strip() if phone else None
-        db_user.image_url = image_url.strip() if image_url else None
         db_user.bio = bio.strip() if bio else None
+
+        # Process uploaded avatar file if provided
+        if avatar_file and avatar_file.filename and getattr(avatar_file, "size", 1):
+            data = await avatar_file.read()
+            if data and len(data) > 0:
+                ext = pathlib.Path(avatar_file.filename).suffix.lower()
+                if ext not in (".jpg", ".jpeg", ".png", ".gif", ".webp"):
+                    ext = ".jpg"
+
+                dest_dir = APP_DIR / "static" / "images" / "user_uploads"
+                dest_dir.mkdir(parents=True, exist_ok=True)
+
+                filename = f"avatar_{db_user.id}_{uuid4().hex[:10]}{ext}"
+                dest_path = dest_dir / filename
+                dest_path.write_bytes(data)
+
+                db_user.image_url = f"/static/images/user_uploads/{filename}"
+        elif image_url and image_url.strip():
+            db_user.image_url = image_url.strip()
 
         db.commit()
         return RedirectResponse(url="/profile?updated=1", status_code=303)

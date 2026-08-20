@@ -135,7 +135,7 @@
           </div>
           {% endif %}
 
-          <form action="/profile/update" method="POST">
+          <form action="/profile/update" method="POST" enctype="multipart/form-data">
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label small fw-semibold">{{ t('profile.firstName') }}</label>
@@ -158,9 +158,30 @@
               </div>
 
               <div class="col-12">
-                <label class="form-label small fw-semibold">{{ t('profile.avatarUrl') }}</label>
-                <input type="url" name="image_url" class="form-control" value="{{ user.image_url or '' }}" placeholder="https://site.com/avatar.jpg">
-                <div class="form-text small">{{ t('profile.avatarHelp') }} {{ user.provider|title }}.</div>
+                <label class="form-label small fw-semibold">🖼️ Poza de Profil / Avatar</label>
+                <div class="p-3 border rounded-3 bg-body-tertiary">
+                  <div class="d-flex flex-column flex-sm-row align-items-center gap-3">
+                    <div class="position-relative">
+                      {% if user.image_url %}
+                      <img src="{{ user.image_url }}" id="avatarEditPreview" alt="Avatar" class="rounded-circle object-fit-cover shadow-sm border" width="75" height="75">
+                      {% else %}
+                      <div id="avatarEditPreviewFallback" class="rounded-circle bg-primary bg-opacity-20 text-primary d-flex align-items-center justify-content-center fs-2 fw-bold shadow-sm" style="width: 75px; height: 75px;">
+                        {{ (user.first_name or user.username or 'U')[0]|upper }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div class="flex-grow-1 w-100">
+                      <div class="mb-2">
+                        <label class="form-label micro text-secondary mb-1 fw-semibold">📁 Încarcă o poză nouă din calculator (JPG, PNG, GIF, WebP)</label>
+                        <input type="file" name="avatar_file" accept="image/png,image/jpeg,image/gif,image/webp" class="form-control form-control-sm" id="avatarFileInput">
+                      </div>
+                      <div>
+                        <label class="form-label micro text-secondary mb-1 fw-semibold">🔗 Sau introdu un URL extern</label>
+                        <input type="url" name="image_url" class="form-control form-control-sm" value="{{ user.image_url or '' }}" placeholder="https://site.com/avatar.jpg">
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div class="col-12">
@@ -175,6 +196,31 @@
               </div>
             </div>
           </form>
+
+          <script>
+            document.getElementById('avatarFileInput')?.addEventListener('change', function(e) {
+              const file = e.target.files[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                  const img = document.getElementById('avatarEditPreview');
+                  const fallback = document.getElementById('avatarEditPreviewFallback');
+                  if (img) {
+                    img.src = evt.target.result;
+                  } else if (fallback) {
+                    const newImg = document.createElement('img');
+                    newImg.id = 'avatarEditPreview';
+                    newImg.src = evt.target.result;
+                    newImg.className = 'rounded-circle object-fit-cover shadow-sm border';
+                    newImg.width = 75;
+                    newImg.height = 75;
+                    fallback.parentNode.replaceChild(newImg, fallback);
+                  }
+                };
+                reader.readAsDataURL(file);
+              }
+            });
+          </script>
         </div>
       </div>
     </div>
