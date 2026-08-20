@@ -400,11 +400,10 @@ async def publish_package(request: Request):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Fișierul theme.json nu este un JSON valid: {e}")
             
-        raw_id = metadata.get("id") or metadata.get("slug") or package_filename.replace(".zip", "")
+        raw_id = str(metadata.get("id") or metadata.get("slug") or package_filename.replace(".zip", "")).strip().lower()
+        raw_id = raw_id.replace("theme-", "").replace("-theme", "")
         import re
-        pkg_id = re.sub(r"[-_]v?\d+\.\d+(\.\d+)?.*$", "", str(raw_id).strip().lower())
-        if pkg_id.endswith("-theme"):
-            pkg_id = pkg_id[:-6]
+        pkg_id = re.sub(r"[-_]v?\d+.*$", "", raw_id).strip()
         if not pkg_id:
             pkg_id = "theme"
 
