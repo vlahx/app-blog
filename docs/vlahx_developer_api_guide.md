@@ -54,9 +54,17 @@ VlahX Core 2.0 folosește SQLAlchemy ORM peste baza de date SQLite (`db/app.db`)
 * `id` (`Integer`, Primary Key)
 * `slug` (`String`, Unique): Calea URL a articolului (ex: `despre-mine`, `prima-postare`).
 * `title` (`String`): Titlul articolului sau al paginii.
-* `excerpt` (`Text`): Rezumatul articolului.
+* `excerpt` (`Text`): Rezumatul / introducerea articolului.
 * `content_html` (`Text`): Conținutul HTML al articolului.
-* `category` (`String`): Categoria (dacă este `"pages"`, `"pagini"` sau `"static"`, este tratată ca pagină statică).
+* `category` (`String`): Categoria articolului (ex: `"Noutăți"`).
+* `hero_image_url` (`String`): Imaginea banner principală (Hero image URL).
+* `image_url` (`String`): Imaginea miniatură (thumbnail).
+* `images_url_json` (`Text`): JSON array cu imagini suplimentare pentru galerie.
+* `meta_keywords` (`String`): Cuvinte cheie SEO.
+* `author_id` (`Integer`): ID-ul utilizatorului autor.
+* `author_name` (`String`): Numele complet al autorului.
+* `published_at` (`DateTime`): Data publicării locale.
+* `published_at_utc` (`DateTime`): Data publicării în format UTC.
 * `draft` (`Boolean`): `True` dacă este ciornă/neactiv.
 * `created_at` / `updated_at` (`DateTime`)
 
