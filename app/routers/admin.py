@@ -1104,6 +1104,20 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
         }
 
     
+    @router.get("/admin/repo", response_class=HTMLResponse)
+    @router.get("/admin/repo/", response_class=HTMLResponse)
+    @router.get("/admin/repo/store", response_class=HTMLResponse)
+    @role_required("admin")
+    async def admin_repo_store_page(request: Request):
+        return render_template(
+            templates,
+            request=request,
+            name="admin/repo_store.html",
+            context={
+                "title": "Magazin Repository (repo.vlahx.org)",
+            },
+        )
+
     @router.get("/admin/plugins", response_class=HTMLResponse)
     @router.get("/admin/plugins/", response_class=HTMLResponse)
     @role_required("admin")

@@ -1,0 +1,172 @@
+{% extends "admin/admin_base.html" %}
+
+{% block content %}
+<section class="py-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1">🏪 VlahX Official Repository Store</h1>
+      <p class="text-secondary mb-0">Catalogul oficial de plugin-uri și teme verificate pentru VlahX Core 2.0 (`repo.vlahx.org`)</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/admin/plugins" class="btn btn-outline-secondary btn-sm fw-semibold rounded-pill px-3">🔌 Plugin-uri Instalate</a>
+      <a href="/admin/themes" class="btn btn-outline-secondary btn-sm fw-semibold rounded-pill px-3">🎨 Teme Instalate</a>
+    </div>
+  </div>
+
+  <!-- Status Notice Banner -->
+  <div class="card shadow-sm border-0 mb-4 bg-primary bg-opacity-10 rounded-4">
+    <div class="card-body p-4">
+      <div class="d-flex align-items-center gap-3">
+        <div class="fs-1">🚀</div>
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <h4 class="fw-bold mb-0">Microserviciul `repo.vlahx.org`</h4>
+            <span class="badge bg-warning text-dark">🚧 În Dezvoltare / Coming Soon</span>
+          </div>
+          <p class="text-secondary small mb-0">
+            Endpoint-ul dedicat pentru containerul separat al magazinului VlahX Repository este în pregătire. 
+            Aici vei găsi instalarea directă 1-Click pentru toate plugin-urile și temele din ecosistemul VlahX.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Catalog Section Header -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h5 class="fw-bold mb-0">📦 Catalog Module &amp; Teme Verificate</h5>
+    <span class="badge bg-secondary">Status: Not available yet</span>
+  </div>
+
+  <div class="row g-4">
+    <!-- Card 1: Analytics -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm border-0 h-100 rounded-4">
+        <div class="card-body p-4 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="fs-3">📊</span>
+              <span class="badge bg-secondary opacity-75">În curând</span>
+            </div>
+            <h5 class="fw-bold mb-1">Analytics &amp; View Counter</h5>
+            <div class="small text-secondary mb-2">Versiune <code>2.0.0</code> • Autor: VlahX Team</div>
+            <p class="small text-body-secondary mb-3">Statistici traficului web în timp real, geolocație IP, timp de lectură și surse de acces direct/referral.</p>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary w-100 rounded-pill fw-semibold disabled" disabled>
+            ⏳ Not available yet
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Google SEO -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm border-0 h-100 rounded-4">
+        <div class="card-body p-4 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="fs-3">🔍</span>
+              <span class="badge bg-secondary opacity-75">În curând</span>
+            </div>
+            <h5 class="fw-bold mb-1">Google SEO &amp; Sitemap Pro</h5>
+            <div class="small text-secondary mb-2">Versiune <code>2.0.0</code> • Autor: VlahX Team</div>
+            <p class="small text-body-secondary mb-3">Generare automată sitemap.xml, robots.txt configurabil și instant indexing API pentru articole pe Google Search.</p>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary w-100 rounded-pill fw-semibold disabled" disabled>
+            ⏳ Not available yet
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Telegram Alerts -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm border-0 h-100 rounded-4">
+        <div class="card-body p-4 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="fs-3">📢</span>
+              <span class="badge bg-secondary opacity-75">În curând</span>
+            </div>
+            <h5 class="fw-bold mb-1">Telegram Admin Alerts</h5>
+            <div class="small text-secondary mb-2">Versiune <code>2.0.0</code> • Autor: VlahX Team</div>
+            <p class="small text-body-secondary mb-3">Notificări instant pe canalul tău de Telegram pentru comenzi noi, comentarii și solicitări de rol Developer.</p>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary w-100 rounded-pill fw-semibold disabled" disabled>
+            ⏳ Not available yet
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: MiniShop -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm border-0 h-100 rounded-4">
+        <div class="card-body p-4 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="fs-3">🛒</span>
+              <span class="badge bg-secondary opacity-75">În curând</span>
+            </div>
+            <h5 class="fw-bold mb-1">VlahX MiniShop E-commerce</h5>
+            <div class="small text-secondary mb-2">Versiune <code>2.0.0</code> • Autor: VlahX Team</div>
+            <p class="small text-body-secondary mb-3">Modul complet de magazin online: catalog produse, coș de cumpărături, checkout și gestiune comenzi.</p>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary w-100 rounded-pill fw-semibold disabled" disabled>
+            ⏳ Not available yet
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 5: Minimalist Theme -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm border-0 h-100 rounded-4">
+        <div class="card-body p-4 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="fs-3">🎨</span>
+              <span class="badge bg-secondary opacity-75">În curând</span>
+            </div>
+            <h5 class="fw-bold mb-1">Minimalist Clean Theme</h5>
+            <div class="small text-secondary mb-2">Versiune <code>2.0.0</code> • Autor: VlahX Team</div>
+            <p class="small text-body-secondary mb-3">Tema implicită oficială, ultra-rapidă, cu suport complet pentru dark mode, i18n și SEO.</p>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary w-100 rounded-pill fw-semibold disabled" disabled>
+            ⏳ Not available yet
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 6: Elevate Theme -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm border-0 h-100 rounded-4">
+        <div class="card-body p-4 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="fs-3">🌟</span>
+              <span class="badge bg-secondary opacity-75">În curând</span>
+            </div>
+            <h5 class="fw-bold mb-1">Elevate Glassmorphism</h5>
+            <div class="small text-secondary mb-2">Versiune <code>2.0.0</code> • Autor: VlahX Team</div>
+            <p class="small text-body-secondary mb-3">Design premium cu efecte moderne de sticlă mată (Glassmorphic), animații fluide și antet dinamic.</p>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary w-100 rounded-pill fw-semibold disabled" disabled>
+            ⏳ Not available yet
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Developer Callout -->
+  <div class="card border-0 shadow-sm rounded-4 bg-body-tertiary p-4 mt-4 text-center">
+    <h5 class="fw-bold mb-1">👨‍💻 Vrei să publici module pe VlahX Repository?</h5>
+    <p class="text-secondary small mb-3">Devino programator autorizat în ecosistemul VlahX! Completează cererea de Developer direct din profilul tău.</p>
+    <a href="/profile" class="btn btn-primary btn-sm rounded-pill fw-bold px-4 shadow-sm" style="max-width: 300px; margin: 0 auto;">
+      Aplică pentru Rol VlahX Developer ➔
+    </a>
+  </div>
+</section>
+{% endblock %}

@@ -2,11 +2,14 @@
 
 {% block content %}
 <section class="py-4">
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
     <div>
-      <h1 class="h3 mb-1">{{ t('admin.plugins.title') }}</h1>
+      <h1 class="h3 fw-bold mb-1">🔌 {{ t('admin.plugins.title') }}</h1>
       <p class="text-secondary mb-0">{{ t('admin.plugins.subtitle') }}</p>
     </div>
+    <a href="/admin/repo" class="btn btn-outline-primary fw-bold rounded-pill px-3 shadow-sm">
+      🏪 Deschide Magazin Repository (repo.vlahx.org) ➔
+    </a>
   </div>
 
   {% if error %}
@@ -17,26 +20,9 @@
   <div class="alert alert-success mb-4">{{ message }}</div>
   {% endif %}
 
-  <!-- Tabs Header -->
-  <ul class="nav nav-tabs border-bottom-0 mb-3" id="pluginTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active fw-bold" id="installed-plugins-tab" data-bs-toggle="tab" data-bs-target="#installed-plugins-pane" type="button" role="tab">
-        🧩 Plugin-uri Instalate
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link fw-bold text-purple" id="repo-store-tab" data-bs-toggle="tab" data-bs-target="#repo-store-pane" type="button" role="tab" style="color: #6f42c1;">
-        🏪 VlahX Repository Store (1-Click)
-      </button>
-    </li>
-  </ul>
-
-  <div class="tab-content" id="pluginTabsContent">
-    <!-- Tab 1: Installed Plugins -->
-    <div class="tab-pane fade show active" id="installed-plugins-pane" role="tabpanel">
-      <div class="card shadow-sm mb-4">
-        <div class="card-body">
-          <h2 class="h5 mb-3">{{ t('admin.plugins.uploadTitle') }}</h2>
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h2 class="h5 mb-3">{{ t('admin.plugins.uploadTitle') }}</h2>
           <form id="plugin-upload-form" method="post" action="/admin/plugins/upload" enctype="multipart/form-data" class="d-flex flex-column gap-3">
             <div>
               <label class="form-label">{{ t('admin.plugins.zipArchive') }}</label>
@@ -94,120 +80,5 @@
           {% endif %}
         </div>
       </div>
-    </div>
-
-    <!-- Tab 2: VlahX Repository Store -->
-    <div class="tab-pane fade" id="repo-store-pane" role="tabpanel">
-      <div class="card shadow-sm border-0 mb-4 bg-primary bg-opacity-10">
-        <div class="card-body p-4">
-          <div class="d-flex align-items-center gap-3">
-            <div class="fs-1">🏪</div>
-            <div>
-              <h4 class="fw-bold mb-1">VlahX Official Plugin Repository (`repo.vlahx.org`)</h4>
-              <p class="text-secondary small mb-0">Instalează sau actualizează plugin-uri verificate pentru VlahX Core 2.0 direct cu un singur click fără încărcare manuală de arhive.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="row g-4">
-        <!-- Store Plugin 1: Analytics -->
-        <div class="col-md-6">
-          <div class="card shadow-sm border-0 h-100">
-            <div class="card-body p-4 d-flex flex-column justify-content-between">
-              <div>
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                  <span class="fs-4">📊</span>
-                  <span class="badge bg-success">Oficial • Verificat</span>
-                </div>
-                <h5 class="fw-bold mb-1">Analytics &amp; View Counter</h5>
-                <div class="small text-secondary mb-3">Versiune <code>2.0.0</code> • Autor: VlahX Core Team</div>
-                <p class="small text-body mb-3">Contorizare în timp real a vizualizărilor, timp de lectură, geolocație IP și surse de trafic (Referrers).</p>
-              </div>
-              <form action="/admin/plugins/repo/install" method="post">
-                <input type="hidden" name="plugin_id" value="analytics">
-                <input type="hidden" name="download_url" value="/static/downloads/plugins/analytics.zip">
-                <button type="submit" class="btn btn-sm btn-primary fw-bold w-100 rounded-pill shadow-sm">
-                  ⚡ Instalare 1-Click Analytics
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-
-        <!-- Store Plugin 2: Google SEO -->
-        <div class="col-md-6">
-          <div class="card shadow-sm border-0 h-100">
-            <div class="card-body p-4 d-flex flex-column justify-content-between">
-              <div>
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                  <span class="fs-4">🔍</span>
-                  <span class="badge bg-success">Oficial • Verificat</span>
-                </div>
-                <h5 class="fw-bold mb-1">Google SEO &amp; Sitemap Pro</h5>
-                <div class="small text-secondary mb-3">Versiune <code>2.0.0</code> • Autor: VlahX Core Team</div>
-                <p class="small text-body mb-3">Generare automată sitemap.xml, configurare robots.txt și meta-taguri OpenGraph pentru indexare pe Google.</p>
-              </div>
-              <form action="/admin/plugins/repo/install" method="post">
-                <input type="hidden" name="plugin_id" value="google_seo">
-                <input type="hidden" name="download_url" value="/static/downloads/plugins/google_seo.zip">
-                <button type="submit" class="btn btn-sm btn-primary fw-bold w-100 rounded-pill shadow-sm">
-                  ⚡ Instalare 1-Click Google SEO
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-
-        <!-- Store Plugin 3: Telegram Notify -->
-        <div class="col-md-6">
-          <div class="card shadow-sm border-0 h-100">
-            <div class="card-body p-4 d-flex flex-column justify-content-between">
-              <div>
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                  <span class="fs-4">📢</span>
-                  <span class="badge bg-success">Oficial • Verificat</span>
-                </div>
-                <h5 class="fw-bold mb-1">Telegram Admin Alerts</h5>
-                <div class="small text-secondary mb-3">Versiune <code>2.0.0</code> • Autor: VlahX Core Team</div>
-                <p class="small text-body mb-3">Notificări instant pe canalul/botul tău de Telegram pentru comentarii, comenzi și cereri de rol Developer.</p>
-              </div>
-              <form action="/admin/plugins/repo/install" method="post">
-                <input type="hidden" name="plugin_id" value="telegram_notify">
-                <input type="hidden" name="download_url" value="/static/downloads/plugins/telegram_notify.zip">
-                <button type="submit" class="btn btn-sm btn-primary fw-bold w-100 rounded-pill shadow-sm">
-                  ⚡ Instalare 1-Click Telegram Alerts
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-
-        <!-- Store Plugin 4: MiniShop -->
-        <div class="col-md-6">
-          <div class="card shadow-sm border-0 h-100">
-            <div class="card-body p-4 d-flex flex-column justify-content-between">
-              <div>
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                  <span class="fs-4">🛒</span>
-                  <span class="badge bg-success">Oficial • Verificat</span>
-                </div>
-                <h5 class="fw-bold mb-1">VlahX MiniShop &amp; E-commerce</h5>
-                <div class="small text-secondary mb-3">Versiune <code>2.0.0</code> • Autor: VlahX Core Team</div>
-                <p class="small text-body mb-3">Modul complet de magazin online: produse, coș de cumpărături, plasare comenzi și administrare stocuri.</p>
-              </div>
-              <form action="/admin/plugins/repo/install" method="post">
-                <input type="hidden" name="plugin_id" value="minishop">
-                <input type="hidden" name="download_url" value="/static/downloads/plugins/minishop.zip">
-                <button type="submit" class="btn btn-sm btn-primary fw-bold w-100 rounded-pill shadow-sm">
-                  ⚡ Instalare 1-Click MiniShop
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 </section>
 {% endblock %}
