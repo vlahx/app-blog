@@ -572,6 +572,10 @@ def save_post(
     if existing is not None:
         was_draft_before = bool(existing.draft)
 
+    cat_clean = category.strip() if category and category.strip() else None
+    if cat_clean and cat_clean.lower() in ("none", "null", "uncategorized", ""):
+        cat_clean = None
+
     if existing is None:
         if published_at is None:
             published_at_final = now
@@ -582,7 +586,7 @@ def save_post(
             author_id=author_id,
             title=(title or slug_final).strip(),
             excerpt=(excerpt or "").strip(),
-            category=category.strip() if category and category.strip() else None,
+            category=cat_clean,
             content_html=(content_html or "").strip(),
             hero_image_url=hero_norm,
             image_url=image_url,
@@ -603,7 +607,7 @@ def save_post(
         existing.author_id = author_id
         existing.title = (title or slug_final).strip()
         existing.excerpt = (excerpt or "").strip()
-        existing.category = category.strip() if category and category.strip() else None
+        existing.category = cat_clean
         existing.content_html = (content_html or "").strip()
         existing.hero_image_url = hero_norm
         existing.image_url = image_url

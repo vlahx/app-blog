@@ -13,7 +13,7 @@
     
     <!-- Category & Metadata Header -->
     <div class="mb-3 d-flex flex-wrap align-items-center gap-2">
-      {% if post.category %}
+      {% if post.category and post.category.lower() not in ['none', 'null', 'uncategorized', ''] %}
         <span class="badge text-bg-primary rounded-pill px-3 py-2 fs-6">{{ post.category }}</span>
       {% endif %}
       {% if post.author_name %}

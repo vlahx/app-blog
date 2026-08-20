@@ -14,7 +14,7 @@
 
       <header class="mb-4">
         <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
-          {% if post.category %}
+          {% if post.category and post.category.lower() not in ['none', 'null', 'uncategorized', ''] %}
             <span class="badge text-bg-light border">{{ post.category }}</span>
           {% endif %}
           {% if post.author_name %}
