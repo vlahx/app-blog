@@ -1109,12 +1109,39 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
     @router.get("/admin/repo/store", response_class=HTMLResponse)
     @role_required("admin")
     async def admin_repo_store_page(request: Request):
+        from app.core.config import get_repo_api_url
+        from app.core.plugin_manager import list_installed_plugins
+        from app.core.themes import list_installed_themes
+        import urllib.request
+        import json
+
+        catalog = {"plugins": [], "themes": [], "online": False}
+        repo_url = get_repo_api_url()
+        try:
+            req = urllib.request.Request(repo_url, headers={"User-Agent": "VlahX-Core-2.0"})
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                raw_data = resp.read().decode("utf-8")
+                catalog_data = json.loads(raw_data)
+                catalog["plugins"] = catalog_data.get("plugins", [])
+                catalog["themes"] = catalog_data.get("themes", [])
+                catalog["version"] = catalog_data.get("version", "1.0.0")
+                catalog["online"] = True
+        except Exception as e:
+            logger.warning(f"Failed to fetch repo catalog from {repo_url}: {e}")
+
+        installed_p_ids = {p.id for p in list_installed_plugins()}
+        installed_t_slugs = {t.slug for t in list_installed_themes()}
+
         return render_template(
             templates,
             request=request,
             name="admin/repo_store.html",
             context={
                 "title": "Magazin Repository (repo.vlahx.org)",
+                "catalog": catalog,
+                "installed_p_ids": installed_p_ids,
+                "installed_t_slugs": installed_t_slugs,
+                "repo_url": repo_url,
             },
         )
 

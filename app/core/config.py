@@ -602,3 +602,15 @@ def get_telegram_bot_username() -> str:
     if v2:
         return v2.strip().lstrip("@")
     return os.environ.get("TELEGRAM_BOT_USERNAME", "").strip().lstrip("@")
+
+
+def get_repo_api_url() -> str:
+    import os
+    env_val = os.environ.get("REPO_API_URL", "").strip()
+    if env_val:
+        return env_val
+    from app.core.plugin_db_settings import get_plugin_setting as legacy_get
+    v = legacy_get("repo_api_url")
+    if v:
+        return v.strip()
+    return "http://192.168.1.11:8088/api/v1/catalog.json"

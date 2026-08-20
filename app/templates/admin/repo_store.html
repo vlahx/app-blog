@@ -18,146 +18,118 @@
     <div class="card-body p-4">
       <div class="d-flex align-items-center gap-3">
         <div class="fs-1">🚀</div>
-        <div>
-          <div class="d-flex align-items-center gap-2 mb-1">
-            <h4 class="fw-bold mb-0">Microserviciul `repo.vlahx.org`</h4>
-            <span class="badge bg-warning text-dark">🚧 În Dezvoltare / Coming Soon</span>
+        <div class="w-100">
+          <div class="d-flex align-items-center justify-content-between mb-1">
+            <h4 class="fw-bold mb-0">Microserviciu Containerizat `repo.vlahx.org`</h4>
+            {% if catalog.online %}
+              <span class="badge bg-success px-3 py-2 fs-6">🟢 ONLINE (v{{ catalog.version }})</span>
+            {% else %}
+              <span class="badge bg-danger px-3 py-2 fs-6">🔴 OFFLINE</span>
+            {% endif %}
           </div>
           <p class="text-secondary small mb-0">
-            Endpoint-ul dedicat pentru containerul separat al magazinului VlahX Repository este în pregătire. 
-            Aici vei găsi instalarea directă 1-Click pentru toate plugin-urile și temele din ecosistemul VlahX.
+            Microserviciul de stocare și distribuție VlahX Repository rulează în container izolat (<code>vlahx-repo</code>).
+            Aici poți instala sau actualiza module și teme oficiale printr-un singur click direct pe blogul tău.
           </p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Catalog Section Header -->
+  <!-- Section 1: Official Plugins -->
   <div class="d-flex align-items-center justify-content-between mb-3">
-    <h5 class="fw-bold mb-0">📦 Catalog Module &amp; Teme Verificate</h5>
-    <span class="badge bg-secondary">Status: Not available yet</span>
+    <h5 class="fw-bold mb-0">🔌 Plugin-uri Oficiale Verificate</h5>
+    <span class="badge bg-primary">Count: {{ catalog.plugins|length }}</span>
   </div>
 
-  <div class="row g-4">
-    <!-- Card 1: Analytics -->
-    <div class="col-md-6 col-lg-4">
+  <div class="row g-4 mb-5">
+    {% for p in catalog.plugins %}
+    <div class="col-md-6 col-lg-6">
       <div class="card shadow-sm border-0 h-100 rounded-4">
         <div class="card-body p-4 d-flex flex-column justify-content-between">
           <div>
             <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="fs-3">📊</span>
-              <span class="badge bg-secondary opacity-75">În curând</span>
+              <span class="fs-2">{{ p.icon }}</span>
+              <span class="badge bg-success">{{ p.badge }}</span>
             </div>
-            <h5 class="fw-bold mb-1">Analytics &amp; View Counter</h5>
-            <div class="small text-secondary mb-2">Versiune <code>2.0.0</code> • Autor: VlahX Team</div>
-            <p class="small text-body-secondary mb-3">Statistici traficului web în timp real, geolocație IP, timp de lectură și surse de acces direct/referral.</p>
+            <h5 class="fw-bold mb-1">{{ p.name }}</h5>
+            <div class="small text-secondary mb-2">Versiune <code>v{{ p.version }}</code> • Autor: {{ p.author }}</div>
+            <p class="small text-body-secondary mb-3">{{ p.description }}</p>
           </div>
-          <button type="button" class="btn btn-sm btn-outline-secondary w-100 rounded-pill fw-semibold disabled" disabled>
-            ⏳ Not available yet
-          </button>
+          
+          <div class="pt-2 border-top">
+            {% if p.id in installed_p_ids %}
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-bold">✓ Instalat</span>
+                <form action="/admin/plugins/repo/install" method="post" class="flex-grow-1">
+                  <input type="hidden" name="plugin_id" value="{{ p.id }}">
+                  <input type="hidden" name="download_url" value="{{ p.download_url }}">
+                  <button type="submit" class="btn btn-sm btn-outline-primary fw-bold w-100 rounded-pill shadow-sm">
+                    🔄 Actualizează / Reinstalează 1-Click
+                  </button>
+                </form>
+              </div>
+            {% else %}
+              <form action="/admin/plugins/repo/install" method="post">
+                <input type="hidden" name="plugin_id" value="{{ p.id }}">
+                <input type="hidden" name="download_url" value="{{ p.download_url }}">
+                <button type="submit" class="btn btn-sm btn-primary fw-bold w-100 rounded-pill shadow-sm">
+                  ⚡ Instalare 1-Click {{ p.name }}
+                </button>
+              </form>
+            {% endif %}
+          </div>
         </div>
       </div>
     </div>
+    {% endfor %}
+  </div>
 
-    <!-- Card 2: Google SEO -->
-    <div class="col-md-6 col-lg-4">
-      <div class="card shadow-sm border-0 h-100 rounded-4">
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-          <div>
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="fs-3">🔍</span>
-              <span class="badge bg-secondary opacity-75">În curând</span>
-            </div>
-            <h5 class="fw-bold mb-1">Google SEO &amp; Sitemap Pro</h5>
-            <div class="small text-secondary mb-2">Versiune <code>2.0.0</code> • Autor: VlahX Team</div>
-            <p class="small text-body-secondary mb-3">Generare automată sitemap.xml, robots.txt configurabil și instant indexing API pentru articole pe Google Search.</p>
-          </div>
-          <button type="button" class="btn btn-sm btn-outline-secondary w-100 rounded-pill fw-semibold disabled" disabled>
-            ⏳ Not available yet
-          </button>
-        </div>
-      </div>
-    </div>
+  <!-- Section 2: Official Themes -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h5 class="fw-bold mb-0">🎨 Teme Oficiale Verificate</h5>
+    <span class="badge bg-primary">Count: {{ catalog.themes|length }}</span>
+  </div>
 
-    <!-- Card 3: Telegram Alerts -->
-    <div class="col-md-6 col-lg-4">
+  <div class="row g-4 mb-4">
+    {% for t_theme in catalog.themes %}
+    <div class="col-md-6 col-lg-6">
       <div class="card shadow-sm border-0 h-100 rounded-4">
         <div class="card-body p-4 d-flex flex-column justify-content-between">
           <div>
             <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="fs-3">📢</span>
-              <span class="badge bg-secondary opacity-75">În curând</span>
+              <span class="fs-2">{{ t_theme.icon }}</span>
+              <span class="badge bg-info text-dark">{{ t_theme.badge }}</span>
             </div>
-            <h5 class="fw-bold mb-1">Telegram Admin Alerts</h5>
-            <div class="small text-secondary mb-2">Versiune <code>2.0.0</code> • Autor: VlahX Team</div>
-            <p class="small text-body-secondary mb-3">Notificări instant pe canalul tău de Telegram pentru comenzi noi, comentarii și solicitări de rol Developer.</p>
+            <h5 class="fw-bold mb-1">{{ t_theme.name }}</h5>
+            <div class="small text-secondary mb-2">Versiune <code>v{{ t_theme.version }}</code> • Autor: {{ t_theme.author }}</div>
+            <p class="small text-body-secondary mb-3">{{ t_theme.description }}</p>
           </div>
-          <button type="button" class="btn btn-sm btn-outline-secondary w-100 rounded-pill fw-semibold disabled" disabled>
-            ⏳ Not available yet
-          </button>
+          
+          <div class="pt-2 border-top">
+            {% if t_theme.id in installed_t_slugs %}
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-bold">✓ Instalată</span>
+                <form action="/admin/themes/repo/install" method="post" class="flex-grow-1">
+                  <input type="hidden" name="download_url" value="{{ t_theme.download_url }}">
+                  <button type="submit" class="btn btn-sm btn-outline-primary fw-bold w-100 rounded-pill shadow-sm">
+                    🔄 Reinstalează Tema 1-Click
+                  </button>
+                </form>
+              </div>
+            {% else %}
+              <form action="/admin/themes/repo/install" method="post">
+                <input type="hidden" name="download_url" value="{{ t_theme.download_url }}">
+                <button type="submit" class="btn btn-sm btn-primary fw-bold w-100 rounded-pill shadow-sm">
+                  ⚡ Instalare 1-Click {{ t_theme.name }}
+                </button>
+              </form>
+            {% endif %}
+          </div>
         </div>
       </div>
     </div>
-
-    <!-- Card 4: MiniShop -->
-    <div class="col-md-6 col-lg-4">
-      <div class="card shadow-sm border-0 h-100 rounded-4">
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-          <div>
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="fs-3">🛒</span>
-              <span class="badge bg-secondary opacity-75">În curând</span>
-            </div>
-            <h5 class="fw-bold mb-1">VlahX MiniShop E-commerce</h5>
-            <div class="small text-secondary mb-2">Versiune <code>2.0.0</code> • Autor: VlahX Team</div>
-            <p class="small text-body-secondary mb-3">Modul complet de magazin online: catalog produse, coș de cumpărături, checkout și gestiune comenzi.</p>
-          </div>
-          <button type="button" class="btn btn-sm btn-outline-secondary w-100 rounded-pill fw-semibold disabled" disabled>
-            ⏳ Not available yet
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Card 5: Minimalist Theme -->
-    <div class="col-md-6 col-lg-4">
-      <div class="card shadow-sm border-0 h-100 rounded-4">
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-          <div>
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="fs-3">🎨</span>
-              <span class="badge bg-secondary opacity-75">În curând</span>
-            </div>
-            <h5 class="fw-bold mb-1">Minimalist Clean Theme</h5>
-            <div class="small text-secondary mb-2">Versiune <code>2.0.0</code> • Autor: VlahX Team</div>
-            <p class="small text-body-secondary mb-3">Tema implicită oficială, ultra-rapidă, cu suport complet pentru dark mode, i18n și SEO.</p>
-          </div>
-          <button type="button" class="btn btn-sm btn-outline-secondary w-100 rounded-pill fw-semibold disabled" disabled>
-            ⏳ Not available yet
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Card 6: Elevate Theme -->
-    <div class="col-md-6 col-lg-4">
-      <div class="card shadow-sm border-0 h-100 rounded-4">
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-          <div>
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="fs-3">🌟</span>
-              <span class="badge bg-secondary opacity-75">În curând</span>
-            </div>
-            <h5 class="fw-bold mb-1">Elevate Glassmorphism</h5>
-            <div class="small text-secondary mb-2">Versiune <code>2.0.0</code> • Autor: VlahX Team</div>
-            <p class="small text-body-secondary mb-3">Design premium cu efecte moderne de sticlă mată (Glassmorphic), animații fluide și antet dinamic.</p>
-          </div>
-          <button type="button" class="btn btn-sm btn-outline-secondary w-100 rounded-pill fw-semibold disabled" disabled>
-            ⏳ Not available yet
-          </button>
-        </div>
-      </div>
-    </div>
+    {% endfor %}
   </div>
 
   <!-- Developer Callout -->

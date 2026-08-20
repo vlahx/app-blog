@@ -1,0 +1,68 @@
+{
+  "version": "1.0.0",
+  "updated_at": "2026-08-20T08:45:00Z",
+  "plugins": [
+    {
+      "id": "analytics",
+      "name": "Analytics & View Counter",
+      "version": "2.0.0",
+      "author": "VlahX Core Team",
+      "description": "Contorizare în timp real a vizualizărilor, timp de lectură, geolocație IP și surse de trafic (Referrers).",
+      "icon": "📊",
+      "badge": "Oficial • Verificat",
+      "download_url": "http://192.168.1.11:8088/download/plugins/analytics.zip"
+    },
+    {
+      "id": "google_seo",
+      "name": "Google SEO & Sitemap Pro",
+      "version": "2.0.0",
+      "author": "VlahX Core Team",
+      "description": "Generare automată sitemap.xml, configurare robots.txt și meta-taguri OpenGraph pentru indexare pe Google.",
+      "icon": "🔍",
+      "badge": "Oficial • Verificat",
+      "download_url": "http://192.168.1.11:8088/download/plugins/google_seo.zip"
+    },
+    {
+      "id": "telegram_notify",
+      "name": "Telegram Admin Alerts",
+      "version": "2.0.0",
+      "author": "VlahX Core Team",
+      "description": "Notificări instant pe canalul/botul tău de Telegram pentru comentarii, comenzi și cereri de rol Developer.",
+      "icon": "📢",
+      "badge": "Oficial • Verificat",
+      "download_url": "http://192.168.1.11:8088/download/plugins/telegram_notify.zip"
+    },
+    {
+      "id": "minishop",
+      "name": "VlahX MiniShop & E-commerce",
+      "version": "2.0.0",
+      "author": "VlahX Core Team",
+      "description": "Modul complet de magazin online: produse, coș de cumpărături, plasare comenzi și administrare stocuri.",
+      "icon": "🛒",
+      "badge": "Oficial • Verificat",
+      "download_url": "http://192.168.1.11:8088/download/plugins/minishop.zip"
+    }
+  ],
+  "themes": [
+    {
+      "id": "minimal",
+      "name": "Minimalist Clean Theme",
+      "version": "2.0.0",
+      "author": "VlahX Core Team",
+      "description": "Tema oficială minimalistă, ultra-rapidă, optimizată pentru lizibilitate și indexare SEO pe orice ecran.",
+      "icon": "🎨",
+      "badge": "Oficial • Implicit",
+      "download_url": "http://192.168.1.11:8088/download/themes/minimal.zip"
+    },
+    {
+      "id": "elevate",
+      "name": "Elevate Modern Glassmorphism",
+      "version": "2.0.0",
+      "author": "VlahX Core Team",
+      "description": "Design modern Dark & Light cu efecte de Glassmorphism, animații fluide și antet dinamic pentru reviste web.",
+      "icon": "🌟",
+      "badge": "Oficial • Premium Design",
+      "download_url": "http://192.168.1.11:8088/download/themes/elevate.zip"
+    }
+  ]
+}
