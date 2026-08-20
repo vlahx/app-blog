@@ -239,3 +239,9 @@ def load_plugins_with_metadata(app: FastAPI) -> None:
             logger.info("Plugin încărcat: %s", plugin_id)
         except Exception:
             logger.exception("Plugin %s: eroare la încărcare", plugin_id)
+
+
+def list_installed_plugins():
+    from app.core.plugin_package import list_installed_plugins as _list
+    return _list()
+

@@ -1110,7 +1110,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
     @role_required("admin")
     async def admin_repo_store_page(request: Request):
         from app.core.config import get_repo_api_url
-        from app.core.plugin_manager import list_installed_plugins
+        from app.core.plugin_package import list_installed_plugins
         from app.core.themes import list_installed_themes
         import urllib.request
         import json
