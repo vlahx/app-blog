@@ -11,7 +11,11 @@ Acest ghid oferă specificațiile tehnice complete, regulile de dezvoltare și e
 
 * **Nume Site & Tagline**: Folosește întotdeauna `{{ site_display_name() }}` și `{{ site_tagline() }}` (care suportă traducere și configurare din Admin).
 * **Logo / Icon**: Folosește `{{ site_nav_icon_abs }}`. Dacă este setat, afișează `<img>`, altfel afișează un fallback SVG/icon.
-* **Traduceri & Etichete UI**: Folosește helper-ul `{{ t('cheie') }}` sau `{{ t_safe(translations, 'cheie', 'Fallback') }}` pentru toate etichetele UI (ex: `t('ui.admin')`, `t('ui.login')`, `t('ui.logout')`, `t('blog.author')`, `t('footer.craftedBy')`, `t('footer.adminPanel')`).
+* **Comutator de Limbi (Language Switcher)**: În navbar, se include întotdeauna formularul de selectare a limbii din `available_locales` (vezi exemplul din `navbar.html`).
+* **Traduceri & Etichete UI**: Folosește cheile oficiale din dicționarul i18n (`ro.json`/`en.json`) precum:
+  - `footer.navigation`, `footer.information`, `footer.quickNav`, `footer.adminPanel`, `footer.craftedBy`, `footer.myAccount`
+  - `nav.home`, `ui.admin`, `ui.login`, `ui.logout`, `ui.profile`, `blog.author`, `blog.readMore`
+  - Folosește `{{ t('cheie') }}` sau `{{ t_safe(translations, 'cheie', 'Fallback') }}`.
 * **Credite Autor Temă**: În subsol (footer), folosește `{{ t('footer.craftedBy') }}` sau atributul `author` definit dinamic în `theme.json`.
 
 ---
