@@ -77,6 +77,18 @@ def init_db() -> None:
                 db.commit()
             except Exception:
                 db.rollback()
+        if "phone" not in user_cols:
+            try:
+                db.execute(text("ALTER TABLE users ADD COLUMN phone VARCHAR(64)"))
+                db.commit()
+            except Exception:
+                db.rollback()
+        if "bio" not in user_cols:
+            try:
+                db.execute(text("ALTER TABLE users ADD COLUMN bio TEXT"))
+                db.commit()
+            except Exception:
+                db.rollback()
 
     with SessionLocal() as db:
         if db.execute(

@@ -294,11 +294,13 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
         if not user:
             return RedirectResponse(url="/admin/login?next=/profile", status_code=303)
 
+        db_user = db.execute(select(User).where(User.id == user.id)).scalar_one_or_none() or user
+
         # Retrieve user's orders from minishop if minishop plugin exists
         orders = []
         try:
             from app.plugins.minishop.db import list_user_orders
-            orders = list_user_orders(user_id=user.id, email=user.email)
+            orders = list_user_orders(user_id=db_user.id, email=db_user.email)
         except Exception:
             pass
 
@@ -308,7 +310,7 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
             name="user/profile.html",
             context={
                 "title": "Profilul Meu — Club",
-                "user": user,
+                "user": db_user,
                 "orders": orders,
             },
         )
@@ -328,17 +330,17 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
         if not user:
             return RedirectResponse(url="/admin/login", status_code=303)
 
-        user.first_name = first_name.strip()
-        if last_name:
-            user.last_name = last_name.strip()
-        if email:
-            user.email = email.strip()
-        if phone:
-            user.phone = phone.strip()
-        if image_url:
-            user.image_url = image_url.strip()
-        if bio:
-            user.bio = bio.strip()
+        db_user = db.execute(select(User).where(User.id == user.id)).scalar_one_or_none()
+        if not db_user:
+            return RedirectResponse(url="/admin/login", status_code=303)
+
+        if first_name:
+            db_user.first_name = first_name.strip()
+        db_user.last_name = last_name.strip() if last_name else None
+        db_user.email = email.strip() if email else None
+        db_user.phone = phone.strip() if phone else None
+        db_user.image_url = image_url.strip() if image_url else None
+        db_user.bio = bio.strip() if bio else None
 
         db.commit()
         return RedirectResponse(url="/profile?updated=1", status_code=303)
@@ -381,6 +383,8 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
         if not user:
             return RedirectResponse(url="/admin/login", status_code=303)
 
+        db_user = db.execute(select(User).where(User.id == user.id)).scalar_one_or_none() or user
+
         roles_map = {
             "developer": "👨‍💻 Programator / Dezvoltator (VlahX Developer)",
             "seller": "🛍️ Vânzător (Magazin / Piață)",
@@ -388,19 +392,19 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
             "editor": "📝 Editor Conținut",
         }
         role_label = roles_map.get(requested_role, requested_role)
-        user_name = f"{user.first_name or user.username or 'Utilizator'} {user.last_name or ''}".strip()
+        user_name = f"{db_user.first_name or db_user.username or 'Utilizator'} {db_user.last_name or ''}".strip()
 
         if requested_role == "developer":
-            user.dev_status = "pending"
-            user.dev_notes = motivation.strip()
-            user.dev_requested_at = datetime.now(timezone.utc)
+            db_user.dev_status = "pending"
+            db_user.dev_notes = motivation.strip()
+            db_user.dev_requested_at = datetime.now(timezone.utc)
             db.commit()
 
         msg = (
             f"🔔 *SOLICITARE ROL NOU PE SITE!*\n\n"
-            f"👤 *Utilizator:* {user_name} (`ID: #{user.id}`)\n"
-            f"📧 *Email:* {user.email or 'Nespecificat'}\n"
-            f"📱 *Telefon:* {getattr(user, 'phone', None) or 'Nespecificat'}\n"
+            f"👤 *Utilizator:* {user_name} (`ID: #{db_user.id}`)\n"
+            f"📧 *Email:* {db_user.email or 'Nespecificat'}\n"
+            f"📱 *Telefon:* {db_user.phone or 'Nespecificat'}\n"
             f"🎯 *Rol Solicitat:* {role_label}\n"
             f"💬 *Motivare:* {motivation.strip() or 'Fără mesaj suplimentar'}\n\n"
             f"⚡ *Aprobă în Admin:* {public_site_origin(request)}/admin/users"
