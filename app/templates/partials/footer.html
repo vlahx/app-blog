@@ -114,7 +114,10 @@
       <!-- Col 4: Community -->
       <div class="col-12 col-md-6 col-lg-3">
         <h6 class="fw-bold mb-3 text-body">{{ t('footer.communityTitle') }}</h6>
-        <p class="text-secondary small mb-0">
+        <p class="text-secondary small mb-2">
+          {{ t('footer.communityText') }}
+        </p>
+        <p class="text-secondary small mb-0 opacity-75">
           <strong>{{ site_display_name() }}</strong>{% if site_tagline() %} — {{ site_tagline() }}{% endif %}
         </p>
 
