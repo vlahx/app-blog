@@ -16,7 +16,9 @@ Acest ghid oferă specificațiile tehnice complete, regulile de dezvoltare și e
   - `footer.navigation`, `footer.information`, `footer.quickNav`, `footer.adminPanel`, `footer.craftedBy`, `footer.myAccount`
   - `nav.home`, `ui.admin`, `ui.login`, `ui.logout`, `ui.profile`, `blog.author`, `blog.readMore`
   - Folosește `{{ t('cheie') }}` sau `{{ t_safe(translations, 'cheie', 'Fallback') }}`.
-* **Credite Autor Temă**: În subsol (footer), folosește `{{ t('footer.craftedBy') }}` sau atributul `author` definit dinamic în `theme.json`.
+* **Credite Autor Temă**: În subsol (footer), folosește combinația:
+  `© {{ year }} {{ site_display_name() }}. {{ t('footer.craftedBy') }} {{ theme_author }}.`
+  (unde `theme_author` este extras automat din câmpul `author` definit în `theme.json`).
 
 ---
 
@@ -330,7 +332,7 @@ Pentru ca toate plugin-urile existente (Comentarii, Magazin, Forum, SEO, Analyti
     <!-- Footer Bottom Bar -->
     <div class="border-top mt-4 pt-4 d-flex flex-wrap justify-content-between align-items-center small text-secondary">
       <div>
-        © {{ year }} {{ site_display_name() }}. {{ t('footer.craftedBy') if t else 'Propulsat de VlahX Core' }}.
+        © {{ year }} {{ site_display_name() }}. {{ t('footer.craftedBy') if t else 'Creat cu ❤️ de' }} {{ theme_author }}.
       </div>
       {% if plugin_area_footer_bottom %}
         <div>{{ plugin_area_footer_bottom | safe }}</div>

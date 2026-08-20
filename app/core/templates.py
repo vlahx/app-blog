@@ -168,6 +168,9 @@ def render_template(
     ctx.setdefault("twitter_site", get_twitter_site())
     available_locales = get_available_locales()
     ctx.setdefault("available_locales", available_locales)
+    t_info = active_theme_info()
+    ctx.setdefault("theme_info", t_info)
+    ctx.setdefault("theme_author", t_info.author if t_info else "VlahX Studio")
     fixed_nav_posts = []
     for item in get_nav_fixed_post_links(locale=locale):
         if item.get("label") or item.get("url") or item.get("slug"):
