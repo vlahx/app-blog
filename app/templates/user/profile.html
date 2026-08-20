@@ -22,6 +22,8 @@
             <h2 class="fw-bold mb-0">{{ user.first_name or user.username or t('profile.member') }} {{ user.last_name or '' }}</h2>
             {% if user.role == 'admin' %}
             <span class="badge bg-danger text-white">⚡ Admin</span>
+            {% elif 'developer' in user.roles_list or user.role == 'developer' %}
+            <span class="badge text-white" style="background-color: #6f42c1;">👨‍💻 Developer</span>
             {% elif user.role in ['editor', 'author'] %}
             <span class="badge bg-primary text-white">📝 Author</span>
             {% elif user.role == 'seller' %}
@@ -39,7 +41,7 @@
         </div>
 
         <div class="d-flex gap-2">
-          {% if user.role in ['admin', 'editor', 'author'] %}
+          {% if user.role in ['admin', 'editor', 'author', 'developer'] %}
           <a href="/admin" class="btn btn-outline-primary btn-sm fw-semibold px-3">{{ t('profile.adminPanel') }}</a>
           {% endif %}
           <a href="/auth/logout" class="btn btn-outline-secondary btn-sm px-3">{{ t('profile.logout') }}</a>
@@ -50,12 +52,26 @@
 
   {% if request.query_params.get('requested') == '1' %}
   <div class="alert alert-success d-flex align-items-center gap-2 mb-4 rounded-4 shadow-sm" role="alert">
-    <span>✅ Request sent to admin team!</span>
+    <span>✅ Solicitarea a fost trimisă cu succes către echipa VlahX! Notificare expediată pe Telegram.</span>
   </div>
   {% endif %}
 
-  <!-- Cerere Schimbare Rol (dacă nu e deja Admin/Editor) -->
-  {% if user.role not in ['admin', 'editor'] %}
+  {% if user.dev_status == 'pending' %}
+  <div class="alert alert-warning d-flex align-items-center gap-2 mb-4 rounded-4 shadow-sm" role="alert">
+    <span>⏳ Solicitarea ta pentru rolul de <strong>VlahX Developer</strong> este în curs de examinare de către administrator.</span>
+  </div>
+  {% elif user.dev_status == 'approved' %}
+  <div class="alert alert-success d-flex align-items-center gap-2 mb-4 rounded-4 shadow-sm" role="alert">
+    <span>🎉 Felicitări! Contul tău este verificat ca <strong>VlahX Developer</strong>.</span>
+  </div>
+  {% elif user.dev_status == 'rejected' %}
+  <div class="alert alert-secondary d-flex align-items-center gap-2 mb-4 rounded-4 shadow-sm" role="alert">
+    <span>❌ Solicitarea anterioară pentru rolul de Developer a fost respinsă. Poți aplica din nou cu detalii suplimentare.</span>
+  </div>
+  {% endif %}
+
+  <!-- Cerere Schimbare Rol (dacă nu e deja Admin) -->
+  {% if user.role != 'admin' %}
   <div class="card border-0 shadow-sm rounded-4 mb-4">
     <div class="card-body p-4">
       <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
@@ -73,14 +89,16 @@
           <div class="mb-3">
             <label class="form-label small fw-semibold">{{ t('profile.selectRole') }}</label>
             <select name="requested_role" class="form-select form-select-sm" required>
-              <option value="author">✍️ Author (Write articles and guides)</option>
-              <option value="editor">📝 Editor (Manage content)</option>
+              <option value="developer">👨‍💻 Developer (Programator / Acces Repo &amp; Module)</option>
+              <option value="author">✍️ Author (Scrie articole și ghiduri)</option>
+              <option value="editor">📝 Editor (Gestionare conținut)</option>
+              <option value="seller">🛍️ Seller (Vânzător Magazin)</option>
             </select>
           </div>
 
           <div class="mb-3">
             <label class="form-label small fw-semibold">{{ t('profile.motivation') }}</label>
-            <textarea name="motivation" class="form-control form-control-sm" rows="2" placeholder="{{ t('profile.motivationPlaceholder') }}"></textarea>
+            <textarea name="motivation" class="form-control form-control-sm" rows="3" placeholder="Descrie pe scurt experiența ta, link-uri către GitHub/portofoliu sau de ce dorești acest rol..."></textarea>
           </div>
 
           <button type="submit" class="btn btn-primary btn-sm fw-bold px-4 rounded-pill">

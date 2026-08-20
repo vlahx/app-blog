@@ -148,7 +148,7 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
         if not roles_selected and form.get("role"):
             roles_selected = [form.get("role")]
             
-        valid_roles = ("admin", "editor", "seller", "author", "reader", "pending")
+        valid_roles = ("admin", "editor", "seller", "author", "developer", "reader", "pending")
         clean_roles = [r.strip().lower() for r in roles_selected if r.strip().lower() in valid_roles]
         if not clean_roles:
             clean_roles = ["reader"]
@@ -157,6 +157,37 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
         target_user.role = final_role_str
         db.commit()
         return RedirectResponse(url="/admin/users?msg=Roluri+actualizate+cu+succes!", status_code=303)
+
+    @router.post("/admin/users/{user_id}/approve-developer")
+    @role_required("admin")
+    async def admin_user_approve_developer(request: Request, user_id: int, db: Session = Depends(get_db)):
+        from app.models.db_models import User
+        from sqlalchemy import select
+        target_user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+        if not target_user:
+            return RedirectResponse(url="/admin/users?err=Utilizatorul+nu+a+fost+găsit", status_code=303)
+        
+        current_roles = target_user.roles_list
+        if "developer" not in current_roles:
+            current_roles.append("developer")
+        
+        target_user.role = ",".join(list(dict.fromkeys(current_roles)))
+        target_user.dev_status = "approved"
+        db.commit()
+        return RedirectResponse(url="/admin/users?msg=Cerere+Developer+aprobată+cu+succes!", status_code=303)
+
+    @router.post("/admin/users/{user_id}/reject-developer")
+    @role_required("admin")
+    async def admin_user_reject_developer(request: Request, user_id: int, db: Session = Depends(get_db)):
+        from app.models.db_models import User
+        from sqlalchemy import select
+        target_user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+        if not target_user:
+            return RedirectResponse(url="/admin/users?err=Utilizatorul+nu+a+fost+găsit", status_code=303)
+        
+        target_user.dev_status = "rejected"
+        db.commit()
+        return RedirectResponse(url="/admin/users?msg=Cererea+de+Developer+a+fost+respinsă.", status_code=303)
 
     @router.post("/admin/users/{user_id}/delete")
     @role_required("admin")
@@ -1122,6 +1153,117 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
                     list_installed_plugins(),
                     error=f"Eroare: {str(e)}",
                 ),
+                status_code=400,
+            )
+
+    @router.post("/admin/plugins/repo/install", response_class=HTMLResponse)
+    @role_required("admin")
+    async def admin_plugins_repo_install(request: Request, download_url: str = Form(...), plugin_id: str = Form(...)):
+        from app.core.plugin_manager import list_installed_plugins, sync_installed_plugins, set_plugin_enabled
+        import urllib.request
+        import zipfile
+        import io
+        import shutil
+
+        try:
+            req = urllib.request.Request(download_url, headers={"User-Agent": "VlahX-Core-2.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = resp.read()
+
+            zipf = zipfile.ZipFile(io.BytesIO(data))
+            members = zipf.namelist()
+            plugin_json_path = None
+            for m in members:
+                if m.endswith("plugin.json"):
+                    plugin_json_path = m
+                    break
+            
+            if not plugin_json_path:
+                raise ValueError("Arhiva nu conține un fișier plugin.json valid.")
+
+            root_folder = plugin_json_path.split("/plugin.json")[0] if "/plugin.json" in plugin_json_path else ""
+            extracted_id = plugin_id or (root_folder.split("/")[-1] if "/" in root_folder else root_folder)
+
+            target_dir = APP_DIR / "plugins" / extracted_id
+            target_dir.mkdir(parents=True, exist_ok=True)
+
+            for member in zipf.infolist():
+                filename = member.filename
+                if root_folder and filename.startswith(root_folder + "/"):
+                    rel_path = filename[len(root_folder) + 1:]
+                else:
+                    rel_path = filename
+                
+                if not rel_path or rel_path.startswith(("/", "..", "\\")):
+                    continue
+                
+                dest_path = target_dir / rel_path
+                if member.is_dir():
+                    dest_path.mkdir(parents=True, exist_ok=True)
+                else:
+                    dest_path.parent.mkdir(parents=True, exist_ok=True)
+                    with zipf.open(member) as source, open(dest_path, "wb") as target:
+                        shutil.copyfileobj(source, target)
+
+            sync_installed_plugins()
+            set_plugin_enabled(extracted_id, True)
+            msg = f"Plugin-ul `{extracted_id}` a fost instalat și activat cu succes din Repository!"
+            plugins = list_installed_plugins()
+            return render_template(
+                templates,
+                request=request,
+                name="admin/plugins.html",
+                context=_plugins_page_ctx(plugins, message=msg),
+            )
+        except Exception as e:
+            return render_template(
+                templates,
+                request=request,
+                name="admin/plugins.html",
+                context=_plugins_page_ctx(list_installed_plugins(), error=f"Eroare instalare din Repository: {e}"),
+                status_code=400,
+            )
+
+    @router.post("/admin/themes/repo/install", response_class=HTMLResponse)
+    @role_required("admin")
+    async def admin_themes_repo_install(request: Request, download_url: str = Form(...)):
+        from app.core.themes import list_installed_themes, active_theme_slug
+        import urllib.request
+
+        try:
+            req = urllib.request.Request(download_url, headers={"User-Agent": "VlahX-Core-2.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = resp.read()
+
+            slug, msg = _extract_theme_zip(data, overwrite=True)
+            themes = list_installed_themes()
+            cur_theme = active_theme_slug()
+            return render_template(
+                templates,
+                request=request,
+                name="admin/themes.html",
+                context={
+                    "title": "Teme",
+                    "installed_themes": themes,
+                    "active_theme_slug": cur_theme,
+                    "error": "",
+                    "message": f"Tema `{slug}` a fost instalată cu succes din Repository!",
+                },
+            )
+        except Exception as e:
+            themes = list_installed_themes()
+            cur_theme = active_theme_slug()
+            return render_template(
+                templates,
+                request=request,
+                name="admin/themes.html",
+                context={
+                    "title": "Teme",
+                    "installed_themes": themes,
+                    "active_theme_slug": cur_theme,
+                    "error": f"Eroare instalare temă din Repository: {e}",
+                    "message": "",
+                },
                 status_code=400,
             )
 

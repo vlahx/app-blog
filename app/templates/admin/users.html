@@ -71,6 +71,8 @@
                     <span class="badge bg-danger shadow-sm">👑 {{ t('admin.roles.admin') }}</span>
                   {% elif clean_r == 'editor' %}
                     <span class="badge bg-primary shadow-sm">✍️ {{ t('admin.roles.editor') }}</span>
+                  {% elif clean_r == 'developer' %}
+                    <span class="badge text-white shadow-sm" style="background-color: #6f42c1;">👨‍💻 Developer</span>
                   {% elif clean_r == 'seller' %}
                     <span class="badge bg-success shadow-sm">🛒 {{ t('admin.roles.seller') }}</span>
                   {% elif clean_r == 'author' %}
@@ -82,6 +84,22 @@
                   {% endif %}
                 {% endfor %}
               </div>
+              {% if u.dev_status == 'pending' %}
+              <div class="mt-2 p-2 border border-warning rounded bg-warning bg-opacity-10 text-start" style="max-width: 220px; margin: 0 auto;">
+                <div class="small fw-bold text-dark mb-1">⏳ Cerere VlahX Developer</div>
+                {% if u.dev_notes %}
+                <div class="small text-secondary mb-2" style="font-size: 0.78rem;"><em>"{{ u.dev_notes }}"</em></div>
+                {% endif %}
+                <div class="d-flex gap-1 justify-content-center">
+                  <form action="/admin/users/{{ u.id }}/approve-developer" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-success py-0 px-2 small">✅ Aprobă</button>
+                  </form>
+                  <form action="/admin/users/{{ u.id }}/reject-developer" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2 small">❌ Respinge</button>
+                  </form>
+                </div>
+              </div>
+              {% endif %}
             </td>
             <td class="text-center">
               <form action="/admin/users/{{ u.id }}/role" method="post" class="p-2 border rounded bg-body-tertiary text-start d-inline-block" style="min-width: 240px;">
@@ -90,6 +108,10 @@
                   <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="roles" value="admin" id="r_admin_{{ u.id }}" {% if 'admin' in u_roles %}checked{% endif %}>
                     <label class="form-check-label fw-semibold text-danger" for="r_admin_{{ u.id }}">👑 {{ t('admin.roles.admin') }}</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="roles" value="developer" id="r_dev_{{ u.id }}" {% if 'developer' in u_roles %}checked{% endif %}>
+                    <label class="form-check-label fw-semibold" style="color: #6f42c1;" for="r_dev_{{ u.id }}">👨‍💻 Developer</label>
                   </div>
                   <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="roles" value="editor" id="r_editor_{{ u.id }}" {% if 'editor' in u_roles %}checked{% endif %}>

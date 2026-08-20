@@ -56,6 +56,28 @@ def init_db() -> None:
             except Exception:
                 db.rollback()
 
+        # Migration for users table developer application fields
+        res_users = db.execute(text("PRAGMA table_info(users)"))
+        user_cols = [row[1] for row in res_users.fetchall()]
+        if "dev_status" not in user_cols:
+            try:
+                db.execute(text("ALTER TABLE users ADD COLUMN dev_status VARCHAR(32) DEFAULT 'none'"))
+                db.commit()
+            except Exception:
+                db.rollback()
+        if "dev_notes" not in user_cols:
+            try:
+                db.execute(text("ALTER TABLE users ADD COLUMN dev_notes TEXT"))
+                db.commit()
+            except Exception:
+                db.rollback()
+        if "dev_requested_at" not in user_cols:
+            try:
+                db.execute(text("ALTER TABLE users ADD COLUMN dev_requested_at DATETIME"))
+                db.commit()
+            except Exception:
+                db.rollback()
+
     with SessionLocal() as db:
         if db.execute(
             text(

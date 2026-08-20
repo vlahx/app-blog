@@ -24,6 +24,9 @@ class User(Base):
     email: Mapped[str | None] = mapped_column(String(254), nullable=True)
     image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     role: Mapped[str] = mapped_column(String(64), nullable=False, default="reader")
+    dev_status: Mapped[str | None] = mapped_column(String(32), nullable=True, default="none")
+    dev_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    dev_requested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     @property
     def roles_list(self) -> list[str]:

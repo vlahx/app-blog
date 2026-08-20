@@ -382,6 +382,7 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
             return RedirectResponse(url="/admin/login", status_code=303)
 
         roles_map = {
+            "developer": "👨‍💻 Programator / Dezvoltator (VlahX Developer)",
             "seller": "🛍️ Vânzător (Magazin / Piață)",
             "author": "✍️ Autor / Scriitor Articole",
             "editor": "📝 Editor Conținut",
@@ -389,14 +390,20 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
         role_label = roles_map.get(requested_role, requested_role)
         user_name = f"{user.first_name or user.username or 'Utilizator'} {user.last_name or ''}".strip()
 
+        if requested_role == "developer":
+            user.dev_status = "pending"
+            user.dev_notes = motivation.strip()
+            user.dev_requested_at = datetime.now(timezone.utc)
+            db.commit()
+
         msg = (
             f"🔔 *SOLICITARE ROL NOU PE SITE!*\n\n"
             f"👤 *Utilizator:* {user_name} (`ID: #{user.id}`)\n"
             f"📧 *Email:* {user.email or 'Nespecificat'}\n"
-            f"📱 *Telefon:* {user.phone or 'Nespecificat'}\n"
+            f"📱 *Telefon:* {getattr(user, 'phone', None) or 'Nespecificat'}\n"
             f"🎯 *Rol Solicitat:* {role_label}\n"
             f"💬 *Motivare:* {motivation.strip() or 'Fără mesaj suplimentar'}\n\n"
-            f"⚡ *Aprobă în Admin:* {public_site_origin(request)}/admin"
+            f"⚡ *Aprobă în Admin:* {public_site_origin(request)}/admin/users"
         )
 
         try:

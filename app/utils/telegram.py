@@ -47,3 +47,47 @@ def verify_telegram_login(params: Mapping[str, str]) -> bool:
         return False
 
     return True
+
+
+def send_telegram_admin_notification(message: str, db=None) -> bool:
+    """
+    Trimite o notificare pe Telegram către admin folosind bot_token și admin_chat_id.
+    """
+    import logging
+    import urllib.parse
+    import urllib.request
+    logger = logging.getLogger(__name__)
+
+    try:
+        token = ""
+        chat_id = ""
+        if db is not None:
+            from app.models.db_models import AppSetting
+            row_token = db.query(AppSetting).filter(AppSetting.key == "telegram_bot_token").first()
+            row_chat = db.query(AppSetting).filter(AppSetting.key == "telegram_admin_chat_id").first()
+            if row_token and row_token.value:
+                token = row_token.value.strip()
+            if row_chat and row_chat.value:
+                chat_id = row_chat.value.strip()
+
+        if not token or not chat_id:
+            from app.core.config import get_telegram_bot_token
+            token = get_telegram_bot_token()
+
+        if not token or not chat_id:
+            logger.info(f"Telegram notification skipped. Message: {message[:100]}")
+            return False
+
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        data = urllib.parse.urlencode({
+            "chat_id": chat_id,
+            "text": message,
+            "parse_mode": "HTML"
+        }).encode("utf-8")
+
+        req = urllib.request.Request(url, data=data, method="POST")
+        with urllib.request.urlopen(req, timeout=5) as response:
+            return response.status == 200
+    except Exception as e:
+        logger.warning(f"Failed to send Telegram notification: {e}")
+        return False
