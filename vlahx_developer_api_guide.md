@@ -1,24 +1,60 @@
 # Ghidul Dezvoltatorului VlahX Engine (v2.0 Core)
-## Arhitectură, API-uri, Variabile & Sistem de Plugin-uri
+## Arhitectură, API-uri, Variabile, Regulament de Versionare & Sistem de Plugin-uri/Teme
 
-Acest ghid oferă documentația tehnică completă a platformei **VlahX Core 2.0**. Orice dezvoltator poate folosi acest document pentru a înțelege structura aplicației și pentru a crea **plugin-uri** și **teme** personalizate.
+Acest ghid oferă documentația tehnică completă a platformei **VlahX Engine 2.0 Core**. Orice dezvoltator poate folosi acest document pentru a înțelege structura aplicației și pentru a crea, publica și actualiza **plugin-uri** și **teme** personalizate în ecosistemul `repo.vlahx.org`.
 
 ---
 
-## 1. Concepte de Baza & Filosofia VlahX Core 2.0
+## 1. Concepte de Bază & Filosofia VlahX Engine
 
 * **Tehnologii Core**: Python (FastAPI), Jinja2 Templates, SQLite (`db/app.db`), Vanilla CSS/Bootstrap 5, JavaScript.
 * **Single Source of Truth**: Toate setările globale ale aplicației sunt stocate în tabela SQLite `app_settings` (sub formă de cheie-valoare), eliminând fișierele temporare `.json`.
 * **Arhitectură Modulară (Plugin-driven)**: Orice funcționalitate avansată (SEO, Notificări Telegram, Analytics, Magazin, Sitemap) este încapsulată într-un plugin decuplat.
+* **Distribuție 1-Click din Repository**: Modulele și temele sunt distribuite securizat prin microserviciul containerizat `repo.vlahx.org`.
 
 ---
 
-## 2. Constante & Ajutoare Globale (`app/core/config.py`)
+## 2. Regulamentul Oficial de Versionare (Semantic Versioning & Compatibility)
+
+Pentru a asigura stabilitatea platformei VlahX pe mii de site-uri active, toate modulele și temele trebuie să respecte regulamentul de versionare **SemVer (`MAJOR.MINOR.PATCH`)**:
+
+### A. Convenția Versiunilor (`vMAJOR.MINOR.PATCH`)
+- **Versiunea de Start**: Toate plugin-urile și temele noi lansate pentru VlahX Core 2.0 pornesc de la versiunea baseline **`v2.0.0`**.
+- **Versiuni `PATCH` (`v2.0.0` ➔ `v2.0.1`)**: Modificări minore, rezolvări de bug-uri, optimizări de performanță.
+- **Versiuni `MINOR` (`v2.0.0` ➔ `v2.1.0`)**: Funcționalități noi adăugate, dar care păstrează **100% compatibilitatea înapoi** cu VlahX Core 2.x.
+- **Versiuni `MAJOR` (`v2.x.x` ➔ `v3.0.0`)**: Schimbări majore de arhitectură ale engine-ului care necesită refactorizarea codului sursă.
+
+### B. Manifestul `plugin.json` & `theme.json`
+Orice modul trebuie să declare în fișierul de configurare versiunea sa și versiunea minimă de engine necesară:
+
+```json
+{
+  "id": "my_custom_plugin",
+  "name": "Plugin-ul Meu Personalizat",
+  "version": "2.0.0",
+  "min_engine_version": "2.0.0",
+  "author": "Numele Tău / Developer VlahX",
+  "description": "Descrierea modulului."
+}
+```
+
+### C. Fluxul de Publicare & Update pe `repo.vlahx.org`
+1. **Prima Publicare**: Modulul este încărcat în repo cu versiunea inițială **`v2.0.0`**.
+2. **Actualizare / Re-salvare (Update Flow)**:
+   - Când developerul urcă o arhivă nouă pentru un modul existent, portalul `repo.vlahx.org` detectează versiunea curentă.
+   - Developerul este invitat să introducă **Changelog-ul / Notele Lansării** (descrierea scurtă a modificărilor).
+   - Microserviciul incrementează versiunea (ex: `v2.0.1`), arhivează build-ul anterior (`my_custom_plugin-2.0.0.zip`) și actualizează `catalog.json`.
+   - Toate site-urile VlahX active afișează automat insigna: **`🚀 Update Disponibil (v2.0.1)`** cu buton de **`⚡ 1-Click Update`**.
+
+---
+
+## 3. Constante & Ajutoare Globale (`app/core/config.py`)
 
 Aceste funcții helper pot fi apelate din orice plugin sau ruter pentru a citi dinamic setările site-ului:
 
 | Funcție Helper | Returnează | Descriere & Utilitate |
 | :--- | :--- | :--- |
+| `VLAH_CORE_VERSION` | `str` | Versiunea curentă a engine-ului Core (ex: `"2.0.0"`). |
 | `get_site_display_name(locale=None)` | `str` | Numele oficial al site-ului (cu suport pentru traducere per limbă). |
 | `get_site_tagline(locale=None)` | `str` | Sloganul / subtitlul site-ului. |
 | `get_public_site_url()` | `str` | URL-ul public configurat al site-ului. |
@@ -36,9 +72,9 @@ Aceste funcții helper pot fi apelate din orice plugin sau ruter pentru a citi d
 
 ---
 
-## 3. Structura Bazei de Date (ORM Models — `app/models/db_models.py`)
+## 4. Structura Bazei de Date (ORM Models — `app/models/db_models.py`)
 
-VlahX Core 2.0 folosește SQLAlchemy ORM peste baza de date SQLite (`db/app.db`).
+VlahX folosește SQLAlchemy ORM peste baza de date SQLite (`db/app.db`).
 
 ### A. Tabela `AppSetting` (Setări Globale Site)
 * `key` (`String`, Primary Key): Numele setării (ex: `SITE_DISPLAY_NAME`, `HOMEPAGE_MODE`, `STATIC_NAV_LINKS`).
@@ -65,14 +101,15 @@ VlahX Core 2.0 folosește SQLAlchemy ORM peste baza de date SQLite (`db/app.db`)
 * `username` (`String`)
 * `first_name` / `last_name` (`String`)
 * `role` (`String`): Rolurile utilizatorului (`admin`, `editor`, `seller`, `author`, `reader`, `developer`, `pending`).
+* `dev_status` (`String`): Statutul cererii de developer (`pending`, `approved`, `rejected`).
+* `dev_notes` (`Text`): Descrierea experienței furnizată de utilizator.
 * `provider` (`String`): Metoda de autentificare (`dev`, `telegram`, `google`).
-* `oauth_id` (`String`): ID-ul unic transmis de furnizorul OAuth.
 
 ---
 
-## 4. Sistemul de Carlige (Hooks) & Evenimente (`app/core/`)
+## 5. Sistemul de Cârlige (Hooks) & Evenimente (`app/core/`)
 
-VlahX Core 2.0 oferă dezvoltatorilor două mecanicisme puternice pentru extinderea aplicației:
+VlahX Engine oferă dezvoltatorilor două mecanicisme puternice pentru extinderea aplicației:
 
 ### A. Cârlige de Șablon / UI (Template Hooks — `app/core/template_hooks.py`)
 
@@ -123,7 +160,7 @@ Evenimente disponibile:
 
 ---
 
-## 5. Ghid Pas-cu-Pas: Cum Creezi un Plugin VlahX de la Zero
+## 6. Ghid Pas-cu-Pas: Cum Creezi un Plugin VlahX de la Zero
 
 Un plugin VlahX se creează în folderul `app/plugins/<id_plugin>/` și conține minimum două fișiere:
 
@@ -133,7 +170,8 @@ Un plugin VlahX se creează în folderul `app/plugins/<id_plugin>/` și conține
   "id": "my_custom_plugin",
   "name": "Plugin-ul Meu Personalizat",
   "description": "Descrierea funcționalităților plugin-ului.",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "min_engine_version": "2.0.0",
   "author": "Numele Tău",
   "permissions": ["events"],
   "settings": {
@@ -169,44 +207,27 @@ def register(app: FastAPI, plugin_id: str = "my_custom_plugin") -> None:
 
 ---
 
-## 6. Lista Rutelor API ale Aplicației Core
+## 7. Ghid Pas-cu-Pas: Cum Creezi o Temă VlahX de la Zero
 
-### A. Rute Publice (Front-End)
-* `GET /` — **Root Router Dinamic**: Randează automat Feed-ul de Blog, Pagina Statică setată în Admin, sau Magazinul Online (`minishop`).
-* `GET /blog` — Feed-ul de articole ale blogului (când prima pagină este setată pe o pagină statică).
-* `GET /blog/{slug}` (sau `GET /{slug}`) — Vizualizare articol individual.
-* `POST /lang` — Schimbare dinamică de limbă (`locale` + `next`).
+O temă VlahX se creează în folderul `app/themes/<slug_temă>/` și conține un manifest `theme.json` și șabloanele Jinja2:
 
-### B. Rute de Autentificare (`/auth`)
-* `GET /admin/login` — Interfața de alegere a metodei de autentificare (Telegram / Google).
-* `GET /admin/login/telegram` — Callback-ul verificat pentru Telegram Login Widget.
-* `GET /dev/login` — Autentificare rapidă pentru dezvoltare și instalare inițială.
-* `GET /auth/logout` — Deconectare utilizator și distrugere sesiune.
+### Pasul 1: Creează `theme.json`
+```json
+{
+  "name": "Numele Temei Tale",
+  "slug": "custom-theme-slug",
+  "author": "Numele Tău",
+  "version": "2.0.0",
+  "min_engine_version": "2.0.0",
+  "description": "O temă modernă și accesibilă."
+}
+```
 
-### C. Rute de Administrare (`/admin`)
-* `GET /admin` — Panou de control și statistici generale.
-* `GET /admin/settings` & `POST /admin/settings/save` — Gestionare setări site (nume, slogan, prima pagină, meniu navbar personalizat, imagnie brand/favicon).
-* `GET /admin/users` & `POST /admin/users/{user_id}/role` — Gestionare utilizatori și roluri.
-* `GET /admin/themes` & `POST /admin/themes/activate` — Gestionare teme instalate.
-* `GET /admin/plugins` & `POST /admin/plugins/toggle` — Activare/dezactivare plugin-uri.
-
----
-
-## 7. Roadmap & To-Do Ecosystem (Repository API & Developer Portal)
-
-> [!NOTE]
-> - [ ] **Subdomeniu & Microserviciu dedicat `repo.vlahx.org`**:
->   - Container Docker izolat (Microserviciu fără frontend HTML) dedicat 100% API-urilor JSON.
->   - Endpoint-uri: `GET /v1/plugins`, `GET /v1/themes`, `GET /v1/check-updates`, `POST /v1/submit`.
-> - [ ] **Flux de Comunitate stil Linux (AUR / Apt)**:
->   - *Testing / Beta*: Pachete trimise de comunitate în curs de verificare.
->   - *Verified / Stable*: Pachete verificate și validate pentru producție.
-> - [ ] **Instalare 1-Click din Admin Panel**:
->   - Tab-ul *Magazin & Comunitate (1-Click)* în `/admin/plugins` și `/admin/themes` din VlahX Core 2.0.
->   - Descărcare automată pachet zip, verificare SHA256, dezarhivare și activare pe loc.
-> - [ ] **Rolul `developer` și Developer Portal**:
->   - Frontend-ul web `repo.vlahx.org` este rezervat ca **Developer Portal** pentru utilizatorii cu rolul `developer` (pentru trimitere pachete, vizualizare statistici și chei API).
->   - Acces extins pe **Forumul Tehnic VlahX**.
+### Pasul 2: Șabloane Jinja2 Necesare
+- `templates/base.html`: Structura principală HTML (inclusiv `<head>`, navbar și footer).
+- `templates/blog/index.html`: Feed-ul principal de articole.
+- `templates/blog/post.html`: Vizualizarea articolului individual.
+- `templates/blog/404.html`: Pagina de eroare 404.
 
 ---
 
