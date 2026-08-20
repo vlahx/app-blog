@@ -408,9 +408,11 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
 
         try:
             from app.utils.telegram_notify import send_telegram_message
-            send_telegram_message(msg)
+            sent_ok = send_telegram_message(msg)
+            if not sent_ok:
+                logger.warning("user_request_role: Telegram notification returned False")
         except Exception as e:
-            pass
+            logger.warning(f"user_request_role: Exception sending Telegram notification: {e}")
 
         return RedirectResponse(url="/profile?requested=1", status_code=303)
 
