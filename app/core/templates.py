@@ -174,10 +174,16 @@ def render_template(
             fixed_nav_posts.append(item)
     ctx.setdefault("nav_fixed_post_link", fixed_nav_posts[0] if fixed_nav_posts else None)
     ctx.setdefault("fixed_nav_posts", fixed_nav_posts)
-    from app.utils.auth import get_current_user_from_request
+    from app.utils.auth import get_current_user_from_request, user_has_role, get_user_roles
     current_user = getattr(request.state, "current_user", None) or get_current_user_from_request(request)
+    if current_user:
+        try:
+            setattr(current_user, "roles_list", get_user_roles(current_user))
+        except Exception:
+            pass
     ctx["current_user"] = current_user
     ctx["user"] = current_user
+    ctx["has_role"] = lambda *roles: user_has_role(current_user, *roles) if current_user else False
     ctx["locale"] = locale
     ctx["site_display_name"] = lambda: get_site_display_name(locale)
     ctx["site_tagline"] = lambda: get_site_tagline(locale)

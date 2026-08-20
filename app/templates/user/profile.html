@@ -20,15 +20,19 @@
         <div class="text-center text-md-start flex-grow-1">
           <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-2 mb-1">
             <h2 class="fw-bold mb-0">{{ user.first_name or user.username or t('profile.member') }} {{ user.last_name or '' }}</h2>
-            {% if user.role == 'admin' %}
-            <span class="badge bg-danger text-white">⚡ Admin</span>
-            {% elif 'developer' in user.roles_list or user.role == 'developer' %}
-            <span class="badge text-white" style="background-color: #6f42c1;">👨‍💻 Developer</span>
-            {% elif user.role in ['editor', 'author'] %}
-            <span class="badge bg-primary text-white">📝 Author</span>
-            {% elif user.role == 'seller' %}
-            <span class="badge bg-success text-white">🛒 Seller</span>
-            {% else %}
+            {% if 'admin' in user.role %}
+            <span class="badge bg-danger text-white me-1">⚡ Admin</span>
+            {% endif %}
+            {% if 'developer' in user.role %}
+            <span class="badge text-white me-1" style="background-color: #6f42c1;">👨‍💻 Developer</span>
+            {% endif %}
+            {% if 'editor' in user.role or 'author' in user.role %}
+            <span class="badge bg-primary text-white me-1">📝 Author</span>
+            {% endif %}
+            {% if 'seller' in user.role %}
+            <span class="badge bg-success text-white me-1">🛒 Seller</span>
+            {% endif %}
+            {% if not ('admin' in user.role or 'developer' in user.role or 'editor' in user.role or 'author' in user.role or 'seller' in user.role) %}
             <span class="badge bg-secondary text-white">👤 {{ t('profile.member') }}</span>
             {% endif %}
           </div>
@@ -41,7 +45,7 @@
         </div>
 
         <div class="d-flex gap-2">
-          {% if user.role in ['admin', 'editor', 'author', 'developer'] %}
+          {% if has_role('admin', 'editor', 'author', 'developer', 'seller') %}
           <a href="/admin" class="btn btn-outline-primary btn-sm fw-semibold px-3">{{ t('profile.adminPanel') }}</a>
           {% endif %}
           <a href="/auth/logout" class="btn btn-outline-secondary btn-sm px-3">{{ t('profile.logout') }}</a>
