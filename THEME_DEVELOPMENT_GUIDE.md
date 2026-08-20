@@ -306,7 +306,7 @@ Pentru ca toate plugin-urile existente (Comentarii, Magazin, Forum, SEO, Analyti
         <h5 class="fw-bold mb-3">{{ t('footer.management') if t else 'Cont & Admin' }}</h5>
         <ul class="list-unstyled small d-flex flex-column gap-2">
           {% if user %}
-            <li><a href="/profile" class="text-decoration-none text-secondary">👤 {{ t('profile.myAccount') if t else 'Contul Meu' }}</a></li>
+            <li><a href="/profile" class="text-decoration-none text-secondary">👤 {{ t('footer.myAccount') if t else 'Contul Meu' }}</a></li>
             {% if has_role('admin', 'editor', 'author', 'seller', 'developer') %}
               <li><a href="/admin" class="text-decoration-none text-secondary">⚡ {{ t('footer.adminPanel') if t else 'Panou Admin' }}</a></li>
             {% endif %}
