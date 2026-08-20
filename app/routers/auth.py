@@ -14,13 +14,34 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core import events
-from app.core.config import TELEGRAM_AUTH_URL, get_telegram_bot_username
+from app.core.config import TELEGRAM_AUTH_URL, get_telegram_bot_username, SESSION_SECRET
 from app.core.templates import render_template
 from app.models.db_models import User
-from app.utils.auth import login_required, get_current_user_from_request
+from app.utils.auth import login_required, get_current_user_from_request, user_has_role
 from app.utils.db import get_db
 from app.utils.telegram import verify_telegram_login
 from app.utils.open_graph import public_site_origin
+import hmac
+import hashlib
+import base64
+import time
+
+def create_sso_token(user: User) -> str:
+    payload = {
+        "user_id": user.id,
+        "first_name": user.first_name or "",
+        "username": user.username or f"user_{user.id}",
+        "email": user.email or "",
+        "role": user.role or "reader",
+        "exp": int(time.time()) + 60
+    }
+    payload_bytes = json.dumps(payload).encode('utf-8')
+    b64_payload = base64.urlsafe_b64encode(payload_bytes).decode('utf-8').rstrip('=')
+    sig = hmac.new(SESSION_SECRET.encode('utf-8'), b64_payload.encode('utf-8'), hashlib.sha256).hexdigest()
+    return f"{b64_payload}.{sig}"
+
+def get_repo_domain_url() -> str:
+    return os.environ.get("REPO_SITE_URL", "https://repo.vlahx.org").rstrip("/")
 
 router = APIRouter(tags=["auth"])
 
@@ -75,7 +96,26 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
                 db.commit()
 
         request.session["user_id"] = str(user.id)
+
+        target = request.query_params.get("target", "").strip() or request.cookies.get("login_target", "").strip()
+        if target == "repo" and user_has_role(user, "developer", "admin"):
+            token = create_sso_token(user)
+            repo_base = get_repo_domain_url()
+            return RedirectResponse(url=f"{repo_base}/auth/sso?token={token}", status_code=303)
+
         return RedirectResponse(url="/profile", status_code=303)
+
+    @router.get("/auth/sso-redirect")
+    async def sso_redirect(request: Request, db: Session = Depends(get_db)):
+        user = getattr(request.state, "current_user", None) or get_current_user_from_request(request)
+        if not user:
+            return RedirectResponse(url="/admin/login?next=/auth/sso-redirect", status_code=303)
+        if "developer" not in (user.role or ""):
+            return RedirectResponse(url="/profile?error=developer_role_required", status_code=303)
+
+        token = create_sso_token(user)
+        repo_base = get_repo_domain_url()
+        return RedirectResponse(url=f"{repo_base}/auth/sso?token={token}", status_code=303)
 
     @router.get("/admin/pending", response_class=HTMLResponse)
     def pending_page(request: Request):
@@ -160,6 +200,12 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
             if next_url and next_url.startswith("/") and not next_url.startswith("/admin"):
                 return RedirectResponse(url=next_url, status_code=303)
             return RedirectResponse(url="/profile", status_code=303)
+
+        target = request.cookies.get("login_target", "").strip()
+        if target == "repo" and "developer" in (existing.role or ""):
+            token = create_sso_token(existing)
+            repo_base = get_repo_domain_url()
+            return RedirectResponse(url=f"{repo_base}/auth/sso?token={token}", status_code=303)
 
         if next_url and next_url.startswith("/"):
             return RedirectResponse(url=next_url, status_code=303)

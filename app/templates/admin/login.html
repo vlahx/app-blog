@@ -10,6 +10,28 @@
       </div>
 
       <div class="card border-0 shadow rounded-4 p-4 text-center">
+        <!-- Destination Selector Dropdown -->
+        <div class="mb-4 text-start">
+          <label for="login_target" class="form-label small fw-semibold text-secondary mb-1">🎯 Destinație Autentificare</label>
+          <select id="login_target" class="form-select border-secondary-subtle rounded-3 py-2" onchange="updateLoginDestination(this.value)">
+            <option value="vlahx" selected>🌐 vlahx.org (Panou Principal / Profil)</option>
+            <option value="repo">🏪 repo.vlahx.org (Repo Store & Publicare Pachete)</option>
+          </select>
+        </div>
+
+        <script>
+        function updateLoginDestination(val) {
+          try {
+            document.cookie = "login_target=" + encodeURIComponent(val) + "; path=/; max-age=300";
+            const devLink = document.getElementById("dev-login-btn");
+            if (devLink) {
+              const base = devLink.getAttribute("data-base") || "/auth/dev-login";
+              devLink.href = base + "?target=" + val;
+            }
+          } catch(e){}
+        }
+        </script>
+
         <!-- Option 1: Google OAuth Login -->
         {% if google_client_id %}
         <div class="mb-4">

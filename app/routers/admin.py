@@ -1214,10 +1214,17 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
     async def admin_plugins_repo_install(request: Request, download_url: str = Form(...), plugin_id: str = Form(...)):
         from app.core.plugin_package import extract_plugin_zip
         from app.core.plugin_manager import set_plugin_enabled
+        from app.core.config import get_repo_api_url
         import urllib.request
         import urllib.parse
 
         try:
+            if download_url.startswith("/"):
+                repo_catalog_url = get_repo_api_url()
+                parsed = urllib.parse.urlparse(repo_catalog_url)
+                origin = f"{parsed.scheme}://{parsed.netloc}"
+                download_url = f"{origin}{download_url}"
+
             req = urllib.request.Request(download_url, headers={"User-Agent": "VlahX-Core-2.0"})
             with urllib.request.urlopen(req, timeout=15) as resp:
                 data = resp.read()
@@ -1234,10 +1241,17 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
     @router.post("/admin/themes/repo/install", response_class=HTMLResponse)
     @role_required("admin")
     async def admin_themes_repo_install(request: Request, download_url: str = Form(...)):
+        from app.core.config import get_repo_api_url
         import urllib.request
         import urllib.parse
 
         try:
+            if download_url.startswith("/"):
+                repo_catalog_url = get_repo_api_url()
+                parsed = urllib.parse.urlparse(repo_catalog_url)
+                origin = f"{parsed.scheme}://{parsed.netloc}"
+                download_url = f"{origin}{download_url}"
+
             req = urllib.request.Request(download_url, headers={"User-Agent": "VlahX-Core-2.0"})
             with urllib.request.urlopen(req, timeout=15) as resp:
                 data = resp.read()

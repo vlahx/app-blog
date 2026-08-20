@@ -615,4 +615,18 @@ def get_repo_api_url() -> str:
     v = legacy_get("repo_api_url")
     if v:
         return v.strip()
-    return "http://192.168.1.11:8088/api/v1/catalog.json"
+
+    official_url = "https://repo.vlahx.org/api/v1/catalog.json"
+    try:
+        import urllib.request, ssl
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        req = urllib.request.Request(official_url, headers={"User-Agent": "VlahX-Core-2.0"})
+        with urllib.request.urlopen(req, timeout=3, context=ctx) as resp:
+            if resp.status == 200:
+                return official_url
+    except Exception:
+        pass
+
+    return "http://vlahx-repo:8080/api/v1/catalog.json"

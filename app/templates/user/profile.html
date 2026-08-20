@@ -54,6 +54,25 @@
     </div>
   </div>
 
+  {% if 'developer' in user.role %}
+  <!-- Developer Publisher Repo Action Card -->
+  <div class="card border-primary border-opacity-50 bg-primary bg-opacity-10 rounded-4 p-4 mb-4 shadow-sm">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="badge text-white px-3 py-2 fs-6 rounded-pill" style="background-color: #6f42c1;">👨‍💻 Rol Dezvoltator Activ</span>
+          <span class="badge bg-success bg-opacity-25 text-success border border-success">✓ Editor & Publicator</span>
+        </div>
+        <h5 class="fw-bold mb-1 text-body">🚀 Panou Publicare Repo & Încărcare Pachete</h5>
+        <p class="text-secondary small mb-0">Ai obținut calitatea de Dezvoltator. Accesează Panoul de Publicare pe Repo Store pentru a încărca pachete (.zip).</p>
+      </div>
+      <a href="/auth/sso-redirect" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold shadow-sm text-white">
+        🏪 Deschide Repo Store →
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
   {% if request.query_params.get('requested') == '1' %}
   <div class="alert alert-success d-flex align-items-center gap-2 mb-4 rounded-4 shadow-sm" role="alert">
     <span>✅ Solicitarea a fost trimisă cu succes către echipa VlahX! Notificare expediată pe Telegram.</span>
