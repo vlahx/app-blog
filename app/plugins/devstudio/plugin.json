@@ -1,0 +1,10 @@
+{
+  "id": "devstudio",
+  "name": "VlahX Cloud DevStudio & Web IDE",
+  "author": "AG & Sergiu",
+  "version": "1.0.0",
+  "min_engine_version": "2.0.0",
+  "description": "Web-based Cloud IDE powered by Monaco Editor with file tree explorer, live Jinja2/Python syntax validation, 1-Click Fork, and automated manifest release builder.",
+  "icon": "💻",
+  "admin_url": "/admin/plugins/devstudio"
+}

@@ -1,0 +1,357 @@
+{% extends "admin/admin_base.html" %}
+
+{% block content %}
+<div class="container-fluid px-3 py-3">
+  <!-- Top Navigation & Action Bar -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 p-3 rounded-4 bg-body-tertiary border shadow-sm">
+    <div class="d-flex align-items-center gap-3">
+      <h4 class="fw-bold mb-0 text-primary d-flex align-items-center gap-2">
+        <span>💻</span> Cloud DevStudio Web IDE
+      </h4>
+      <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-3 py-1">Core 2.0 Engine</span>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-outline-primary rounded-pill px-3 fw-semibold" onclick="openForkModal()">
+        🍴 Fork Pachet
+      </button>
+      <button class="btn btn-outline-secondary rounded-pill px-3 fw-semibold" onclick="openUploadModal()">
+        ⬆️ Upload ZIP
+      </button>
+      <button class="btn btn-success rounded-pill px-4 fw-semibold" onclick="saveCurrentFile()">
+        💾 Salvează (Ctrl+S)
+      </button>
+      <button class="btn btn-primary rounded-pill px-4 fw-semibold" onclick="openPublishModal()">
+        🚀 Pachetizează & Publică
+      </button>
+    </div>
+  </div>
+
+  <div class="row g-3" style="height: calc(100vh - 180px);">
+    <!-- Left Panel: File Explorer Tree -->
+    <div class="col-md-3 col-lg-3 d-flex flex-column h-100">
+      <div class="card border-0 shadow-sm rounded-4 flex-grow-1 overflow-hidden d-flex flex-column">
+        <div class="card-header bg-body-secondary py-3 d-flex align-items-center justify-content-between">
+          <span class="fw-bold small text-uppercase">📂 Arbore de Fișiere</span>
+          <div class="d-flex gap-1">
+            <button class="btn btn-sm btn-light rounded-circle p-1" title="Fișier Nou" onclick="createNewFile('file')">📄</button>
+            <button class="btn btn-sm btn-light rounded-circle p-1" title="Dosar Nou" onclick="createNewFile('folder')">📁</button>
+            <button class="btn btn-sm btn-light rounded-circle p-1" title="Reîmprospătează" onclick="loadTree()">🔄</button>
+          </div>
+        </div>
+        <div class="card-body p-2 overflow-auto flex-grow-1" id="file-tree-container">
+          <div class="text-center text-muted py-4">Se încarcă spațiul de lucru...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Panel: Monaco Editor & Tab Bar -->
+    <div class="col-md-9 col-lg-9 d-flex flex-column h-100">
+      <div class="card border-0 shadow-sm rounded-4 flex-grow-1 overflow-hidden d-flex flex-column">
+        <!-- Open Files Tab Bar -->
+        <div class="card-header bg-body-tertiary p-2 d-flex align-items-center gap-2 overflow-auto" id="editor-tabs" style="min-height: 48px;">
+          <span class="small text-muted px-2">Niciun fișier deschis</span>
+        </div>
+        
+        <!-- Monaco Container -->
+        <div class="card-body p-0 flex-grow-1 position-relative" id="monaco-wrapper">
+          <div id="monaco-container" style="width: 100%; height: 100%;"></div>
+        </div>
+
+        <!-- Status & Error Bar -->
+        <div class="card-footer bg-body-secondary py-2 px-3 d-flex align-items-center justify-content-between small" id="editor-status">
+          <span class="text-secondary" id="status-text">Gata pentru redactare.</span>
+          <span class="badge text-bg-secondary" id="file-info">Monaco v0.45</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Fork Package -->
+<div class="modal fade" id="forkModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold">🍴 Clonează / Fork Pachet</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-secondary mb-3">Alege un pachet instalat pe sistem pentru a-l copia în spațiul tău de lucru.</p>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Tip Pachet</label>
+          <select id="fork-type" class="form-select rounded-3" onchange="updateForkOptions()">
+            <option value="theme">Temă Vizuală</option>
+            <option value="plugin">Plugin</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Pachet Sursă</label>
+          <select id="fork-id" class="form-select rounded-3"></select>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Renunță</button>
+        <button type="button" class="btn btn-primary rounded-pill px-4" onclick="submitFork()">Fork Pachet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Publish Package -->
+<div class="modal fade" id="publishModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold">🚀 Pachetizează & Publică</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-secondary mb-3">Selectează dosarul din spațiul de lucru pentru împachetat.</p>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Dosar Pachet</label>
+          <select id="publish-folder" class="form-select rounded-3"></select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Nume Pachet</label>
+          <input type="text" id="publish-name" class="form-control rounded-3" placeholder="Ex: Antigravity Custom">
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Descriere</label>
+          <textarea id="publish-desc" class="form-control rounded-3" rows="2" placeholder="Scurtă descriere..."></textarea>
+        </div>
+        <div class="p-3 bg-body-tertiary rounded-3 small">
+          <div>✍️ <strong>Autor:</strong> {{ user.first_name or user.username }} (Automat)</div>
+          <div>🔢 <strong>Versiune:</strong> Generată/Incrementată automat</div>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Renunță</button>
+        <button type="button" class="btn btn-success rounded-pill px-4" onclick="submitPublish()">Pachetizează & Publică</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Monaco CDN Loader -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+<script>
+  let editor = null;
+  let activeFilePath = null;
+  let openTabs = [];
+  const installedThemes = {{ installed_themes|tojson }};
+  const installedPlugins = {{ installed_plugins|tojson }};
+
+  require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
+  require(['vs/editor/editor.main'], function () {
+    editor = monaco.editor.create(document.getElementById('monaco-container'), {
+      value: '// Selectează un fișier din stânga pentru a începe redactarea...',
+      language: 'html',
+      theme: 'vs-dark',
+      automaticLayout: true,
+      fontSize: 14,
+      minimap: { enabled: true }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveCurrentFile();
+      }
+    });
+  });
+
+  async function loadTree() {
+    try {
+      const res = await fetch('/admin/plugins/devstudio/tree');
+      const data = await res.json();
+      if (data.ok) {
+        renderTreeNodes(data.tree, document.getElementById('file-tree-container'));
+      }
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
+  function renderTreeNodes(nodes, container) {
+    container.innerHTML = '';
+    if (!nodes || nodes.length === 0) {
+      container.innerHTML = '<div class="text-center text-muted small py-4">Spațiul de lucru este gol. Folosește butonul "Fork Pachet" de sus.</div>';
+      return;
+    }
+    const ul = document.createElement('ul');
+    ul.className = 'list-unstyled ps-1 mb-0';
+    nodes.forEach(node => {
+      const li = document.createElement('li');
+      li.className = 'my-1';
+      if (node.type === 'folder') {
+        li.innerHTML = `<div class="d-flex align-items-center gap-1 fw-bold text-secondary small py-1 px-2 rounded hover-bg" style="cursor:pointer;">
+          <span>📁</span> <span>${node.name}</span>
+        </div>`;
+        const childUl = document.createElement('div');
+        childUl.className = 'ps-3';
+        renderTreeNodes(node.children, childUl);
+        li.appendChild(childUl);
+      } else {
+        const icon = node.name.endsWith('.py') ? '🐍' : (node.name.endsWith('.json') ? '⚙️' : (node.name.endsWith('.css') ? '🎨' : '📄'));
+        li.innerHTML = `<div class="d-flex align-items-center gap-2 small py-1 px-2 rounded hover-bg" style="cursor:pointer;" onclick="openFile('${node.path}')">
+          <span>${icon}</span> <span>${node.name}</span>
+        </div>`;
+      }
+      ul.appendChild(li);
+    });
+    container.appendChild(ul);
+  }
+
+  async function openFile(path) {
+    try {
+      const res = await fetch('/admin/plugins/devstudio/file?path=' + encodeURIComponent(path));
+      const data = await res.json();
+      if (data.ok) {
+        activeFilePath = path;
+        if (!openTabs.includes(path)) openTabs.push(path);
+        renderTabs();
+        
+        const ext = path.split('.').pop().toLowerCase();
+        let lang = 'html';
+        if (ext === 'py') lang = 'python';
+        else if (ext === 'json') lang = 'json';
+        else if (ext === 'css') lang = 'css';
+        else if (ext === 'js') lang = 'javascript';
+        
+        monaco.editor.setModelLanguage(editor.getModel(), lang);
+        editor.setValue(data.content);
+        document.getElementById('status-text').innerText = 'Deschis: ' + path;
+        document.getElementById('file-info').innerText = lang.toUpperCase() + ' | ' + path;
+      }
+    } catch(e) {
+      alert('Eroare la deschidere fișier: ' + e);
+    }
+  }
+
+  function renderTabs() {
+    const container = document.getElementById('editor-tabs');
+    container.innerHTML = '';
+    openTabs.forEach(tab => {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-sm ' + (tab === activeFilePath ? 'btn-primary' : 'btn-outline-secondary') + ' rounded-pill px-3 py-1 d-flex align-items-center gap-2';
+      btn.innerHTML = `<span>${tab.split('/').pop()}</span> <span onclick="closeTab('${tab}', event)">&times;</span>`;
+      btn.onclick = () => openFile(tab);
+      container.appendChild(btn);
+    });
+  }
+
+  function closeTab(tab, e) {
+    e.stopPropagation();
+    openTabs = openTabs.filter(t => t !== tab);
+    if (activeFilePath === tab) {
+      activeFilePath = openTabs.length > 0 ? openTabs[openTabs.length - 1] : null;
+      if (activeFilePath) openFile(activeFilePath);
+      else editor.setValue('');
+    }
+    renderTabs();
+  }
+
+  async function saveCurrentFile() {
+    if (!activeFilePath || !editor) return;
+    const content = editor.getValue();
+    const st = document.getElementById('status-text');
+    st.innerText = 'Se salvează și se validează...';
+    try {
+      const res = await fetch('/admin/plugins/devstudio/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: activeFilePath, content: content })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        if (data.errors && data.errors.length > 0) {
+          const err = data.errors[0];
+          st.innerHTML = `<span class="text-danger fw-bold">❌ Linia ${err.line}: ${err.message}</span>`;
+        } else {
+          st.innerHTML = '<span class="text-success fw-bold">✅ Salvat cu succes! Codul este 100% valid.</span>';
+        }
+      }
+    } catch(e) {
+      st.innerHTML = '<span class="text-danger">Eroare de salvare.</span>';
+    }
+  }
+
+  function openForkModal() {
+    updateForkOptions();
+    new bootstrap.Modal(document.getElementById('forkModal')).show();
+  }
+
+  function updateForkOptions() {
+    const type = document.getElementById('fork-type').value;
+    const sel = document.getElementById('fork-id');
+    sel.innerHTML = '';
+    const list = type === 'theme' ? installedThemes : installedPlugins;
+    list.forEach(item => {
+      const opt = document.createElement('option');
+      opt.value = item;
+      opt.innerText = item;
+      sel.appendChild(opt);
+    });
+  }
+
+  async function submitFork() {
+    const type = document.getElementById('fork-type').value;
+    const id = document.getElementById('fork-id').value;
+    try {
+      const res = await fetch('/admin/plugins/devstudio/fork', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: type, id: id })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        bootstrap.Modal.getInstance(document.getElementById('forkModal')).hide();
+        loadTree();
+        alert('Pachetul a fost clonat cu succes în spațiul tău de lucru!');
+      }
+    } catch(e) {
+      alert('Eroare fork: ' + e);
+    }
+  }
+
+  async function openPublishModal() {
+    const res = await fetch('/admin/plugins/devstudio/tree');
+    const data = await res.json();
+    const sel = document.getElementById('publish-folder');
+    sel.innerHTML = '';
+    if (data.ok && data.tree) {
+      data.tree.filter(n => n.type === 'folder').forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f.name;
+        opt.innerText = f.name;
+        sel.appendChild(opt);
+      });
+    }
+    new bootstrap.Modal(document.getElementById('publishModal')).show();
+  }
+
+  async function submitPublish() {
+    const folder = document.getElementById('publish-folder').value;
+    const name = document.getElementById('publish-name').value;
+    const desc = document.getElementById('publish-desc').value;
+    try {
+      const res = await fetch('/admin/plugins/devstudio/package-and-publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: folder, name: name, description: desc })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        bootstrap.Modal.getInstance(document.getElementById('publishModal')).hide();
+        alert(data.message);
+      }
+    } catch(e) {
+      alert('Eroare publicare: ' + e);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    loadTree();
+  });
+</script>
+{% endblock %}
