@@ -191,6 +191,14 @@ def build_blog_router(templates: Jinja2Templates) -> APIRouter:
         author = request.query_params.get("author", "").strip() or None
         return _render_blog_index(request, db, current_category=category, current_author=author)
 
+    @router.api_route("/category/{category_slug}", methods=["GET", "HEAD"], response_class=HTMLResponse)
+    async def blog_category_filter(request: Request, category_slug: str, db=Depends(get_db)):
+        return _render_blog_index(request, db, current_category=category_slug)
+
+    @router.api_route("/category/{category_slug}/", methods=["GET", "HEAD"], response_class=HTMLResponse)
+    async def blog_category_filter_slash(request: Request, category_slug: str, db=Depends(get_db)):
+        return _render_blog_index(request, db, current_category=category_slug)
+
     @router.api_route("/blog/{slug}", methods=["GET", "HEAD"], response_class=HTMLResponse)
     async def blog_post(request: Request, slug: str, db=Depends(get_db)):
         locale = getattr(request.state, "locale", None)
