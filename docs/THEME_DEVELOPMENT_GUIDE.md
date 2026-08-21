@@ -157,8 +157,36 @@ Pentru ca toate plugin-urile existente (Comentarii, Magazin, Forum, SEO, Analyti
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}{{ site_display_name() }}{% endblock %}</title>
+  <title>{% block title %}{{ seo_title or title or site_display_name() }}{% endblock %}</title>
   
+  <!-- Primary Meta Tags & SEO -->
+  <meta name="description" content="{{ seo_description or meta_description or site_tagline() }}">
+  {% if meta_keywords %}<meta name="keywords" content="{{ meta_keywords|e }}">{% endif %}
+  <link rel="canonical" href="{{ seo_canonical or request.url }}">
+  <meta name="theme-color" content="#10b981">
+  
+  <!-- Open Graph / Facebook & Social Share -->
+  <meta property="og:type" content="{{ seo_type or 'website' }}">
+  <meta property="og:url" content="{{ seo_canonical or share_url or request.url }}">
+  <meta property="og:title" content="{{ seo_title or title or site_display_name() }}">
+  <meta property="og:description" content="{{ seo_description or meta_description or site_tagline() }}">
+  {% if seo_image %}<meta property="og:image" content="{{ seo_image }}">{% endif %}
+  {% if seo_image_alt %}<meta property="og:image:alt" content="{{ seo_image_alt }}">{% endif %}
+  {% if site_nav_icon_abs %}<meta property="og:logo" content="{{ site_nav_icon_abs }}">{% endif %}
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="{% if seo_image_is_card %}summary_large_image{% else %}summary{% endif %}">
+  <meta name="twitter:url" content="{{ seo_canonical or share_url or request.url }}">
+  <meta name="twitter:title" content="{{ seo_title or title or site_display_name() }}">
+  <meta name="twitter:description" content="{{ seo_description or meta_description or site_tagline() }}">
+  {% if seo_image %}<meta name="twitter:image" content="{{ seo_image }}">{% endif %}
+
+  <!-- Favicon & Icons -->
+  {% if site_nav_icon_abs %}
+    <link rel="icon" href="{{ site_nav_icon_abs }}">
+    <link rel="apple-touch-icon" href="{{ site_nav_icon_abs }}">
+  {% endif %}
+
   <!-- Bootstrap 5 CSS & Iconițe -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   
