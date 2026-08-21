@@ -486,3 +486,32 @@ Pentru ca toate plugin-urile existente (Comentarii, Magazin, Forum, SEO, Analyti
 2. Mergi în **Panoul de Admin** ➡️ **Teme** (`/admin/themes`).
 3. Încarcă `theme-elevate.zip` la secțiunea **Încarcă Temă**.
 4. Apasă **Activează** în dreptul temei încărcate!
+
+---
+
+## 🌐 8. Dicționar Oficial de Chei de Traducere (`t('key')`)
+
+Pentru ca tema ta să fie 100% multilingvă, folosește **exclusiv** cheile din dicționarul oficial VlahX Core 2.0. Nu inventa chei (precum `categories.title`), deoarece Jinja2 va afișa textul brut al cheii dacă aceasta nu există în baza de date de traduceri!
+
+| Cheie Oficială (`key`) | Română (Default) | English (Default) | Descriere |
+| :--- | :--- | :--- | :--- |
+| `home.categories.title` | `"Explorează după categorie"` | `"Explore by category"` | Titlul widget-ului de categorii din acasă / sidebar |
+| `home.categories.all` | `"Toate"` | `"All"` | Eticheta butonului 'Toate categoriile' |
+| `home.postCard.readMore` | `"Citește povestea →"` | `"Read the story →"` | Butonul de citit articol în card |
+| `home.breadcrumb.home` | `"Acasă"` | `"Home"` | Link-ul Acasă din breadcrumbs |
+| `home.postPage.backToBlog` | `"Înapoi la articole"` | `"Back to journal"` | Link-ul de întoarcere din pagina articolului |
+| `blog.empty.title` | `"Nu există articole încă."` | `"No posts yet"` | Mesaj când nu există articole în listă |
+| `blog.noPosts` | `"Nu există articole încă."` | `"No posts yet"` | Alias oficial pentru lista goală de articole |
+| `blog.author` | `"Autor"` | `"Author"` | Etichetă autor articol |
+| `footer.navigation` | `"Navigare"` | `"Navigation"` | Titlu coloană navigare subsol |
+| `footer.management` | `"Cont & Admin"` | `"Management"` | Titlu coloană cont/admin subsol |
+| `footer.information` | `"Informații"` | `"Information"` | Titlu coloană informații subsol |
+| `footer.myAccount` | `"Contul Meu"` | `"My Account"` | Link spre profil utilizator |
+| `footer.adminPanel` | `"Panou Admin"` | `"Admin Panel"` | Link spre panoul admin |
+| `footer.craftedBy` | `"Creat cu ❤️ de"` | `"Crafted with ❤️ by"` | Text copyright subsol |
+| `search.title` | `"Căutare"` | `"Search"` | Titlu widget căutare |
+| `ui.login` | `"Autentificare"` | `"Login"` | Buton de conectare |
+| `ui.logout` | `"Deconectare"` | `"Logout"` | Buton de deconectare |
+| `ui.profile` | `"Profilul meu"` | `"My Profile"` | Link profil |
+| `ui.admin` | `"Panou Admin"` | `"Admin"` | Link admin |
+
