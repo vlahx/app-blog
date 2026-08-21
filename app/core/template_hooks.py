@@ -17,6 +17,7 @@ _footer_col1: list[tuple[int, Callable[[Request], str]]] = []
 _footer_col2: list[tuple[int, Callable[[Request], str]]] = []
 _footer_col3: list[tuple[int, Callable[[Request], str]]] = []
 _footer_col4: list[tuple[int, Callable[[Request], str]]] = []
+_footer_col5: list[tuple[int, Callable[[Request], str]]] = []
 _footer_bottom: list[tuple[int, Callable[[Request], str]]] = []
 _navbar_link: list[tuple[int, Callable[[Request], str]]] = []
 _navbar_search: list[tuple[int, Callable[[Request], str]]] = []
@@ -36,6 +37,7 @@ def clear_post_article_footers() -> None:
     _footer_col2.clear()
     _footer_col3.clear()
     _footer_col4.clear()
+    _footer_col5.clear()
     _footer_bottom.clear()
     _navbar_link.clear()
     _navbar_search.clear()
@@ -200,6 +202,20 @@ def render_footer_col4(request: Request) -> str:
             if c: parts.append(c)
         except Exception:
             logger.exception("footer_col4 renderer failed")
+    return "\n".join(parts)
+
+def register_footer_col5(renderer: Callable[[Request], str], *, order: int = 100) -> None:
+    _footer_col5.append((order, renderer))
+    _footer_col5.sort(key=lambda t: t[0])
+
+def render_footer_col5(request: Request) -> str:
+    parts = []
+    for _, fn in _footer_col5:
+        try:
+            c = (fn(request) or "").strip()
+            if c: parts.append(c)
+        except Exception:
+            logger.exception("footer_col5 renderer failed")
     return "\n".join(parts)
 
 def register_footer_bottom(renderer: Callable[[Request], str], *, order: int = 100) -> None:

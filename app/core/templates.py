@@ -234,6 +234,7 @@ def render_template(
         render_footer_col2,
         render_footer_col3,
         render_footer_col4,
+        render_footer_col5,
         render_footer_bottom,
         render_navbar_links,
         render_navbar_search,
@@ -258,6 +259,7 @@ def render_template(
     ctx.setdefault("plugin_area_footer_col2", render_footer_col2(request))
     ctx.setdefault("plugin_area_footer_col3", render_footer_col3(request))
     ctx.setdefault("plugin_area_footer_col4", render_footer_col4(request))
+    ctx.setdefault("plugin_area_footer_col5", render_footer_col5(request))
     ctx.setdefault("plugin_area_footer_bottom", render_footer_bottom(request))
     ctx.setdefault("editor_document_base", f"{root.rstrip('/')}/")
     response = templates.TemplateResponse(request, name, ctx, status_code=status_code)
