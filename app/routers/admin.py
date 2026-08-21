@@ -924,9 +924,24 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
 
             theme_dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copytree(theme_src, theme_dest)
+            static_dest.parent.mkdir(parents=True, exist_ok=True)
             if static_src.is_dir():
-                static_dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copytree(static_src, static_dest)
+                shutil.copytree(static_src, static_dest, dirs_exist_ok=True)
+
+            # Auto-mirror any assets/, images/, static/, css/, js/, fonts/ inside theme_dest to static_dest
+            for folder_name in ("static", "assets", "images", "css", "js", "fonts"):
+                src_folder = theme_dest / folder_name
+                if src_folder.is_dir():
+                    if folder_name == "static":
+                        for item in src_folder.iterdir():
+                            dst = static_dest / item.name
+                            if item.is_dir():
+                                shutil.copytree(item, dst, dirs_exist_ok=True)
+                            else:
+                                shutil.copy2(item, dst)
+                    else:
+                        target_sub = static_dest / folder_name
+                        shutil.copytree(src_folder, target_sub, dirs_exist_ok=True)
 
             return slug, f"Tema `{slug}` a fost instalată."
 

@@ -111,6 +111,16 @@ def build_templates(directory: str = "app/templates") -> Jinja2Templates:
     templates.env.globals["translate"] = lambda locale, key: get_translation(locale, key)
     templates.env.globals["is_plugin_active"] = is_plugin_active
 
+    def _theme_asset_url(path: str = "") -> str:
+        cur_theme = get_active_theme() or "minimal"
+        if cur_theme == "default":
+            cur_theme = "minimal"
+        rel_path = str(path or "").lstrip("/")
+        return f"/static/themes/{cur_theme}/{rel_path}"
+
+    templates.env.globals["theme_asset"] = _theme_asset_url
+    templates.env.globals["theme_static"] = _theme_asset_url
+
     def _safe_translation_lookup(data: dict | None, path: str, default: str = "") -> str:
         if not isinstance(data, dict):
             return default or path
@@ -226,10 +236,24 @@ def render_template(
         render_footer_col4,
         render_footer_bottom,
         render_navbar_links,
+        render_navbar_search,
+        render_sidebar_top,
+        render_sidebar_search,
+        render_sidebar_widgets,
+        render_sidebar_bottom,
     )
     ctx.setdefault("plugin_area_admin_nav", render_admin_navs(request))
     ctx.setdefault("plugin_area_admin_top_bar", render_admin_top_bars(request))
     ctx.setdefault("plugin_area_navbar_links", render_navbar_links(request))
+    nb_search = render_navbar_search(request)
+    sb_search = render_sidebar_search(request)
+    ctx.setdefault("plugin_area_navbar_search", nb_search)
+    ctx.setdefault("plugin_area_sidebar_top", render_sidebar_top(request))
+    ctx.setdefault("plugin_area_sidebar_search", sb_search)
+    ctx.setdefault("plugin_area_sidebar_widgets", render_sidebar_widgets(request))
+    ctx.setdefault("plugin_area_sidebar_bottom", render_sidebar_bottom(request))
+    # Smart Fallback for Search Widget (Sidebar first, then Navbar)
+    ctx.setdefault("plugin_area_search", sb_search or nb_search)
     ctx.setdefault("plugin_area_footer_col1", render_footer_col1(request))
     ctx.setdefault("plugin_area_footer_col2", render_footer_col2(request))
     ctx.setdefault("plugin_area_footer_col3", render_footer_col3(request))

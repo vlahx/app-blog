@@ -19,6 +19,12 @@ _footer_col3: list[tuple[int, Callable[[Request], str]]] = []
 _footer_col4: list[tuple[int, Callable[[Request], str]]] = []
 _footer_bottom: list[tuple[int, Callable[[Request], str]]] = []
 _navbar_link: list[tuple[int, Callable[[Request], str]]] = []
+_navbar_search: list[tuple[int, Callable[[Request], str]]] = []
+
+_sidebar_top: list[tuple[int, Callable[[Request], str]]] = []
+_sidebar_search: list[tuple[int, Callable[[Request], str]]] = []
+_sidebar_widgets: list[tuple[int, Callable[[Request], str]]] = []
+_sidebar_bottom: list[tuple[int, Callable[[Request], str]]] = []
 
 
 def clear_post_article_footers() -> None:
@@ -32,6 +38,11 @@ def clear_post_article_footers() -> None:
     _footer_col4.clear()
     _footer_bottom.clear()
     _navbar_link.clear()
+    _navbar_search.clear()
+    _sidebar_top.clear()
+    _sidebar_search.clear()
+    _sidebar_widgets.clear()
+    _sidebar_bottom.clear()
 
 
 def register_navbar_link(renderer: Callable[[Request], str], *, order: int = 100) -> None:
@@ -203,4 +214,81 @@ def render_footer_bottom(request: Request) -> str:
             if c: parts.append(c)
         except Exception:
             logger.exception("footer_bottom renderer failed")
+    return "\n".join(parts)
+
+
+# Navbar Search Hook
+def register_navbar_search(renderer: Callable[[Request], str], *, order: int = 100) -> None:
+    _navbar_search.append((order, renderer))
+    _navbar_search.sort(key=lambda t: t[0])
+
+def render_navbar_search(request: Request) -> str:
+    parts = []
+    for _, fn in _navbar_search:
+        try:
+            c = (fn(request) or "").strip()
+            if c: parts.append(c)
+        except Exception:
+            logger.exception("navbar_search renderer failed")
+    return "\n".join(parts)
+
+
+# Sidebar Hooks
+def register_sidebar_top(renderer: Callable[[Request], str], *, order: int = 100) -> None:
+    _sidebar_top.append((order, renderer))
+    _sidebar_top.sort(key=lambda t: t[0])
+
+def render_sidebar_top(request: Request) -> str:
+    parts = []
+    for _, fn in _sidebar_top:
+        try:
+            c = (fn(request) or "").strip()
+            if c: parts.append(c)
+        except Exception:
+            logger.exception("sidebar_top renderer failed")
+    return "\n".join(parts)
+
+
+def register_sidebar_search(renderer: Callable[[Request], str], *, order: int = 100) -> None:
+    _sidebar_search.append((order, renderer))
+    _sidebar_search.sort(key=lambda t: t[0])
+
+def render_sidebar_search(request: Request) -> str:
+    parts = []
+    for _, fn in _sidebar_search:
+        try:
+            c = (fn(request) or "").strip()
+            if c: parts.append(c)
+        except Exception:
+            logger.exception("sidebar_search renderer failed")
+    return "\n".join(parts)
+
+
+def register_sidebar_widgets(renderer: Callable[[Request], str], *, order: int = 100) -> None:
+    _sidebar_widgets.append((order, renderer))
+    _sidebar_widgets.sort(key=lambda t: t[0])
+
+def render_sidebar_widgets(request: Request) -> str:
+    parts = []
+    for _, fn in _sidebar_widgets:
+        try:
+            c = (fn(request) or "").strip()
+            if c: parts.append(c)
+        except Exception:
+            logger.exception("sidebar_widgets renderer failed")
+    return "\n".join(parts)
+
+
+def register_sidebar_bottom(renderer: Callable[[Request], str], *, order: int = 100) -> None:
+    _sidebar_bottom.append((order, renderer))
+    _sidebar_bottom.sort(key=lambda t: t[0])
+
+def render_sidebar_bottom(request: Request) -> str:
+    parts = []
+    for _, fn in _sidebar_bottom:
+        try:
+            c = (fn(request) or "").strip()
+            if c: parts.append(c)
+        except Exception:
+            logger.exception("sidebar_bottom renderer failed")
     return "\n".join(parts)

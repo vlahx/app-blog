@@ -116,11 +116,21 @@ Pentru ca toate plugin-urile existente (Comentarii, Magazin, Forum, SEO, Analyti
 <!-- În <head> -->
 {{ plugin_area_head | safe }}
 
-<!-- În Navbar <ul class="navbar-nav"> -->
+<!-- În Navbar (Căutare & Link-uri) -->
+{{ plugin_area_navbar_search | safe }}
 {{ plugin_area_navbar_links | safe }}
 
 <!-- În User Dropdown Menu <ul> -->
 {{ plugin_area_user_dropdown | safe }}
+
+<!-- În Sidebar (Bara Laterală - templates/partials/sidebar.html) -->
+{{ plugin_area_sidebar_top | safe }}
+{{ plugin_area_sidebar_search | safe }}
+{{ plugin_area_sidebar_widgets | safe }}
+{{ plugin_area_sidebar_bottom | safe }}
+
+<!-- Smart Fallback pentru widget de căutare (Sidebar prima opțiune, altfel Navbar) -->
+{{ plugin_area_search | safe }}
 
 <!-- În Main Body / Homepage -->
 {{ plugin_area_main_content | safe }}
@@ -143,6 +153,10 @@ Pentru ca toate plugin-urile existente (Comentarii, Magazin, Forum, SEO, Analyti
 <!-- În Profil Utilizator (profile.html) -->
 {{ plugin_area_profile_tabs | safe }}
 {{ plugin_area_profile_content | safe }}
+
+<!-- Helper-e Jinja2 pentru Resurse Media Statice Oglindite (din /assets/ sau /images/) -->
+<img src="{{ theme_asset('images/hero-bg.svg') }}" alt="Hero">
+<link rel="stylesheet" href="{{ theme_static('css/custom.css') }}">
 ```
 
 ---
