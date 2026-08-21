@@ -66,10 +66,10 @@
               <span class="fs-2">{{ p.icon }}</span>
               <div>
                 <span class="badge bg-success me-1">{{ p.badge }}</span>
-                {% if p.min_engine_version <= core_version %}
-                  <span class="badge bg-info-subtle text-info border border-info-subtle">✅ Compatibil v{{ p.min_engine_version }}+</span>
+                {% if (p.min_engine_version or '2.0.0') <= core_version %}
+                  <span class="badge bg-info-subtle text-info border border-info-subtle">✅ Compatibil v{{ p.min_engine_version or '2.0.0' }}+</span>
                 {% else %}
-                  <span class="badge bg-warning-subtle text-warning border border-warning-subtle">⚠️ Necesită v{{ p.min_engine_version }}+</span>
+                  <span class="badge bg-warning-subtle text-warning border border-warning-subtle">⚠️ Necesită v{{ p.min_engine_version or '2.0.0' }}+</span>
                 {% endif %}
               </div>
             </div>
@@ -78,24 +78,16 @@
             <p class="small text-body-secondary mb-3">{{ p.description }}</p>
           </div>
           
-          <div class="pt-2 border-top">
-            {% if p.id in installed_p_ids %}
-              <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-bold">✓ Instalat</span>
-                <form action="/admin/plugins/repo/install" method="post" class="flex-grow-1">
-                  <input type="hidden" name="plugin_id" value="{{ p.id }}">
-                  <input type="hidden" name="download_url" value="{{ p.download_url }}">
-                  <button type="submit" class="btn btn-sm btn-outline-primary fw-bold w-100 rounded-pill shadow-sm">
-                    🔄 Actualizează / Reinstalează 1-Click
-                  </button>
-                </form>
-              </div>
+          <div class="pt-3 border-top d-flex align-items-center justify-content-between">
+            <span class="small text-muted">ID: <code>{{ p.id }}</code></span>
+            {% if p.id in installed_plugin_ids %}
+              <button class="btn btn-outline-secondary rounded-pill btn-sm px-3" disabled>
+                ✅ Instalat
+              </button>
             {% else %}
-              <form action="/admin/plugins/repo/install" method="post">
-                <input type="hidden" name="plugin_id" value="{{ p.id }}">
-                <input type="hidden" name="download_url" value="{{ p.download_url }}">
-                <button type="submit" class="btn btn-sm btn-primary fw-bold w-100 rounded-pill shadow-sm">
-                  ⚡ Instalare 1-Click {{ p.name }}
+              <form action="/admin/repo/install-plugin/{{ p.id }}" method="post">
+                <button type="submit" class="btn btn-primary rounded-pill btn-sm px-4 fw-semibold shadow-sm" onclick="return confirm('Dorești să instalezi pluginul {{ p.name }}?')">
+                  📥 Instalează Plugin
                 </button>
               </form>
             {% endif %}
@@ -106,10 +98,9 @@
     {% endfor %}
   </div>
 
-  <!-- Section 2: Official Themes -->
+  <!-- Themes Section -->
   <div class="d-flex align-items-center justify-content-between mb-3">
-    <h5 class="fw-bold mb-0">🎨 Teme Oficiale Verificate ({{ catalog.themes|length }})</h5>
-    <span class="badge bg-secondary">VlahX Engine v{{ core_version }}</span>
+    <h5 class="fw-bold mb-0">🎨 Teme Vizuale Verificate ({{ catalog.themes|length }})</h5>
   </div>
 
   <div class="row g-4 mb-4">
@@ -121,11 +112,11 @@
             <div class="d-flex align-items-center justify-content-between mb-2">
               <span class="fs-2">{{ t_theme.icon }}</span>
               <div>
-                <span class="badge bg-info text-dark me-1">{{ t_theme.badge }}</span>
-                {% if t_theme.min_engine_version <= core_version %}
-                  <span class="badge bg-info-subtle text-info border border-info-subtle">✅ Compatibil v{{ t_theme.min_engine_version }}+</span>
+                <span class="badge bg-info text-dark me-1">{{ t_theme.badge or 'Oficial' }}</span>
+                {% if (t_theme.min_engine_version or '2.0.0') <= core_version %}
+                  <span class="badge bg-info-subtle text-info border border-info-subtle">✅ Compatibil v{{ t_theme.min_engine_version or '2.0.0' }}+</span>
                 {% else %}
-                  <span class="badge bg-warning-subtle text-warning border border-warning-subtle">⚠️ Necesită v{{ t_theme.min_engine_version }}+</span>
+                  <span class="badge bg-warning-subtle text-warning border border-warning-subtle">⚠️ Necesită v{{ t_theme.min_engine_version or '2.0.0' }}+</span>
                 {% endif %}
               </div>
             </div>
