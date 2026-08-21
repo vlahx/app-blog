@@ -28,7 +28,6 @@ app/static/themes/*
 # Plugin-uri (aplicația este cheală în Git; plugin-urile sunt păstrate ca arhive în /zips)
 app/plugins/*
 !app/plugins/.gitkeep
-!app/plugins/devstudio/**
 
 # Arhive ZIP cu plugin-uri (excluse din Git; descărcare oficială exclusivă de pe camionagiul.club)
 zips/
