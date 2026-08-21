@@ -522,6 +522,7 @@ def get_catalog():
 
 
 @app.get("/download/plugins/{plugin_id}.zip")
+@app.get("/storage/plugins/{plugin_id}.zip")
 def download_plugin(plugin_id: str):
     file_path = STORAGE_DIR / "plugins" / f"{plugin_id}.zip"
     if not file_path.exists():
@@ -530,6 +531,7 @@ def download_plugin(plugin_id: str):
 
 
 @app.get("/download/themes/{theme_id}.zip")
+@app.get("/storage/themes/{theme_id}.zip")
 def download_theme(theme_id: str):
     file_path = STORAGE_DIR / "themes" / f"{theme_id}.zip"
     if not file_path.exists():
