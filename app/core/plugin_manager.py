@@ -236,6 +236,11 @@ def load_plugins_with_metadata(app: FastAPI) -> None:
             else:
                 register(app)
             
+            top_bar_fn = getattr(mod, "render_admin_top_bar", None)
+            if callable(top_bar_fn):
+                from app.core.template_hooks import register_admin_top_bar
+                register_admin_top_bar(top_bar_fn)
+
             logger.info("Plugin încărcat: %s", plugin_id)
         except Exception:
             logger.exception("Plugin %s: eroare la încărcare", plugin_id)
