@@ -110,7 +110,7 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
         user = getattr(request.state, "current_user", None) or get_current_user_from_request(request)
         if not user:
             return RedirectResponse(url="/admin/login?next=/auth/sso-redirect", status_code=303)
-        if "developer" not in (user.role or ""):
+        if not user_has_role(user, "developer", "admin"):
             return RedirectResponse(url="/profile?error=developer_role_required", status_code=303)
 
         token = create_sso_token(user)
@@ -202,7 +202,7 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
             return RedirectResponse(url="/profile", status_code=303)
 
         target = request.cookies.get("login_target", "").strip()
-        if target == "repo" and "developer" in (existing.role or ""):
+        if target == "repo" and user_has_role(existing, "developer", "admin"):
             token = create_sso_token(existing)
             repo_base = get_repo_domain_url()
             return RedirectResponse(url=f"{repo_base}/auth/sso?token={token}", status_code=303)

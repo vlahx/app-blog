@@ -54,7 +54,7 @@
     </div>
   </div>
 
-  {% if 'developer' in user.role %}
+  {% if has_role('admin', 'developer') %}
   <!-- Developer Publisher Repo Action Card -->
   <div class="card border-primary border-opacity-50 bg-primary bg-opacity-10 rounded-4 p-4 mb-4 shadow-sm">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
