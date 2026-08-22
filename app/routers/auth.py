@@ -81,6 +81,9 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
         if not user or not user.password_hash or not verify_password(password.strip(), user.password_hash):
             return RedirectResponse(url="/login?err=Email+sau+parolă+incorectă.", status_code=303)
 
+        if user.provider == "email" and not user.email_verified:
+            return RedirectResponse(url="/login?err=Adresa+de+email+nu+a+fost+verificată+încă.+Verifică+Inbox-ul+sau+Folderul+Spam+pentru+linkul+de+activare.", status_code=303)
+
         request.session["user_id"] = str(user.id)
         return RedirectResponse(url="/profile", status_code=303)
 
@@ -152,14 +155,12 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
 
         # Send verification email via no-reply@vlahx.org
         sent_ok = send_verification_email(email_clean, token, first_name.strip())
-        if sent_ok:
-            return RedirectResponse(url="/register?msg=Un+link+de+verificare+a+fost+trimis+pe+email!+Verifică+Inbox-ul.", status_code=303)
-        else:
-            # Auto-verify if local SMTP not configured yet
-            new_user.email_verified = True
-            db.commit()
-            request.session["user_id"] = str(new_user.id)
-            return RedirectResponse(url="/profile?msg=Cont+creat+cu+succes!", status_code=303)
+        
+        # Mandatory Email Verification Redirect - DO NOT Auto-Login
+        return RedirectResponse(
+            url=f"/login?msg=Contul+a+fost+creat!+Un+link+de+verificare+a+fost+trimis+pe+adresa+{email_clean}.+Verifică+Inbox-ul+pentru+activare.",
+            status_code=303
+        )
 
     @router.get("/verify-email")
     async def verify_email_route(request: Request, token: str, db: Session = Depends(get_db)):

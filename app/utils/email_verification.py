@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def send_verification_email(email: str, token: str, first_name: str | None = None) -> bool:
     settings = get_mailmanager_settings()
     
-    smtp_host = settings.get("smtp_host", "mail.vlahx.org")
+    primary_host = settings.get("smtp_host", "mail.vlahx.org")
     smtp_port = int(settings.get("smtp_port", 587))
     from_email = os.environ.get("SMTP_FROM_EMAIL", "no-reply@vlahx.org")
     from_name = os.environ.get("SMTP_FROM_NAME", "VlahX Core Security")
@@ -36,7 +36,7 @@ def send_verification_email(email: str, token: str, first_name: str | None = Non
         .card {{ max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }}
         .header {{ text-align: center; margin-bottom: 24px; }}
         .logo {{ font-size: 28px; font-weight: 800; color: #0284c7; text-decoration: none; }}
-        .btn {{ display: inline-block; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff !important; padding: 14px 32px; border-radius: 50px; text-decoration: none; font-weight: 600; margin: 24px 0; text-align: center; shadow: 0 4px 12px rgba(2,132,199,0.3); }}
+        .btn {{ display: inline-block; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff !important; padding: 14px 32px; border-radius: 50px; text-decoration: none; font-weight: 600; margin: 24px 0; text-align: center; box-shadow: 0 4px 12px rgba(2,132,199,0.3); }}
         .footer {{ font-size: 12px; color: #94a3b8; text-align: center; margin-top: 32px; border-top: 1px solid #f1f5f9; padding-top: 16px; }}
       </style>
     </head>
@@ -66,17 +66,23 @@ def send_verification_email(email: str, token: str, first_name: str | None = Non
     msg["To"] = email
     msg.attach(MIMEText(html_content, "html", "utf-8"))
     
-    try:
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=3) as server:
-            server.ehlo()
-            if smtp_port == 587:
-                server.starttls()
+    # Try primary host first, then fallback to container host / local host
+    hosts_to_try = [primary_host, "hosting_mailserver", "127.0.0.1"]
+    
+    for host in hosts_to_try:
+        try:
+            with smtplib.SMTP(host, smtp_port, timeout=3) as server:
                 server.ehlo()
-            if smtp_user and smtp_pass:
-                server.login(smtp_user, smtp_pass)
-            server.sendmail(from_email, [email], msg.as_string())
-        logger.info(f"✅ Verification email sent to {email} via {smtp_host}")
-        return True
-    except Exception as e:
-        logger.error(f"❌ Failed to send verification email to {email}: {e}")
-        return False
+                if smtp_port == 587:
+                    server.starttls()
+                    server.ehlo()
+                if smtp_user and smtp_pass:
+                    server.login(smtp_user, smtp_pass)
+                server.sendmail(from_email, [email], msg.as_string())
+            logger.info(f"✅ Verification email sent to {email} via {host}")
+            return True
+        except Exception as e:
+            logger.warning(f"Failed SMTP via {host}: {e}")
+            
+    logger.error(f"❌ All SMTP attempts failed for {email}")
+    return False
