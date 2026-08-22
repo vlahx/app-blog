@@ -131,7 +131,7 @@ def register_admin_top_bar(
     *,
     order: int = 100,
 ) -> None:
-    if any(r == renderer or getattr(r, '__name__', '') == getattr(renderer, '__name__', 'unnamed') for _, r in _admin_top_bar):
+    if any(r is renderer or r == renderer for _, r in _admin_top_bar):
         return
     _admin_top_bar.append((order, renderer))
     _admin_top_bar.sort(key=lambda t: t[0])
