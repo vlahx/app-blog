@@ -63,12 +63,12 @@
   <div class="card border-0 shadow-sm rounded-4 mb-4 p-4 bg-body-tertiary border">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
       <div>
-        <h4 class="fw-bold mb-1 text-body">✨ Ce îți dorești să faci pe VlahX Core?</h4>
-        <p class="text-secondary small mb-0">Alege intenția ta principală pentru a-ți personaliza contul și experiența pe platformă:</p>
+        <h4 class="fw-bold mb-1 text-body">{{ t('profile.intentTitle') }}</h4>
+        <p class="text-secondary small mb-0">{{ t('profile.intentSubtitle') }}</p>
       </div>
       {% if user.onboarding_intent %}
       <span class="badge bg-primary bg-opacity-20 text-primary border border-primary-subtle px-3 py-2 rounded-pill fw-semibold">
-        🎯 Opțiune Activă: {{ user.onboarding_intent|upper }}
+        {{ t('profile.intentActive') }} {{ user.onboarding_intent|upper }}
       </span>
       {% endif %}
     </div>
@@ -78,12 +78,12 @@
       <div class="col-md-4">
         <div class="card h-100 border-0 shadow-sm rounded-4 p-3 text-center bg-body hover-shadow transition border {% if user.onboarding_intent == 'hosting' %}border-primary border-2{% endif %}">
           <div class="fs-1 mb-2">🌐</div>
-          <h5 class="fw-bold mb-1 text-body">Propriul Meu Site</h5>
-          <p class="text-secondary small mb-3">Vreau propriul meu website sau magazin găzduit pe server cu SSL automat și domeniu.</p>
+          <h5 class="fw-bold mb-1 text-body">{{ t('profile.intentHostingTitle') }}</h5>
+          <p class="text-secondary small mb-3">{{ t('profile.intentHostingDesc') }}</p>
           <form action="/profile/intent" method="POST" class="mt-auto">
             <input type="hidden" name="intent" value="hosting">
             <button type="submit" class="btn {% if user.onboarding_intent == 'hosting' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm w-100 rounded-pill fw-semibold">
-              {% if user.onboarding_intent == 'hosting' %}✓ Selectat (Hosting){% else %}🌐 Alege Hosting →{% endif %}
+              {% if user.onboarding_intent == 'hosting' %}✓ {{ t('profile.intentHostingTitle') }}{% else %}{{ t('profile.intentHostingBtn') }}{% endif %}
             </button>
           </form>
         </div>
@@ -93,12 +93,12 @@
       <div class="col-md-4">
         <div class="card h-100 border-0 shadow-sm rounded-4 p-3 text-center bg-body hover-shadow transition border {% if user.onboarding_intent == 'developer' %}border-purple border-2{% endif %}">
           <div class="fs-1 mb-2">💻</div>
-          <h5 class="fw-bold mb-1 text-body">Dezvoltator Teme / Plugin</h5>
-          <p class="text-secondary small mb-3">Vreau să creez teme și plugin-uri, să am acces la DevStudio Web IDE și Repo Store.</p>
+          <h5 class="fw-bold mb-1 text-body">{{ t('profile.intentDevTitle') }}</h5>
+          <p class="text-secondary small mb-3">{{ t('profile.intentDevDesc') }}</p>
           <form action="/profile/intent" method="POST" class="mt-auto">
             <input type="hidden" name="intent" value="developer">
             <button type="submit" class="btn {% if user.onboarding_intent == 'developer' %}btn-dark{% else %}btn-outline-dark{% endif %} btn-sm w-100 rounded-pill fw-semibold">
-              {% if user.onboarding_intent == 'developer' %}✓ Selectat (Dezvoltator){% else %}💻 Alege Dezvoltator →{% endif %}
+              {% if user.onboarding_intent == 'developer' %}✓ {{ t('profile.intentDevTitle') }}{% else %}{{ t('profile.intentDevBtn') }}{% endif %}
             </button>
           </form>
         </div>
@@ -108,12 +108,12 @@
       <div class="col-md-4">
         <div class="card h-100 border-0 shadow-sm rounded-4 p-3 text-center bg-body hover-shadow transition border {% if user.onboarding_intent == 'member' %}border-secondary border-2{% endif %}">
           <div class="fs-1 mb-2">👤</div>
-          <h5 class="fw-bold mb-1 text-body">Membru Comunitate</h5>
-          <p class="text-secondary small mb-3">Vreau doar să citesc articole, să las comentarii și să primesc noutăți pe newsletter.</p>
+          <h5 class="fw-bold mb-1 text-body">{{ t('profile.intentMemberTitle') }}</h5>
+          <p class="text-secondary small mb-3">{{ t('profile.intentMemberDesc') }}</p>
           <form action="/profile/intent" method="POST" class="mt-auto">
             <input type="hidden" name="intent" value="member">
             <button type="submit" class="btn {% if user.onboarding_intent == 'member' %}btn-secondary{% else %}btn-outline-secondary{% endif %} btn-sm w-100 rounded-pill fw-semibold">
-              {% if user.onboarding_intent == 'member' %}✓ Selectat (Membru){% else %}👤 Alege Membru →{% endif %}
+              {% if user.onboarding_intent == 'member' %}✓ {{ t('profile.intentMemberTitle') }}{% else %}{{ t('profile.intentMemberBtn') }}{% endif %}
             </button>
           </form>
         </div>

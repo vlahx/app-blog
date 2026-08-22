@@ -5,13 +5,13 @@
   <div class="row justify-content-center">
     <div class="col-md-6 col-lg-5">
       <div class="text-center mb-4">
-        <h1 class="fw-extrabold h2 mb-2 text-body">🔑 Autentificare VlahX Core</h1>
-        <p class="text-secondary small">Intră în contul tău sau înregistrează-te în comunitate</p>
+        <h1 class="fw-extrabold h2 mb-2 text-body">{{ t('auth.loginTitle') }}</h1>
+        <p class="text-secondary small">{{ t('auth.loginSubtitle') }}</p>
       </div>
 
       {% if msg %}
       <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
-        <strong>✅ Succes:</strong> {{ msg }}
+        <strong>✅ {{ t('admin.status.public') }}:</strong> {{ msg }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       </div>
       {% endif %}
@@ -26,7 +26,7 @@
       <div class="card border-0 shadow-lg rounded-4 p-4 bg-body-tertiary border">
         <!-- Destination Selector Dropdown -->
         <div class="mb-4 text-start">
-          <label for="login_target" class="form-label small fw-semibold text-secondary mb-1">🎯 Destinație Autentificare</label>
+          <label for="login_target" class="form-label small fw-semibold text-secondary mb-1">{{ t('auth.destinationTarget') }}</label>
           <select id="login_target" class="form-select border-secondary-subtle rounded-3 py-2" onchange="updateLoginDestination(this.value)">
             <option value="vlahx" selected>🌐 vlahx.org (Panou Principal / Profil)</option>
             <option value="repo">🏪 repo.vlahx.org (Repo Store & Publicare Pachete)</option>
@@ -44,11 +44,11 @@
         <!-- Classic Email + Password Login Form -->
         <form action="/login" method="POST" class="mb-4 text-start">
           <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Adresă de Email</label>
+            <label class="form-label small fw-semibold text-secondary">{{ t('auth.email') }}</label>
             <input type="email" name="email" class="form-control rounded-3" placeholder="ex: alex@vlahx.org" required>
           </div>
           <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Parolă</label>
+            <label class="form-label small fw-semibold text-secondary">{{ t('auth.password') }}</label>
             <input type="password" name="password" class="form-control rounded-3" placeholder="••••••••" required>
           </div>
 
@@ -57,7 +57,7 @@
           {% endif %}
 
           <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold rounded-pill shadow-sm py-2 mt-2">
-            🔑 Conectare în Cont
+            {{ t('auth.signInBtn') }}
           </button>
         </form>
 
@@ -77,7 +77,7 @@
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
             </svg>
-            <span>Conectare cu Google</span>
+            <span>{{ t('auth.googleSignIn') }}</span>
           </a>
         </div>
         {% endif %}
@@ -99,8 +99,8 @@
         {% endif %}
 
         <div class="mt-4 pt-3 border-top text-center">
-          <p class="mb-0 text-secondary small">Nu ai cont încă? 
-            <a href="/register" class="fw-bold text-primary text-decoration-none ms-1">Înregistrează-te în 5 secunde ↗</a>
+          <p class="mb-0 text-secondary small">{{ t('auth.noAccount') }} 
+            <a href="/register" class="fw-bold text-primary text-decoration-none ms-1">{{ t('auth.registerLink') }}</a>
           </p>
         </div>
       </div>
