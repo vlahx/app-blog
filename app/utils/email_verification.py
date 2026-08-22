@@ -66,23 +66,28 @@ def send_verification_email(email: str, token: str, first_name: str | None = Non
     msg["To"] = email
     msg.attach(MIMEText(html_content, "html", "utf-8"))
     
-    # Try primary host first, then fallback to container host / local host
-    hosts_to_try = [primary_host, "hosting_mailserver", "127.0.0.1"]
+    # Try primary host first, then fallback to internal container port 25 / 587
+    hosts_to_try = [
+        (primary_host, smtp_port),
+        ("hosting_mailserver", 25),
+        ("hosting_mailserver", 587),
+        ("127.0.0.1", 25)
+    ]
     
-    for host in hosts_to_try:
+    for host, port in hosts_to_try:
         try:
-            with smtplib.SMTP(host, smtp_port, timeout=3) as server:
+            with smtplib.SMTP(host, port, timeout=4) as server:
                 server.ehlo()
-                if smtp_port == 587:
+                if port == 587:
                     server.starttls()
                     server.ehlo()
-                if smtp_user and smtp_pass:
+                if smtp_user and smtp_pass and port == 587:
                     server.login(smtp_user, smtp_pass)
                 server.sendmail(from_email, [email], msg.as_string())
-            logger.info(f"✅ Verification email sent to {email} via {host}")
+            logger.info(f"✅ Verification email sent to {email} via {host}:{port}")
             return True
         except Exception as e:
-            logger.warning(f"Failed SMTP via {host}: {e}")
+            logger.warning(f"Failed SMTP via {host}:{port}: {e}")
             
     logger.error(f"❌ All SMTP attempts failed for {email}")
     return False
