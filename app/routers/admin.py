@@ -1279,6 +1279,69 @@ def build_admin_router(templates: Jinja2Templates) -> APIRouter:
             safe_err = urllib.parse.quote(f"Eroare instalare temă: {e}")
             return RedirectResponse(url=f"/admin/repo?error={safe_err}", status_code=303)
 
+    @router.post("/admin/repo/delete", response_class=HTMLResponse)
+    @role_required("admin")
+    async def admin_repo_delete_package(request: Request, package_id: str = Form(...), pkg_type: str = Form(...)):
+        import urllib.parse
+        import json
+        from app.core.config import APP_DIR
+
+        PROTECTED_CORE_PACKAGES = {
+            "devstudio", "google_seo", "analytics", "comments", "minishop",
+            "newsletter", "robots", "share", "sitemap", "telegram_notify",
+            "antigravity", "lumina", "elevate", "minimal"
+        }
+
+        pkg_id = package_id.strip()
+        if pkg_id.lower() in PROTECTED_CORE_PACKAGES:
+            safe_err = urllib.parse.quote(f"Pachetele oficiale VlahX Core ({pkg_id}) nu pot fi șterse.")
+            return RedirectResponse(url=f"/admin/repo?error={safe_err}", status_code=303)
+
+        try:
+            # 1. Clean up storage ZIP archives and installed folders
+            for sec in ["themes", "plugins"]:
+                z = APP_DIR / "storage" / sec / f"{pkg_id}.zip"
+                if z.exists():
+                    try:
+                        z.unlink()
+                    except Exception:
+                        pass
+                inst = APP_DIR / sec / pkg_id
+                if inst.exists() and inst.is_dir():
+                    try:
+                        shutil.rmtree(inst)
+                    except Exception:
+                        pass
+
+            # 2. Clean up catalog.json
+            cat_file = APP_DIR / "storage" / "catalog.json"
+            if cat_file.exists():
+                cat = json.loads(cat_file.read_text(encoding="utf-8"))
+                cat["plugins"] = [p for p in cat.get("plugins", []) if p.get("id") != pkg_id]
+                cat["themes"] = [t for t in cat.get("themes", []) if t.get("id") != pkg_id]
+                cat_file.write_text(json.dumps(cat, indent=2, ensure_ascii=False), encoding="utf-8")
+
+            # 3. Sync to /opt/vlahx-repo-data if available
+            remote_data_dir = pathlib.Path("/opt/vlahx-repo-data")
+            if remote_data_dir.exists():
+                for sec in ["themes", "plugins"]:
+                    r_zip = remote_data_dir / "storage" / sec / f"{pkg_id}.zip"
+                    if r_zip.exists():
+                        try:
+                            r_zip.unlink()
+                        except Exception:
+                            pass
+                r_cat = remote_data_dir / "catalog.json"
+                if cat_file.exists():
+                    shutil.copy2(cat_file, r_cat)
+
+            safe_msg = urllib.parse.quote(f"Pachetul '{pkg_id}' a fost eliminat cu succes din Repo Store!")
+            return RedirectResponse(url=f"/admin/repo?message={safe_msg}", status_code=303)
+        except Exception as e:
+            logger.exception("Failed to delete package from repo store")
+            safe_err = urllib.parse.quote(f"Eroare la ștergerea pachetului {pkg_id}: {e}")
+            return RedirectResponse(url=f"/admin/repo?error={safe_err}", status_code=303)
+
     @router.post("/admin/plugins/delete", response_class=HTMLResponse)
     @role_required("admin")
     async def admin_plugins_delete(request: Request, slug: str = Form(...)):

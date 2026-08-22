@@ -58,26 +58,38 @@
             <p class="small text-body-secondary mb-3">{{ p.description }}</p>
           </div>
           
-          <div class="pt-3 border-top">
-            {% if p.id in installed_p_ids %}
-              <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-bold">✓ Instalat</span>
-                <form action="/admin/plugins/repo/install" method="post" class="flex-grow-1">
+          <div class="pt-3 border-top d-flex align-items-center justify-content-between gap-2">
+            <div class="flex-grow-1">
+              {% if p.id in installed_p_ids %}
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-bold">✓ Instalat</span>
+                  <form action="/admin/plugins/repo/install" method="post" class="flex-grow-1">
+                    <input type="hidden" name="plugin_id" value="{{ p.id }}">
+                    <input type="hidden" name="download_url" value="{{ p.download_url }}">
+                    <button type="submit" class="btn btn-sm btn-outline-primary fw-bold w-100 rounded-pill shadow-sm" onclick="return confirm('Dorești să reinstalezi pluginul {{ p.name }}?')">
+                      🔄 Reinstalează
+                    </button>
+                  </form>
+                </div>
+              {% else %}
+                <form action="/admin/plugins/repo/install" method="post">
                   <input type="hidden" name="plugin_id" value="{{ p.id }}">
                   <input type="hidden" name="download_url" value="{{ p.download_url }}">
-                  <button type="submit" class="btn btn-sm btn-outline-primary fw-bold w-100 rounded-pill shadow-sm" onclick="return confirm('Dorești să reinstalezi pluginul {{ p.name }}?')">
-                    🔄 Reinstalează 1-Click
+                  <button type="submit" class="btn btn-sm btn-primary fw-bold w-100 rounded-pill shadow-sm" onclick="return confirm('Dorești să instalezi pluginul {{ p.name }}?')">
+                    ⚡ Instalare 1-Click {{ p.name }}
                   </button>
                 </form>
-              </div>
-            {% else %}
-              <form action="/admin/plugins/repo/install" method="post">
-                <input type="hidden" name="plugin_id" value="{{ p.id }}">
-                <input type="hidden" name="download_url" value="{{ p.download_url }}">
-                <button type="submit" class="btn btn-sm btn-primary fw-bold w-100 rounded-pill shadow-sm" onclick="return confirm('Dorești să instalezi pluginul {{ p.name }}?')">
-                  ⚡ Instalare 1-Click {{ p.name }}
-                </button>
-              </form>
+              {% endif %}
+            </div>
+
+            {% if p.id not in ['devstudio', 'google_seo', 'analytics', 'comments', 'minishop', 'newsletter', 'robots', 'share', 'sitemap', 'telegram_notify', 'antigravity', 'lumina', 'elevate', 'minimal'] %}
+            <form action="/admin/repo/delete" method="post" onsubmit="return confirm('Sigur dorești să elimini definitiv pachetul {{ p.name }} din Repo Store?');">
+              <input type="hidden" name="package_id" value="{{ p.id }}">
+              <input type="hidden" name="pkg_type" value="plugin">
+              <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle p-2" title="Șterge din Repo Store">
+                🗑️
+              </button>
+            </form>
             {% endif %}
           </div>
         </div>
@@ -88,7 +100,7 @@
 
   <!-- Section 2: Official Themes -->
   <div class="d-flex align-items-center justify-content-between mb-3">
-    <h5 class="fw-bold mb-0">🎨 Teme Vizuale Oficiale ({{ catalog.themes|length }})</h5>
+    <h5 class="fw-bold mb-0">🎨 Teme Vizuale ({{ catalog.themes|length }})</h5>
     <span class="badge bg-secondary">VlahX Engine v{{ core_version }}</span>
   </div>
 
@@ -114,24 +126,36 @@
             <p class="small text-body-secondary mb-3">{{ t_theme.description }}</p>
           </div>
           
-          <div class="pt-3 border-top">
-            {% if t_theme.id in installed_t_slugs %}
-              <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-bold">✓ Instalată</span>
-                <form action="/admin/themes/repo/install" method="post" class="flex-grow-1">
+          <div class="pt-3 border-top d-flex align-items-center justify-content-between gap-2">
+            <div class="flex-grow-1">
+              {% if t_theme.id in installed_t_slugs %}
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-bold">✓ Instalată</span>
+                  <form action="/admin/themes/repo/install" method="post" class="flex-grow-1">
+                    <input type="hidden" name="download_url" value="{{ t_theme.download_url }}">
+                    <button type="submit" class="btn btn-sm btn-outline-primary fw-bold w-100 rounded-pill shadow-sm" onclick="return confirm('Dorești să reinstalezi tema {{ t_theme.name }}?')">
+                      🔄 Reinstalează
+                    </button>
+                  </form>
+                </div>
+              {% else %}
+                <form action="/admin/themes/repo/install" method="post">
                   <input type="hidden" name="download_url" value="{{ t_theme.download_url }}">
-                  <button type="submit" class="btn btn-sm btn-outline-primary fw-bold w-100 rounded-pill shadow-sm" onclick="return confirm('Dorești să reinstalezi tema {{ t_theme.name }}?')">
-                    🔄 Reinstalează 1-Click
+                  <button type="submit" class="btn btn-sm btn-primary fw-bold w-100 rounded-pill shadow-sm" onclick="return confirm('Dorești să instalezi tema {{ t_theme.name }}?')">
+                    ⚡ Instalare 1-Click {{ t_theme.name }}
                   </button>
                 </form>
-              </div>
-            {% else %}
-              <form action="/admin/themes/repo/install" method="post">
-                <input type="hidden" name="download_url" value="{{ t_theme.download_url }}">
-                <button type="submit" class="btn btn-sm btn-primary fw-bold w-100 rounded-pill shadow-sm" onclick="return confirm('Dorești să instalezi tema {{ t_theme.name }}?')">
-                  ⚡ Instalare 1-Click {{ t_theme.name }}
-                </button>
-              </form>
+              {% endif %}
+            </div>
+
+            {% if t_theme.id not in ['devstudio', 'google_seo', 'analytics', 'comments', 'minishop', 'newsletter', 'robots', 'share', 'sitemap', 'telegram_notify', 'antigravity', 'lumina', 'elevate', 'minimal'] %}
+            <form action="/admin/repo/delete" method="post" onsubmit="return confirm('Sigur dorești să elimini definitiv tema {{ t_theme.name }} din Repo Store?');">
+              <input type="hidden" name="package_id" value="{{ t_theme.id }}">
+              <input type="hidden" name="pkg_type" value="theme">
+              <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle p-2" title="Șterge din Repo Store">
+                🗑️
+              </button>
+            </form>
             {% endif %}
           </div>
         </div>
