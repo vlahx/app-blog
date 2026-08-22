@@ -76,12 +76,14 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
     ):
         from app.utils.auth import verify_password
         email_clean = email.strip().lower()
-        user = db.execute(select(User).where(User.email == email_clean)).scalar_one_or_none()
+        user = db.execute(
+            select(User).where(User.email == email_clean, User.password_hash.isnot(None))
+        ).scalars().first()
 
         if not user or not user.password_hash or not verify_password(password.strip(), user.password_hash):
             return RedirectResponse(url="/login?err=Email+sau+parolă+incorectă.", status_code=303)
 
-        if user.provider == "email" and not user.email_verified:
+        if not user.email_verified:
             return RedirectResponse(url="/login?err=Adresa+de+email+nu+a+fost+verificată+încă.+Verifică+Inbox-ul+sau+Folderul+Spam+pentru+linkul+de+activare.", status_code=303)
 
         request.session["user_id"] = str(user.id)
@@ -117,25 +119,36 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
         if not email_clean or "@" not in email_clean:
             return RedirectResponse(url="/register?err=Adresă+de+email+nevalidă.", status_code=303)
 
-        existing = db.execute(select(User).where(User.email == email_clean)).scalar_one_or_none()
-        if existing:
-            return RedirectResponse(url="/register?err=Există+deja+un+cont+cu+această+adresă+de+email.", status_code=303)
-
+        existing = db.execute(select(User).where(User.email == email_clean)).scalars().first()
         token = uuid4().hex
         now = datetime.now(timezone.utc)
-        new_user = User(
-            provider="email",
-            oauth_id=f"email_{email_clean}",
-            email=email_clean,
-            first_name=first_name.strip(),
-            last_name=last_name.strip(),
-            password_hash=hash_password(password.strip()),
-            email_verified=False,
-            verification_token=token,
-            role="reader",
-            created_at=now
-        )
-        db.add(new_user)
+
+        if existing:
+            if existing.password_hash:
+                return RedirectResponse(url="/register?err=Există+deja+un+cont+cu+această+adresă+de+email.", status_code=303)
+            else:
+                # Link classic password & email verification to existing OAuth user
+                existing.first_name = first_name.strip() or existing.first_name
+                existing.last_name = last_name.strip() or existing.last_name
+                existing.password_hash = hash_password(password.strip())
+                existing.email_verified = False
+                existing.verification_token = token
+                new_user = existing
+        else:
+            new_user = User(
+                provider="email",
+                oauth_id=f"email_{email_clean}",
+                email=email_clean,
+                first_name=first_name.strip(),
+                last_name=last_name.strip(),
+                password_hash=hash_password(password.strip()),
+                email_verified=False,
+                verification_token=token,
+                role="reader",
+                created_at=now
+            )
+            db.add(new_user)
+
         db.commit()
         db.refresh(new_user)
 
