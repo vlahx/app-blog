@@ -136,6 +136,20 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
         db.commit()
         db.refresh(new_user)
 
+        # Send Telegram Notification Alert to Admin on New User Registration
+        reg_msg = (
+            f"👤 *UTILIZATOR NOU ÎNREGISTRAT PE SITE!*\n\n"
+            f"📛 *Nume:* {first_name.strip()} {last_name.strip()}\n"
+            f"📧 *Email:* {email_clean}\n"
+            f"📅 *Data:* {now.strftime('%d.%m.%Y %H:%M UTC')}\n\n"
+            f"⚡ *Vezi în Admin:* {public_site_origin(request)}/admin/users"
+        )
+        try:
+            from app.utils.telegram_notify import send_telegram_message
+            send_telegram_message(reg_msg)
+        except Exception as e:
+            logger.warning(f"classic_register: Telegram notify error: {e}")
+
         # Send verification email via no-reply@vlahx.org
         sent_ok = send_verification_email(email_clean, token, first_name.strip())
         if sent_ok:
