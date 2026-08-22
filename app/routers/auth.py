@@ -47,10 +47,10 @@ router = APIRouter(tags=["auth"])
 
 
 def build_auth_router(templates: Jinja2Templates) -> APIRouter:
+    @router.get("/login", response_class=HTMLResponse)
     @router.get("/admin/login", response_class=HTMLResponse)
-    def login_page(request: Request):
+    def login_page(request: Request, msg: str | None = None, err: str | None = None):
         bot_username = get_telegram_bot_username()
-
         google_client_id = os.environ.get("GOOGLE_CLIENT_ID", "")
 
         return render_template(
@@ -58,11 +58,122 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
             request=request,
             name="admin/login.html",
             context={
+                "title": "Conectare — VlahX Core",
                 "bot_username": bot_username or "",
                 "auth_url": TELEGRAM_AUTH_URL,
                 "google_client_id": google_client_id,
+                "msg": msg or request.query_params.get("msg"),
+                "err": err or request.query_params.get("err"),
             },
         )
+
+    @router.post("/login")
+    async def classic_login(
+        request: Request,
+        email: str = Form(...),
+        password: str = Form(...),
+        db: Session = Depends(get_db)
+    ):
+        from app.utils.auth import verify_password
+        email_clean = email.strip().lower()
+        user = db.execute(select(User).where(User.email == email_clean)).scalar_one_or_none()
+
+        if not user or not user.password_hash or not verify_password(password.strip(), user.password_hash):
+            return RedirectResponse(url="/login?err=Email+sau+parolă+incorectă.", status_code=303)
+
+        request.session["user_id"] = str(user.id)
+        return RedirectResponse(url="/profile", status_code=303)
+
+    @router.get("/register", response_class=HTMLResponse)
+    def register_page(request: Request, msg: str | None = None, err: str | None = None):
+        return render_template(
+            templates,
+            request=request,
+            name="user/register.html",
+            context={
+                "title": "Înregistrare Cont — VlahX Core",
+                "msg": msg or request.query_params.get("msg"),
+                "err": err or request.query_params.get("err"),
+            },
+        )
+
+    @router.post("/register")
+    async def classic_register(
+        request: Request,
+        email: str = Form(...),
+        password: str = Form(...),
+        first_name: str = Form(...),
+        last_name: str = Form(""),
+        db: Session = Depends(get_db)
+    ):
+        from app.utils.auth import hash_password
+        from app.utils.email_verification import send_verification_email
+        from uuid import uuid4
+
+        email_clean = email.strip().lower()
+        if not email_clean or "@" not in email_clean:
+            return RedirectResponse(url="/register?err=Adresă+de+email+nevalidă.", status_code=303)
+
+        existing = db.execute(select(User).where(User.email == email_clean)).scalar_one_or_none()
+        if existing:
+            return RedirectResponse(url="/register?err=Există+deja+un+cont+cu+această+adresă+de+email.", status_code=303)
+
+        token = uuid4().hex
+        now = datetime.now(timezone.utc)
+        new_user = User(
+            provider="email",
+            oauth_id=f"email_{email_clean}",
+            email=email_clean,
+            first_name=first_name.strip(),
+            last_name=last_name.strip(),
+            password_hash=hash_password(password.strip()),
+            email_verified=False,
+            verification_token=token,
+            role="reader",
+            created_at=now
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+
+        # Send verification email via no-reply@vlahx.org
+        sent_ok = send_verification_email(email_clean, token, first_name.strip())
+        if sent_ok:
+            return RedirectResponse(url="/register?msg=Un+link+de+verificare+a+fost+trimis+pe+email!+Verifică+Inbox-ul.", status_code=303)
+        else:
+            # Auto-verify if local SMTP not configured yet
+            new_user.email_verified = True
+            db.commit()
+            request.session["user_id"] = str(new_user.id)
+            return RedirectResponse(url="/profile?msg=Cont+creat+cu+succes!", status_code=303)
+
+    @router.get("/verify-email")
+    async def verify_email_route(request: Request, token: str, db: Session = Depends(get_db)):
+        user = db.execute(select(User).where(User.verification_token == token)).scalar_one_or_none()
+        if not user:
+            return RedirectResponse(url="/login?err=Token+de+verificare+nevalid+sau+expirat.", status_code=303)
+
+        user.email_verified = True
+        user.verification_token = None
+        db.commit()
+
+        request.session["user_id"] = str(user.id)
+        return RedirectResponse(url="/profile?msg=Emailul+tău+a+fost+verificat+cu+succes!+Bun+venit!", status_code=303)
+
+    @router.post("/profile/intent")
+    async def save_profile_intent(request: Request, intent: str = Form(...), db: Session = Depends(get_db)):
+        user = getattr(request.state, "current_user", None) or get_current_user_from_request(request)
+        if not user:
+            return RedirectResponse(url="/login", status_code=303)
+
+        db_user = db.execute(select(User).where(User.id == user.id)).scalar_one_or_none() or user
+        db_user.onboarding_intent = intent.strip()
+        
+        if intent == "developer" and "developer" not in db_user.roles_list:
+            db_user.role = f"{db_user.role},developer" if db_user.role else "developer"
+
+        db.commit()
+        return RedirectResponse(url=f"/profile?msg=Opțiunea+ta+({intent})+a+fost+salvată!", status_code=303)
 
     @router.get("/dev/login")
     async def dev_login(
