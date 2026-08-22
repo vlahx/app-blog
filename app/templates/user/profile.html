@@ -59,64 +59,20 @@
   </div>
   {% endif %}
 
-  <!-- Onboarding & Intent Selection Card -->
+  <!-- Hosting Provisioning & Request Banner Card -->
   <div class="card border-0 shadow-sm rounded-4 mb-4 p-4 bg-body-tertiary border">
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
       <div>
-        <h4 class="fw-bold mb-1 text-body">{{ t('profile.intentTitle') }}</h4>
-        <p class="text-secondary small mb-0">{{ t('profile.intentSubtitle') }}</p>
-      </div>
-      {% if user.onboarding_intent %}
-      <span class="badge bg-primary bg-opacity-20 text-primary border border-primary-subtle px-3 py-2 rounded-pill fw-semibold">
-        {{ t('profile.intentActive') }} {{ user.onboarding_intent|upper }}
-      </span>
-      {% endif %}
-    </div>
-
-    <div class="row g-3">
-      <!-- Intent 1: Hosting -->
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 p-3 text-center bg-body hover-shadow transition border {% if user.onboarding_intent == 'hosting' %}border-primary border-2{% endif %}">
-          <div class="fs-1 mb-2">🌐</div>
-          <h5 class="fw-bold mb-1 text-body">{{ t('profile.intentHostingTitle') }}</h5>
-          <p class="text-secondary small mb-3">{{ t('profile.intentHostingDesc') }}</p>
-          <form action="/profile/intent" method="POST" class="mt-auto">
-            <input type="hidden" name="intent" value="hosting">
-            <button type="submit" class="btn {% if user.onboarding_intent == 'hosting' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm w-100 rounded-pill fw-semibold">
-              {% if user.onboarding_intent == 'hosting' %}✓ {{ t('profile.intentHostingTitle') }}{% else %}{{ t('profile.intentHostingBtn') }}{% endif %}
-            </button>
-          </form>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="fs-4">🌐</span>
+          <h4 class="fw-bold mb-0 text-body">Găzduire Website & Magazin (Hosting pe RPi)</h4>
         </div>
+        <p class="text-secondary small mb-0 mt-1">Vrei propriul tău website sau magazin găzduit direct pe infrastructura noastră cu certificat SSL automat și verificator de domeniu?</p>
       </div>
-
-      <!-- Intent 2: Developer -->
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 p-3 text-center bg-body hover-shadow transition border {% if user.onboarding_intent == 'developer' %}border-purple border-2{% endif %}">
-          <div class="fs-1 mb-2">💻</div>
-          <h5 class="fw-bold mb-1 text-body">{{ t('profile.intentDevTitle') }}</h5>
-          <p class="text-secondary small mb-3">{{ t('profile.intentDevDesc') }}</p>
-          <form action="/profile/intent" method="POST" class="mt-auto">
-            <input type="hidden" name="intent" value="developer">
-            <button type="submit" class="btn {% if user.onboarding_intent == 'developer' %}btn-dark{% else %}btn-outline-dark{% endif %} btn-sm w-100 rounded-pill fw-semibold">
-              {% if user.onboarding_intent == 'developer' %}✓ {{ t('profile.intentDevTitle') }}{% else %}{{ t('profile.intentDevBtn') }}{% endif %}
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <!-- Intent 3: Member -->
-      <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 p-3 text-center bg-body hover-shadow transition border {% if user.onboarding_intent == 'member' %}border-secondary border-2{% endif %}">
-          <div class="fs-1 mb-2">👤</div>
-          <h5 class="fw-bold mb-1 text-body">{{ t('profile.intentMemberTitle') }}</h5>
-          <p class="text-secondary small mb-3">{{ t('profile.intentMemberDesc') }}</p>
-          <form action="/profile/intent" method="POST" class="mt-auto">
-            <input type="hidden" name="intent" value="member">
-            <button type="submit" class="btn {% if user.onboarding_intent == 'member' %}btn-secondary{% else %}btn-outline-secondary{% endif %} btn-sm w-100 rounded-pill fw-semibold">
-              {% if user.onboarding_intent == 'member' %}✓ {{ t('profile.intentMemberTitle') }}{% else %}{{ t('profile.intentMemberBtn') }}{% endif %}
-            </button>
-          </form>
-        </div>
+      <div>
+        <a href="#hosting-section" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold shadow-sm text-white" onclick="document.getElementById('hostingModal').style.display='block'">
+          🚀 Solicită Găzduire Site →
+        </a>
       </div>
     </div>
   </div>
