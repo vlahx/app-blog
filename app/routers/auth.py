@@ -167,13 +167,34 @@ def build_auth_router(templates: Jinja2Templates) -> APIRouter:
             return RedirectResponse(url="/login", status_code=303)
 
         db_user = db.execute(select(User).where(User.id == user.id)).scalar_one_or_none() or user
-        db_user.onboarding_intent = intent.strip()
-        
-        if intent == "developer" and "developer" not in db_user.roles_list:
-            db_user.role = f"{db_user.role},developer" if db_user.role else "developer"
+        clean_intent = intent.strip()
+        db_user.onboarding_intent = clean_intent
+
+        if clean_intent == "developer" and "developer" not in db_user.roles_list and db_user.role != "admin":
+            if db_user.dev_status != "approved":
+                db_user.dev_status = "pending"
+                db_user.dev_requested_at = datetime.now(timezone.utc)
+                db.commit()
+
+                # Trigger Telegram notification to Admin
+                user_name = f"{db_user.first_name or db_user.username or 'Utilizator'} {db_user.last_name or ''}".strip()
+                msg = (
+                    f"🔔 *SOLICITARE ROL DEZVOLTATOR (ONBOARDING)!*\n\n"
+                    f"👤 *Utilizator:* {user_name} (`ID: #{db_user.id}`)\n"
+                    f"📧 *Email:* {db_user.email or 'Nespecificat'}\n"
+                    f"🎯 *Intenție:* Dezvoltator Teme / Plugin (DevStudio)\n\n"
+                    f"⚡ *Aprobă în Admin:* {public_site_origin(request)}/admin/users"
+                )
+                try:
+                    from app.utils.telegram_notify import send_telegram_message
+                    send_telegram_message(msg)
+                except Exception as e:
+                    logger.warning(f"save_profile_intent: Telegram notify error: {e}")
+
+                return RedirectResponse(url="/profile?msg=Solicitarea+pentru+rolul+de+Dezvoltator+a+fost+trimisă!+Se+așteaptă+aprobarea+administratorului.", status_code=303)
 
         db.commit()
-        return RedirectResponse(url=f"/profile?msg=Opțiunea+ta+({intent})+a+fost+salvată!", status_code=303)
+        return RedirectResponse(url=f"/profile?msg=Opțiunea+ta+({clean_intent})+a+fost+salvată!", status_code=303)
 
     @router.get("/dev/login")
     async def dev_login(
