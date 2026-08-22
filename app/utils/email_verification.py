@@ -67,7 +67,7 @@ def send_verification_email(email: str, token: str, first_name: str | None = Non
     msg.attach(MIMEText(html_content, "html", "utf-8"))
     
     try:
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=3) as server:
             server.ehlo()
             if smtp_port == 587:
                 server.starttls()
