@@ -66,12 +66,12 @@ def send_verification_email(email: str, token: str, first_name: str | None = Non
     msg["To"] = email
     msg.attach(MIMEText(html_content, "html", "utf-8"))
     
-    # Try primary host first, then fallback to internal container port 25 / 587
+    # Try internal container relay first (instant delivery), then fallbacks
     hosts_to_try = [
-        (primary_host, smtp_port),
         ("hosting_mailserver", 25),
-        ("hosting_mailserver", 587),
-        ("127.0.0.1", 25)
+        ("127.0.0.1", 25),
+        (primary_host, smtp_port),
+        ("hosting_mailserver", 587)
     ]
     
     for host, port in hosts_to_try:
